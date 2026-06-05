@@ -436,6 +436,7 @@ function calcAfter(p) {
 // ===== UI =====
 function switchFloor(f, btn) {
   floor = f;
+  localStorage.setItem('last_floor_pc', f);
   document.querySelectorAll('.floor-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   loadDaily();
@@ -827,6 +828,16 @@ document.addEventListener('wheel', e => { if(document.activeElement.type==='numb
 
 // 初期化実行
 initState();
+// 前回のフロアを復元
+const savedFloor = localStorage.getItem('last_floor_pc');
+if (savedFloor && (savedFloor === '2F' || savedFloor === '3F')) {
+  floor = savedFloor;
+  const btn = document.getElementById('fb-' + savedFloor);
+  if (btn) {
+    document.querySelectorAll('.floor-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+}
 loadDaily();
 reflectRoom(true);  // 居室管理を自動反映（起動時はトースト非表示）
 buildCards();
