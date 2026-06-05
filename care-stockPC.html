@@ -597,7 +597,13 @@ function saveDaily() {
 
 function confirmOrder() {
   const items = products.filter(p => state[floor][p.id].orderQty > 0)
-    .map(p => ({ name: p.short||p.name, qty: state[floor][p.id].orderQty }));
+    .map(p => ({
+      name: p.short||p.name,
+      qty: state[floor][p.id].orderQty,
+      stockBoxes: state[floor][p.id].stockBoxes,
+      stockBags: state[floor][p.id].stockBags,
+      stock: state[floor][p.id].stockBoxes * p.perBox + state[floor][p.id].stockBags * p.perBag
+    }));
   if (!items.length) { showToast('注文箱数を入力してください'); return; }
   const history = loadHistory();
   history.unshift({ week: new Date().toLocaleDateString('ja-JP'), floor, items });
