@@ -20,7 +20,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
   font-size: 12px; font-weight: 700; font-family: inherit; background: #f0f0f0; color: #333; }
 .btn-mode.admin { background: #ffe082; color: #5a3a00; }
 
-#layout { display: grid; grid-template-columns: 190px 1fr 405px; min-height: calc(100vh - 54px); }
+#layout { display: grid; grid-template-columns: 190px 1fr 350px; min-height: calc(100vh - 54px); }
 
 /* サイドバー */
 #sidebar {
@@ -166,9 +166,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 .c-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #ccc; background: #f5f5f5; font-size: 14px; cursor: pointer; }
 .c-btn.plus { border-color: #a5d6a7; background: #f0fdf6; }
 .c-val { font-size: 15px; font-weight: 800; min-width: 22px; text-align: center; }
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
-input[type=number] { -moz-appearance: textfield; }
+/* スピンボタンを大きく表示 */
+.stock-in::-webkit-inner-spin-button,
+.stock-in::-webkit-outer-spin-button,
+.order-in::-webkit-inner-spin-button,
+.order-in::-webkit-outer-spin-button { -webkit-appearance: inner-spin-button; opacity:1; width:28px; cursor:pointer; }
+.daily-in::-webkit-inner-spin-button,
+.daily-in::-webkit-outer-spin-button,
+.weekly-in::-webkit-inner-spin-button,
+.weekly-in::-webkit-outer-spin-button { -webkit-appearance: none; }
 </style>
 </head>
 <body>
@@ -430,7 +436,8 @@ function toggleHoliday() {
 }
 
 function onInput(pid, field, val) {
-  state[floor][pid][field] = parseInt(val) || 0;
+  const num = Math.max(0, parseInt(val) || 0);
+  state[floor][pid][field] = num;
   updateCard(pid);
   updateSummary();
 }
