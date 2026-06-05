@@ -765,7 +765,12 @@ function reflectRoom(silent) {
       state[floor][p.id].weeklyOverride = w > 0 ? w : null;
     }
   });
-  buildCards();
+  // 手動反映時はbuildCards、起動時はupdateCardのみ
+  if (!silent) {
+    buildCards();
+  } else {
+    products.forEach(p => updateCard(p.id));
+  }
   updateSummary();
   if (!silent) showToast('✅ 居室合計を反映しました！');
   const lbl = document.getElementById('room-reflect-label');
