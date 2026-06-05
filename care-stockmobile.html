@@ -723,11 +723,11 @@ function buildCards() {
               id="sg-${p.id}" value="" placeholder="0" oninput="onInput(${p.id},'stockBags',this.value)">
             <div class="sub-pieces sub-bag" id="sgp-${p.id}" style="display:none"></div>
           </div>
-          <div class="stock-sep">=</div>
-          <div class="stock-col">
-            <div class="col-label label-total">合計</div>
-            <div class="total-box" id="tot-${p.id}">0<span class="total-unit">枚</span></div>
-          </div>
+        </div>
+        <div style="text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px">
+          <span style="font-size:12px;color:#888">合計：</span>
+          <span class="total-box" id="tot-${p.id}" style="font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0">0</span>
+          <span style="font-size:11px;color:#888">枚</span>
         </div>
         <div class="bottom-row">
           <div class="bottom-col admin-only" id="daily-col-${p.id}" ${p.weeklyFixed !== null ? 'style="display:none"' : ''} data-weekly="${p.weeklyFixed !== null}">
@@ -1079,6 +1079,8 @@ function confirmOrder() {
     const s = state[currentFloor][p.id];
     orders[p.id] = {
       qty: s.orderQty,
+      stockBoxes: s.stockBoxes,
+      stockBags: s.stockBags,
       stock: s.stockBoxes * p.perBox + s.stockBags * p.perBag
     };
   });
@@ -1130,7 +1132,7 @@ function renderHistory() {
         const stock = typeof o === 'object' && o.stock !== undefined ? o.stock + '枚' : '-';
         return `<div class="history-item" style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center">
           <span>${p.short || p.name}</span>
-          <span style="font-size:10px;color:#888">在庫${stock}</span>
+          <span style="font-size:10px;color:#888">${o.stockBoxes||0}箱${o.stockBags||0}袋<span style="font-size:9px;color:#bbb">（${stock}枚）</span></span>
           <span style="font-weight:800;color:#e65100">${qty}箱</span>
         </div>`;
       })
