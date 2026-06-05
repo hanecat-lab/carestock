@@ -766,8 +766,10 @@ function reflectRoom(silent) {
     }
   });
   // デバッグ
-  const dbg = products.filter(p=>p.weeklyFixed===null).map(p=>p.name+':dailyUse='+state[floor][p.id].dailyUse).join('\n');
-  alert(dbg);
+  const dbg = products.filter(p=>p.weeklyFixed===null).map(p=>p.name+':total='+totals[p.id]).join('\n');
+  const roomData = loadRoomData();
+  const keys = Object.keys(roomData).slice(0,3).join(', ');
+  alert('totals:\n'+dbg+'\n\nroomDatakeys:'+keys+'\nfloor:'+floor);
   // 反映後は常にbuildCardsで再描画（stateの値をinputに反映させるため）
   buildCards();
   updateSummary();
