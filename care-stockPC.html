@@ -20,7 +20,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
   font-size: 12px; font-weight: 700; font-family: inherit; background: #f0f0f0; color: #333; }
 .btn-mode.admin { background: #ffe082; color: #5a3a00; }
 
-#layout { display: grid; grid-template-columns: 190px 1fr 270px; min-height: calc(100vh - 54px); }
+#layout { display: grid; grid-template-columns: 190px 1fr 405px; min-height: calc(100vh - 54px); }
 
 /* サイドバー */
 #sidebar {
@@ -108,7 +108,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 }
 .order-in {
   width: 100%; padding: 8px; border-radius: 8px;
-  border: 2px solid #e53935; font-size: 23px; font-weight: 800;
+  border: 2px solid #e53935; font-size: 24px; font-weight: 800;
   text-align: center; font-family: inherit; outline: none;
   background: #fff5f5; color: #c62828; margin-top: 4px;
 }
@@ -127,7 +127,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
   background: #f9f9f9; border-radius: 7px; margin-bottom: 3px;
 }
 .sum-dot { width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
-.sum-name { font-size: 12px; color: #333; flex: 1; }
+.sum-name { font-size: 20px; font-weight: 800; color: #333; flex: 1; }
 .sum-qty { font-size: 19px; font-weight: 800; color: #e65100; }
 .sum-unit { font-size: 10px; color: #999; margin-left: 2px; }
 .grp-lbl { font-size: 10px; font-weight: 700; color: #777; margin: 5px 0 2px; }
@@ -166,6 +166,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 .c-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #ccc; background: #f5f5f5; font-size: 14px; cursor: pointer; }
 .c-btn.plus { border-color: #a5d6a7; background: #f0fdf6; }
 .c-val { font-size: 15px; font-weight: 800; min-width: 22px; text-align: center; }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+input[type=number] { -moz-appearance: textfield; }
 </style>
 </head>
 <body>
@@ -534,7 +537,7 @@ function updateCard(pid) {
     const isLow = stock > 0 && after < 0;
     const bags = Math.floor(Math.max(0,after)/p.perBag);
     const rem = Math.max(0,after)%p.perBag;
-    afEl.textContent = isLow ? '不足' : bags+'袋'+rem+'枚';
+    afEl.textContent = isLow ? '不足' : (bags>0||rem>0 ? bags+'袋'+rem+'枚' : '0枚');
     if (afWrap) afWrap.className = 'box-after' + (isLow ? ' low' : '');
   }
 
@@ -707,6 +710,8 @@ function showToast(msg) {
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
+
+document.addEventListener('wheel', e => { if(document.activeElement.type==='number') document.activeElement.blur(); }, {passive:false});
 
 // 初期化実行
 initState();
