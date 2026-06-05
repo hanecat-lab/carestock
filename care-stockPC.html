@@ -182,13 +182,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
     <h1>📦 オムツ注文管理 <span style="font-size:11px;font-weight:600;color:#5a7a5a">PC版</span></h1>
   </div>
   <div class="header-sub">🗓 日曜注文 → 🚚 木曜納品（4日後）→ 翌木曜まで7日分</div>
-  <button class="btn-mode" id="mode-btn" onclick="toggleMode()">⚙️ 管理者モード</button>
 </div>
 
 <div class="holiday-banner" id="hol-banner">🏖 連休モード：14日分で計算中</div>
 
 <div id="layout">
   <div id="sidebar">
+    <!-- モード表示 -->
+    <div id="mode-display" style="background:#fff3e0;border:2px solid #e65100;border-radius:10px;padding:10px;text-align:center;margin-bottom:4px">
+      <div style="font-size:10px;color:#888;margin-bottom:2px">現在のモード</div>
+      <div id="mode-label" style="font-size:20px;font-weight:800;color:#e65100">👕 スタッフ</div>
+    </div>
     <div>
       <div class="sb-title">フロア切り替え</div>
       <button class="floor-btn active" id="fb-2F" onclick="switchFloor('2F',this)">🏢 2階</button>
@@ -216,6 +220,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
       <button class="sb-tool-btn" onclick="document.getElementById('room-import').click()"
         style="border:2px solid #388e3c;background:#e8f5e9;color:#388e3c">📥 インポート</button>
       <input type="file" id="room-import" accept=".json" style="display:none" onchange="importRoomData(this)">
+    </div>
+    <!-- モード切替ボタン（左下） -->
+    <div style="margin-top:auto;padding-top:10px">
+      <button class="btn-mode" id="mode-btn" onclick="toggleMode()"
+        style="width:100%;padding:3px;border-radius:6px;border:1px solid #ddd;background:#f9f9f9;color:#aaa;font-size:9px;font-weight:600;cursor:pointer;font-family:inherit">
+        ⚙️ 管理者モードに切り替え
+      </button>
     </div>
   </div>
 
@@ -419,8 +430,19 @@ function switchCat(c, btn) {
 function toggleMode() {
   isAdmin = !isAdmin;
   const btn = document.getElementById('mode-btn');
-  btn.textContent = isAdmin ? '👕 スタッフモード' : '⚙️ 管理者モード';
-  btn.className = 'btn-mode' + (isAdmin ? ' admin' : '');
+  const label = document.getElementById('mode-label');
+  const modeDisplay = document.getElementById('mode-display');
+  if (isAdmin) {
+    btn.textContent = '👕 スタッフモードに切り替え';
+    btn.style.cssText = 'width:100%;padding:10px;border-radius:10px;border:2px solid #a5d6a7;background:#f0fdf6;color:#2a4a2a;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
+    if (label) { label.textContent = '⚙️ 管理者'; label.style.color = '#1976d2'; }
+    if (modeDisplay) { modeDisplay.style.background = '#e3f2fd'; modeDisplay.style.borderColor = '#1976d2'; }
+  } else {
+    btn.textContent = '⚙️ 管理者モードに切り替え';
+    btn.style.cssText = 'width:100%;padding:10px;border-radius:10px;border:2px solid #aaa;background:#f5f5f5;color:#555;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
+    if (label) { label.textContent = '👕 スタッフ'; label.style.color = '#e65100'; }
+    if (modeDisplay) { modeDisplay.style.background = '#fff3e0'; modeDisplay.style.borderColor = '#e65100'; }
+  }
   document.querySelectorAll('.admin-tool').forEach(el => el.classList.toggle('show', isAdmin));
   buildCards();
 }
