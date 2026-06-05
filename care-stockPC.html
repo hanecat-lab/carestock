@@ -319,13 +319,13 @@ function setRoomState(floor, roomNo, state) {
 
 function loadHistory() {
   try {
-    return JSON.parse(localStorage.getItem(historyKey()) || "[]");
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
   } catch(e) { return []; }
 }
-
 function saveHistory(hist) {
-  localStorage.setItem(historyKey(), JSON.stringify(hist));
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
 }
+
 
 function loadWeeklyFixed() {
   try { return JSON.parse(localStorage.getItem(WEEKLY_FIXED_KEY) || '{}'); }
