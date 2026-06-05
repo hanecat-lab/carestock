@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>care-stockmobile</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #e8e8e8;
+    font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+  #app-wrapper {
+    background: #fff;
+    width: 100%;
+    max-width: 600px;
+    min-height: 100vh;
+    position: relative;
+    box-shadow: 0 0 30px rgba(0,0,0,0.15);
+  }
+
+  #header {
+    background: #d6edd6;
+    padding: 14px 16px 10px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .header-label { color: #2a5a2a; font-size: 10px; letter-spacing: 1px; }
+  .header-title { color: #0a2a0a; font-size: 16px; font-weight: 800; }
+  .header-sub { color: #3a5a3a; font-size: 10px; margin-bottom: 8px; }
+  .btn-auto {
+    background: #f5d800; color: #1a1a00; border: none; border-radius: 8px;
+    padding: 8px 14px; font-weight: 800; font-size: 12px; cursor: pointer; font-family: inherit;
+  }
+  .btn-sm {
+    background: #f5d800; color: #1a1a00; border: none; border-radius: 8px;
+    padding: 8px 10px; font-size: 11px; cursor: pointer; font-family: inherit; font-weight: 700;
+  }
+  .btn-group { display: flex; gap: 6px; }
+
+  /* フロアタブ */
+  .floor-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .floor-tab {
+    flex: 1; padding: 7px 4px; border-radius: 8px; border: none;
+    background: rgba(0,0,0,0.08); color: #2a4a2a;
+    font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+  .floor-tab.active { background: #f5d800; color: #1a1a00; }
+
+  /* カテゴリタブ */
+  .cat-tabs { display: flex; gap: 6px; }
+  .tab {
+    flex: 1; padding: 8px 4px; border-radius: 8px; border: 2px solid rgba(0,0,0,0.25);
+    background: rgba(0,0,0,0.07); color: #2a4a2a;
+    font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit;
+  }
+  .tab.active { background: #f5d800; color: #1a1a00; }
+
+  /* フロア表示バー */
+  #floor-banner {
+    background: #fff3e0; color: #e65100;
+    text-align: center; font-size: 18px; font-weight: 800;
+    padding: 8px;
+  }
+
+  /* 保存トースト */
+  #toast {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: #1a4a3a; color: #fff; border-radius: 16px;
+    padding: 16px 32px; font-size: 16px; font-weight: 800;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2); text-align: center;
+  }
+
+  /* カード */
+  #cards { padding: 10px 12px 16px; background: #fff; }
+  .card {
+    background: #fff; border-radius: 14px; margin-bottom: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    overflow: hidden; border: 2px solid transparent; display: none;
+  }
+  .card.visible { display: block; }
+  .card.low { border-color: #e74c3c; }
+
+  .card-header {
+    background: #d6edd6; padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .color-dot { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.3); }
+  .card-name { color: #0a2a0a; font-size: 15px; font-weight: 800; }
+  .card-sub { color: #2a5a2a; font-size: 11px; }
+  .badge-low {
+    background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700;
+    border-radius: 6px; padding: 3px 8px; margin-left: auto; flex-shrink: 0;
+  }
+
+  .card-badges { padding: 8px 14px 0; display: flex; gap: 8px; flex-wrap: wrap; background: #fff; }
+  .badge-box { font-size: 11px; font-weight: 700; background: #fffbe6; color: #8a6000; border: 1px solid #f0d080; border-radius: 6px; padding: 3px 10px; }
+  .badge-bag { font-size: 11px; font-weight: 700; background: #eef2ff; color: #3a4ab0; border: 1px solid #c0ccf0; border-radius: 6px; padding: 3px 10px; }
+  .badge-saved { font-size: 10px; font-weight: 700; background: #e8f5ee; color: #1a6a44; border: 1px solid #a0d4b0; border-radius: 6px; padding: 3px 10px; }
+
+  .card-body { padding: 10px 14px 14px; background: #fff; }
+  .stock-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
+  .stock-col { flex: 1; }
+  .stock-sep { color: #ccc; font-size: 20px; padding-top: 22px; }
+  .col-label { font-size: 18px; font-weight: 700; margin-bottom: 3px; text-align: center; }
+  .label-box { color: #8a6000; } .label-bag { color: #3a4ab0; }
+  .label-total { color: #1a4a3a; } .label-daily { color: #1a4a3a; }
+  .label-order { color: #1a4a3a; } .label-after { color: #555; }
+
+  /* 1日使用量ラベル行 */
+  .daily-label-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; margin-bottom: 3px;
+  }
+  .daily-saved-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #1a6a44; display: none;
+  }
+
+
+  input[type=number]::placeholder { color: #ccc; font-weight: 400; }
+  input[type=number] {
+    width: 100%; padding: 10px 4px;
+    border: 1.5px solid #dde8e4; border-radius: 10px;
+    font-size: 18px; text-align: center; font-weight: 700;
+    background: #fafffe; outline: none;
+    font-family: inherit; color: #1a3a2e; -webkit-appearance: none;
+  }
+  input.bg-box { background: #fffbe6; }
+  input.bg-bag { background: #eef2ff; }
+  input.bg-warn { background: #fff8e1; }
+  input.bg-daily { background: #f0fdf6; border-color: #a0d4b0; }
+
+  .sub-pieces { font-size: 10px; text-align: center; margin-top: 3px; }
+  .sub-box { color: #8a6000; } .sub-bag { color: #3a4ab0; } .sub-order { color: #888; }
+
+  .total-box {
+    border: 2px solid #ddd; border-radius: 10px; padding: 10px 4px;
+    text-align: center; font-weight: 800; font-size: 16px; color: #ccc; background: #f5f0e8;
+  }
+  .total-box.has-stock { background: #f5efd0; border-color: #8a6e2a; color: #5a4a1a; }
+  .total-unit { font-size: 10px; font-weight: 400; }
+
+  .bottom-row { display: flex; gap: 8px; }
+  .bottom-col { flex: 1; }
+
+  .after-box { background: #f9f9f9; border: 1px solid #eee; border-radius: 10px; padding: 6px 4px; text-align: center; }
+  .after-box.low { background: #fff0ee; border-color: #e09088; }
+  .after-val { font-weight: 600; font-size: 13px; color: #ccc; }
+  .after-val.low { color: #e07060; }
+  .after-del { font-size: 9px; color: #999; margin-top: 1px; }
+
+  .suggest-label { font-size: 20px; font-weight: 800; margin-bottom: 4px; text-align: center; color: #c0392b; white-space: nowrap; }
+  .suggest-num { font-size: 14px; font-weight: 400; color: #999; }
+
+  /* 保存ボタンエリア */
+  .save-bar {
+    margin: 0 12px 12px;
+    background: #fff; border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .save-info { font-size: 11px; color: #666; line-height: 1.5; }
+  .save-info strong { color: #1a4a3a; }
+  .btn-save {
+    background: #f5d800; color: #1a1a00; border: none; border-radius: 10px;
+    padding: 10px 18px; font-weight: 800; font-size: 13px; cursor: pointer;
+    font-family: inherit; white-space: nowrap; flex-shrink: 0;
+  }
+
+  /* サマリー */
+  #summary { background: #d6edd6; padding: 14px 16px; }
+  .summary-title { color: #0a2a0a; font-size: 11px; margin-bottom: 10px; font-weight: 700; }
+  .summary-cat-label { color: #2a5a2a; font-size: 10px; margin-bottom: 5px; }
+  .summary-items { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .summary-item { background: rgba(255,255,255,0.6); border-radius: 8px; padding: 6px 12px; }
+  .summary-item-name { color: #0a2a0a; font-size: 14px; font-weight: 700; }
+  .summary-item-qty { color: #e65100; font-size: 22px; font-weight: 800; }
+  .summary-item-pieces { opacity: 0.6; font-size: 10px; }
+  .summary-empty { color: #3a5a3a; font-size: 12px; }
+  .summary-totals { border-top: 1px solid rgba(0,0,0,0.1); padding-top: 10px; margin-top: 6px; display: flex; justify-content: flex-end; }
+  .total-label { color: #2a5a2a; font-size: 10px; text-align: center; }
+  .total-val { color: #e65100; font-size: 26px; font-weight: 800; text-align: center; }
+  .logic-box { margin-top: 12px; background: rgba(0,0,0,0.06); border-radius: 10px; padding: 10px 12px; font-size: 10px; color: #2a5a2a; line-height: 1.8; }
+  .logic-title { font-weight: 700; margin-bottom: 2px; color: #0a2a0a; }
+
+  /* バックアップ */
+  #backup-section {
+    background: #fff; margin: 0 12px 16px;
+    border-radius: 14px; padding: 14px 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    border: 2px dashed #a0d4b0;
+  }
+  .backup-title { font-size: 13px; font-weight: 800; color: #1a4a3a; margin-bottom: 4px; }
+  .backup-desc { font-size: 11px; color: #888; line-height: 1.6; margin-bottom: 12px; }
+  .backup-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-export {
+    flex: 1; padding: 11px 10px; border: none; border-radius: 10px;
+    background: #f5d800; color: #1a1a00; font-weight: 800; font-size: 13px;
+    cursor: pointer; font-family: inherit; text-align: center;
+  }
+  .btn-import {
+    flex: 1; padding: 11px 10px; border: 2px solid #d4b800; border-radius: 10px;
+    background: #f5d800; color: #1a1a00; font-weight: 800; font-size: 13px;
+    cursor: pointer; font-family: inherit; text-align: center; display: block;
+  }
+  #import-status {
+    margin-top: 10px; padding: 8px 12px; border-radius: 8px;
+    font-size: 12px; font-weight: 700;
+  }
+  #import-status.ok { background: #f5f0de; color: #5a4a1a; }
+  #import-status.err { background: #fdecea; color: #c0392b; }
+  .btn-confirm {
+    display: block; width: 100%;
+    padding: 20px 16px; border: none; border-radius: 14px;
+    background: #f57c00;
+    color: #fff; font-weight: 800; font-size: 22px;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 4px 16px rgba(245,124,0,0.35);
+    letter-spacing: 1px; text-align: center;
+  }
+  .btn-confirm:active { opacity: 0.8; }
+
+  /* 居室管理 */
+  #room-section { display: none; padding: 10px 12px 16px; }
+  .room-card {
+    background: #fff; border-radius: 14px; margin-bottom: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07); overflow: hidden;
+  }
+  .room-card-header {
+    background: #d6edd6; padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+  }
+  .room-no { font-size: 15px; font-weight: 800; color: #0a2a0a; }
+  .room-summary { font-size: 11px; color: #2a5a2a; margin-top: 2px; }
+  .room-toggle { color: #2a5a2a; font-size: 12px; }
+  .room-body { display: none; padding: 12px 14px; }
+  .room-product-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid #f0f0f0;
+    min-height: 40px;
+  }
+  .room-product-row:last-child { border-bottom: none; }
+  .room-product-name { flex: 1; font-size: 14px; color: #333; font-weight: 600; }
+  .room-product-input {
+    width: 72px; padding: 8px 4px; border: 1.5px solid #dde8e4;
+    border-radius: 8px; font-size: 18px; text-align: center;
+    font-weight: 700; font-family: inherit; outline: none;
+    background: #fff; flex-shrink: 0;
+  }
+  .room-product-input:focus { border-color: #2a5a2a; background: #f0fdf6; }
+  .room-product-unit { font-size: 11px; color: #888; flex-shrink: 0; }
+  .room-daily-summary {
+    margin-top: 10px; background: #f0fdf6; border-radius: 8px;
+    padding: 8px 12px; font-size: 11px; color: #2a5a2a;
+    line-height: 1.8;
+  }
+  .room-controls {
+    display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .btn-room-save {
+    background: #f5d800; color: #1a1a00; border: none; border-radius: 8px;
+    padding: 8px 16px; font-weight: 800; font-size: 12px;
+    cursor: pointer; font-family: inherit;
+  }
+  .btn-room-reflect {
+    background: #f57c00; color: #fff; border: none; border-radius: 8px;
+    padding: 8px 16px; font-weight: 800; font-size: 12px;
+    cursor: pointer; font-family: inherit;
+  }
+  .room-reflect-info {
+    font-size: 11px; color: #888; margin-bottom: 10px; line-height: 1.6;
+  }
+
+  /* カウンター式入力 */
+  .room-counter-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 4px; border-bottom: 1px solid #f0f0f0;
+  }
+  .room-counter-row:last-child { border-bottom: none; }
+  .room-product-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.15); }
+  .room-product-label { flex: 1; font-size: 15px; color: #222; font-weight: 700; white-space: nowrap; }
+  .counter-btn {
+    width: 44px; height: 44px; border: none; border-radius: 12px;
+    font-size: 24px; font-weight: 800; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-family: inherit; flex-shrink: 0;
+  }
+  .counter-btn-minus { background: #eee; color: #555; }
+  .counter-btn-minus:active { background: #ddd; }
+  .counter-btn-plus { background: #d6edd6; color: #1a4a1a; }
+  .counter-btn-plus:active { background: #b8e0b8; }
+  .counter-btn-zero { background: #fdecea; color: #c0392b; width: 32px; height: 32px; font-size: 13px; border-radius: 8px; }
+  .counter-btn-zero:active { background: #f5c6c6; }
+  .counter-val {
+    width: 48px; text-align: center; font-size: 22px; font-weight: 800;
+    color: #1a1a1a; font-family: inherit; font-variant-numeric: tabular-nums;
+    display: inline-block; flex-shrink: 0;
+  }
+  .counter-val.zero { color: #ccc; }
+  .counter-unit { font-size: 10px; color: #aaa; flex-shrink: 0; }
+
+  .btn-mode {
+    font-size: 10px; padding: 4px 10px; border-radius: 6px; border: none;
+    cursor: pointer; font-family: inherit; font-weight: 700;
+  }
+  .btn-mode-admin { background: rgba(0,0,0,0.1); color: #3a5a3a; }
+  .btn-mode-staff { background: #f5d800; color: #1a1a00; }
+  .admin-only { display: none; }
+  .mode-banner {
+    text-align: center; font-size: 11px; font-weight: 700;
+    padding: 4px; background: #f5d800; color: #1a1a00;
+  }
+  .mode-banner.admin { background: #2a5a2a; color: #fff; }
+  input.oq-input {
+    font-size: 26px;
+    padding: 12px 4px;
+    border: 2.5px solid #e53935;
+    border-radius: 12px;
+    background: #fff5f5;
+    font-weight: 800;
+    color: #c0392b;
+  }
+
+  .holiday-banner {
+    background: #e53935; color: #fff;
+    text-align: center; font-size: 12px; font-weight: 800;
+    padding: 6px; letter-spacing: 0.5px;
+    display: none;
+  }
+  .btn-holiday {
+    width: 100%; padding: 12px; border: none; border-radius: 10px;
+    background: #fff3e0; color: #e65100; font-weight: 800; font-size: 14px;
+    cursor: pointer; font-family: inherit; border: 2px solid #ffb74d;
+    margin-top: 4px;
+  }
+  .btn-holiday.active {
+    background: #e53935; color: #fff; border-color: #e53935;
+  }
+
+  /* カテゴリ別タブカラー */
+  .tab-pad { background: rgba(255,255,255,0.2); color: #1a1a1a; border: 2px solid rgba(0,0,0,0.2); }
+  .tab-pad.active { background: #f5d800; color: #1a1a00; }
+  .tab-tape { background: rgba(255,255,255,0.2); color: #1a1a1a; border: 2px solid rgba(0,0,0,0.2); }
+  .tab-tape.active { background: #4fc3f7; color: #003a50; }
+  .tab-pants { background: rgba(255,255,255,0.2); color: #1a1a1a; border: 2px solid rgba(0,0,0,0.2); }
+  .tab-pants.active { background: #ce93d8; color: #2a003a; }
+
+  .btn-scroll-summary {
+    display: block; width: calc(100% - 24px); margin: 0 12px 0;
+    padding: 12px; border: none; border-radius: 12px;
+    background: #fff; color: #e65100;
+    font-size: 16px; font-weight: 800; cursor: pointer;
+    font-family: inherit; text-align: center;
+    border: 2px solid #e65100;
+  }
+  .btn-scroll-summary:active { background: #fff3e0; }
+</style>
+</head>
+<body>
+<div id="app-wrapper">
+
+<div id="header">
+  <div class="header-top">
+    <div>
+      <div class="header-label">CARE UNIT</div>
+      <div class="header-title">📦 オムツ注文管理</div>
+    </div>
+    <div class="btn-group">
+      <button class="btn-auto" id="auto-btn" onclick="autoFill()" style="pointer-events:none;opacity:0.8;cursor:default">⚡ 自動入力中</button>
+      <span id="staff-label" style="font-size:11px;font-weight:800;color:#3a5a3a;background:rgba(255,255,255,0.3);padding:4px 8px;border-radius:6px;white-space:nowrap">👕 スタッフ</span>
+    </div>
+  </div>
+  <div class="header-sub">🗓 日曜注文 → 🚚 木曜納品（4日後）→ 翌木曜まで7日分</div>
+
+  <!-- フロア選択 -->
+  <div class="floor-tabs">
+    <button class="floor-tab active" onclick="switchFloor('2F', this)">🏢 2階</button>
+    <button class="floor-tab" onclick="switchFloor('3F', this)">🏢 3階</button>
+  </div>
+
+  <!-- カテゴリタブ -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+    <div style="font-size:13px;font-weight:700;color:#3a5a3a;letter-spacing:0.3px">▼ カテゴリを選んでください</div>
+    <div style="font-size:10px;font-weight:700;color:#3a5a3a">↑↑切り替えで一番上に戻ります↑↑</div>
+  </div>
+  <div class="cat-tabs">
+    <button class="tab tab-pad active" onclick="switchCat('pad', this)">パッド類<br><span style="font-size:10px;font-weight:600;opacity:0.8">表示中</span></button>
+    <button class="tab tab-tape" onclick="switchCat('tape', this)">テープ止め</button>
+    <button class="tab tab-pants" onclick="switchCat('pants', this)">リハパン</button>
+    <button class="tab admin-only" id="tab-room" onclick="switchCat('room', this)">居室管理</button>
+  </div>
+</div>
+
+
+<div id="floor-banner">2階の在庫を入力中</div>
+<div class="holiday-banner" id="holiday-banner">🏖 連休モード：14日分で計算中</div>
+<div id="mode-banner" style="display:none"></div>
+
+<!-- 1日使用量 保存エリア -->
+<div class="save-bar admin-only">
+  <div class="save-info">
+    <strong id="save-floor-label">2階</strong> の1日使用量<br>
+    <span id="save-date-label" style="font-size:10px;color:#aaa;">未保存</span>
+  </div>
+  <button class="btn-save" onclick="saveDailyUse()">💾 使用量を保存</button>
+</div>
+
+<button class="btn-scroll-summary" onclick="const el=document.getElementById('summary');const header=document.getElementById('header');const offset=el.getBoundingClientRect().top+window.scrollY-header.offsetHeight-8;window.scrollTo({top:offset,behavior:'smooth'})">📋 注文確定画面へ ↓</button>
+<div id="cards"></div>
+<div id="room-section"></div>
+
+
+<div id="summary">
+  <div class="summary-title">📋 今週の注文サマリー（全カテゴリ）</div>
+  <div id="summary-body"><div class="summary-empty">注文箱数を入力してください</div></div>
+  <div id="total-boxes" style="display:none">0</div>
+  <div id="total-pieces" style="display:none">0</div>
+  <div style="padding: 10px 0 4px;">
+    <button class="btn-confirm" onclick="confirmOrder()">✅ 注文確定・履歴に保存</button>
+  </div>
+  <div class="logic-box">
+    <div class="logic-title">📐 計算ロジック</div>
+    <div>【パッド類】</div>
+    <div>現在庫 ＝ 箱数×1箱枚数 ＋ 袋数×1袋枚数</div>
+    <div>推奨注文 ＝ ⌈（7日分 − 木曜到着時残庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
+    <div style="margin-top:6px">【テープ止め・リハパン】</div>
+    <div>推奨注文 ＝ ⌈（入浴日使用枚数 ＋ 1袋 − 現在庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
+    <div style="margin-top:6px">【木曜届く前の残り】</div>
+    <div>木曜届く前の残り ＝ 現在庫 − 1日使用量×4日 − 予備1袋</div>
+  </div>
+</div>
+
+<!-- 注文確定ボタン + 注文履歴 -->
+<div id="history-section" class="admin-only">
+  <div class="history-header" onclick="toggleHistory()">
+    <div class="history-header-title">📅 注文履歴（直近12週）</div>
+    <div class="history-toggle" id="history-toggle-icon">▼ 開く</div>
+  </div>
+  <div id="history-body"></div>
+</div>
+
+<!-- バックアップ -->
+<div style="padding: 8px 12px;">
+  <button id="mode-btn" class="btn-mode btn-mode-admin" onclick="toggleMode()" style="width:100%;padding:10px;border-radius:10px;font-size:13px;">⚙️ 管理者モードに切り替え</button>
+  <button id="holiday-btn" class="btn-holiday" onclick="toggleHoliday()">🏖 連休モード（14日分計算）をONにする</button>
+</div>
+
+<div id="backup-section" class="admin-only">
+  <div class="backup-title">🗂 データのバックアップ</div>
+  <div class="backup-desc">
+    1日使用量はこの端末のブラウザに保存されます。<br>
+    キャッシュクリアや機種変更の前に書き出しておきましょう。
+  </div>
+  <div class="backup-btns">
+    <button class="btn-export" onclick="exportData()">📤 書き出し（JSON）</button>
+    <label class="btn-import">
+      📥 読み込み（JSON）
+      <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+    </label>
+  </div>
+  <div id="import-status" style="display:none"></div>
+  <div style="border-top:1px solid #a0d4b0;margin:10px 0 8px"></div>
+  <div class="backup-title">🏠 居室管理データ</div>
+  <div class="backup-desc">スマホ↔PC間でデータを共有できます。</div>
+  <div class="backup-btns">
+    <button class="btn-export" onclick="exportRoomData()">📤 居室データ書き出し</button>
+    <label class="btn-import">
+      📥 居室データ読み込み
+      <input type="file" accept=".json" onchange="importRoomData(this)" style="display:none">
+    </label>
+  </div>
+</div>
+
+<div id="toast">💾 保存しました！</div>
+
+<script>
+const DAYS_DELIVERY = 4;
+const DAYS_WEEK_NORMAL = 7;
+const DAYS_WEEK_HOLIDAY = 14;
+let isHolidayMode = false;
+function getDaysWeek() { return isHolidayMode ? DAYS_WEEK_HOLIDAY : DAYS_WEEK_NORMAL; }
+
+const colorDot = {
+  "白小":"#f0f0f0","白大":"#e0e0e0","グレー":"#9e9e9e","緑":"#43a047",
+  "青":"#1e88e5","紫":"#8e24aa","濃い紫":"#4a148c","深緑":"#2e7d32",
+};
+
+const products = [
+  { id:1,  cat:"pad",   name:"尿取りパッド（2回）",   short:"白小",    color:"白小",   abs:"300ml",  perBox:144, perBag:48,  weeklyFixed:null },
+  { id:2,  cat:"pad",   name:"尿取りパッド（4回）",   short:"白大",    color:"白大",   abs:"600ml",  perBox:224, perBag:28,  weeklyFixed:null },
+  { id:4,  cat:"pad",   name:"長時間安心パッド",      short:"グレー",  color:"グレー", abs:"600ml",  perBox:144, perBag:36,  weeklyFixed:null },
+  { id:5,  cat:"pad",   name:"夜パッド ふつう",       short:"緑",      color:"緑",     abs:"750ml",  perBox:120, perBag:30,  weeklyFixed:null },
+  { id:6,  cat:"pad",   name:"夜パッド 多い",         short:"青",      color:"青",     abs:"900ml",  perBox:90,  perBag:30,  weeklyFixed:null },
+  { id:7,  cat:"pad",   name:"夜パッド 特多",     short:"特多",      color:"紫",     abs:"1200ml", perBox:80,  perBag:20,  weeklyFixed:null },
+  { id:8,  cat:"pad",   name:"夜パッド 10回",         short:"10回",  color:"濃い紫", abs:"1500ml", perBox:64,  perBag:16,  weeklyFixed:null },
+  { id:9,  cat:"pad",   name:"夜パッド 12回",         short:"12回",    color:"深緑",   abs:"1800ml", perBox:56,  perBag:14,  weeklyFixed:null },
+  { id:10, cat:"tape",  name:"テープ止め S",          short:"S", color:null,     abs:null,     perBox:66,  perBag:22,  weeklyFixed:0 },
+  { id:11, cat:"tape",  name:"テープ止め M",          short:"M", color:null,     abs:null,     perBox:80,  perBag:20,  weeklyFixed:0 },
+  { id:12, cat:"tape",  name:"テープ止め L",          short:"L", color:null,     abs:null,     perBox:80,  perBag:20,  weeklyFixed:0 },
+  { id:14, cat:"pants", name:"フィットパンツ M〜L",   short:"M〜L", color:null,     abs:null,     perBox:66,  perBag:22,  weeklyFixed:0 },
+  { id:15, cat:"pants", name:"フィットパンツ L〜LL",  short:"L〜LL", color:null,     abs:null,     perBox:60,  perBag:20,  weeklyFixed:0 },
+  // 吸水シート（計算なし・在庫と注文数のみ）
+  { id:16, cat:"pants",  name:"吸水シート",              short:"吸水シート", color:null, abs:null,     perBox:576, perBag:72,  weeklyFixed:null, special:true, bagPerBox:8 },
+];
+
+const FLOORS = ["2F", "3F"];
+let currentFloor = "2F";
+let currentCat = "pad";
+
+// state[floor][pid] = { stockBoxes, stockBags, dailyUse, orderQty }
+const state = {};
+FLOORS.forEach(f => {
+  state[f] = {};
+  products.forEach(p => {
+    state[f][p.id] = { stockBoxes:0, stockBags:0, dailyUse:0, orderQty:0, weeklyOverride:null };
+  });
+});
+
+// --- localStorage 保存・読込（1日使用量のみ、フロアごと） ---
+function saveKey(floor) { return "diaper_daily_" + floor; }
+
+function saveDateKey(floor) { return "diaper_saved_at_" + floor; }
+
+function saveDailyUse() {
+  const data = {};
+  products.forEach(p => { data[p.id] = state[currentFloor][p.id].dailyUse; });
+  localStorage.setItem(saveKey(currentFloor), JSON.stringify(data));
+  // 保存日時を記録
+  const now = new Date();
+  localStorage.setItem(saveDateKey(currentFloor), now.toISOString());
+  showToast("💾 " + floorLabel(currentFloor) + "の使用量を保存しました！");
+  updateSaveDateLabel();
+  products.forEach(p => updateDailyBadge(p.id));
+}
+
+function updateSaveDateLabel() {
+  const raw = localStorage.getItem(saveDateKey(currentFloor));
+  const el = document.getElementById("save-date-label");
+  if (!el) return;
+  if (!raw) { el.textContent = "未保存"; return; }
+  const d = new Date(raw);
+  const y = d.getFullYear();
+  const mo = ('0'+(d.getMonth()+1)).slice(-2);
+  const day = ('0'+d.getDate()).slice(-2);
+  el.textContent = "最終更新：" + y + "/" + mo + "/" + day;
+}
+
+function loadDailyUse(floor) {
+  try {
+    const raw = localStorage.getItem(saveKey(floor));
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    products.forEach(p => {
+      if (data[p.id] !== undefined) {
+        state[floor][p.id].dailyUse = data[p.id];
+      }
+    });
+  } catch(e) {}
+}
+
+function hasSavedData(floor) {
+  return !!localStorage.getItem(saveKey(floor));
+}
+
+function floorLabel(f) { return f === "2F" ? "2階" : "3階"; }
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.opacity = 1;
+  setTimeout(() => { t.style.opacity = 0; }, 2000);
+}
+
+// --- 計算 ---
+function totalStock(p) {
+  const s = state[currentFloor][p.id];
+  return s.stockBoxes * p.perBox + s.stockBags * p.perBag;
+}
+function weeklyNeed(p) {
+  if (p.weeklyFixed !== null) {
+    const override = state[currentFloor][p.id].weeklyOverride;
+    if (override !== null && override !== undefined) return override;
+    const custom = getWeeklyFixed(p.id);
+    if (custom !== null && custom > 0) return custom;
+    return p.weeklyFixed;
+  }
+  return state[currentFloor][p.id].dailyUse * getDaysWeek();
+}
+function calcOrder(p) {
+  const s = state[currentFloor][p.id];
+  if (p.special) {
+    const stock = totalStock(p);
+    return stock <= p.perBox ? 4 : 0;  // 在庫1箱以下なら推奨4箱
+  }
+  if (p.weeklyFixed === null && s.dailyUse === 0) return 0;
+  const atDel = p.weeklyFixed !== null
+    ? totalStock(p)  // テープ/パンツは到着時消費なし（週1回注文）
+    : totalStock(p) - s.dailyUse * DAYS_DELIVERY;
+  const needed = weeklyNeed(p) - atDel;
+  return needed <= 0 ? 0 : Math.ceil(needed / p.perBox) + 1; // 予備1箱追加
+}
+function calcAtDelivery(p) {
+  if (p.weeklyFixed !== null) return totalStock(p);
+  return Math.max(0, totalStock(p) - state[currentFloor][p.id].dailyUse * DAYS_DELIVERY);
+}
+function calcAfterWeek(p) {
+  const s = state[currentFloor][p.id];
+  return Math.max(0, calcAtDelivery(p) + s.orderQty * p.perBox - weeklyNeed(p));
+}
+
+// --- カード構築 ---
+function buildCards() {
+  const container = document.getElementById("cards");
+  container.innerHTML = "";
+  products.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "card" + (p.cat === currentCat ? " visible" : "");
+    card.id = "card-" + p.id;
+
+    // 吸水シートは箱+袋在庫・注文・納品後在庫つきカード
+    if (p.special) {
+      card.innerHTML = `
+      <div class="card-header">
+        <div style="flex:1"><div class="card-name">${p.short || p.name}</div></div>
+      </div>
+      <div class="card-badges">
+        <span class="badge-box">📦 1箱 = ${p.bagPerBox}袋（${p.perBox}枚）</span>
+        <span class="badge-bag">🛍 1袋 = ${p.perBag}枚</span>
+      </div>
+      <div class="card-body">
+        <div style="font-size:11px;font-weight:700;color:#555;margin-bottom:6px">現在の在庫</div>
+        <div class="stock-row">
+          <div class="stock-col">
+            <div class="col-label label-box">📦 箱数</div>
+            <input type="number" inputmode="numeric" min="0" class="bg-box"
+              id="sb-${p.id}" value="" placeholder="0"
+              oninput="onInput(${p.id},'stockBoxes',this.value)">
+            <div class="sub-pieces sub-box" id="sbp-${p.id}" style="display:none"></div>
+          </div>
+          <div class="stock-sep">+</div>
+          <div class="stock-col">
+            <div class="col-label label-bag">🛍 袋数</div>
+            <input type="number" inputmode="numeric" min="0" class="bg-bag"
+              id="sg-${p.id}" value="" placeholder="0"
+              oninput="onInput(${p.id},'stockBags',this.value)">
+            <div class="sub-pieces sub-bag" id="sgp-${p.id}" style="display:none"></div>
+          </div>
+          <div class="stock-sep">=</div>
+          <div class="stock-col">
+            <div class="col-label label-total">合計</div>
+            <div class="total-box" id="tot-${p.id}">0<span class="total-unit">枚</span></div>
+          </div>
+        </div>
+        <div class="bottom-row">
+          <div class="bottom-col" id="after-col-${p.id}" style="flex:0.7">
+            <div class="col-label label-after" style="font-size:9px;color:#bbb">木曜届く前の残り</div>
+            <div class="after-box" id="af-${p.id}">
+              <div class="after-val" id="afv-${p.id}">0<span class="total-unit">枚</span></div>
+              <div class="after-del" id="afd-${p.id}" style="display:none"></div>
+            </div>
+          </div>
+          <div class="bottom-col" style="flex:1.3">
+            <div class="suggest-label" id="ol-${p.id}">注文箱数</div>
+            <input type="number" inputmode="numeric" min="0"
+              id="oq-${p.id}" value="" placeholder="0"
+              style="font-size:26px;padding:12px 4px;border:2.5px solid #e53935;border-radius:12px;background:#fff5f5;font-weight:800;color:#c0392b;width:100%;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none;"
+              oninput="onInput(${p.id},'orderQty',this.value)">
+            <div class="sub-pieces sub-order" id="oqp-${p.id}" style="display:none"></div>
+          </div>
+        </div>
+      </div>`;
+      container.appendChild(card);
+      return;
+    }
+
+    const dotHtml = p.color
+      ? `<div class="color-dot" style="background:${colorDot[p.color]||'#ccc'}"></div>` : "";
+    const subHtml = p.abs
+      ? `<div class="card-sub">${p.name}　${p.abs}</div>` : "";
+
+    card.innerHTML = `
+      <div class="card-header">
+        ${dotHtml}
+        <div style="flex:1">
+          <div class="card-name">${p.short || p.name}</div>
+          ${subHtml}
+        </div>
+        <div class="badge-low" id="low-${p.id}" style="display:none">⚠ 不足注意</div>
+      </div>
+      <div class="card-badges">
+        <span class="badge-box">📦 1箱 = ${Math.round(p.perBox/p.perBag)}袋（${p.perBox}枚）</span>
+        <span class="badge-bag">🛍 1袋 = ${p.perBag}枚</span>
+        <span class="badge-saved" id="bsaved-${p.id}" style="display:none">✓ 使用量保存済</span>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:11px;font-weight:700;color:#555">現在の在庫</div>
+          <div id="use4-${p.id}" style="font-size:10px;color:#888;display:none;text-align:right;line-height:1.9">
+            <span style="color:#aaa;font-size:9px">※1枚でも使えば1袋カウント</span><br>
+            日〜水消費：<span id="use4v-${p.id}" style="font-weight:700;color:#c07000"></span><br>
+            7日消費：<span id="use7v-${p.id}" style="font-weight:700;color:#888"></span>
+          </div>
+        </div>
+        <div class="stock-row">
+          <div class="stock-col">
+            <div class="col-label label-box">📦 箱数</div>
+            <input type="number" inputmode="numeric" min="0" class="bg-box"
+              id="sb-${p.id}" value="" placeholder="0" oninput="onInput(${p.id},'stockBoxes',this.value)">
+            <div class="sub-pieces sub-box" id="sbp-${p.id}" style="display:none"></div>
+          </div>
+          <div class="stock-sep">+</div>
+          <div class="stock-col">
+            <div class="col-label label-bag">🛍 袋数</div>
+            <input type="number" inputmode="numeric" min="0" class="bg-bag"
+              id="sg-${p.id}" value="" placeholder="0" oninput="onInput(${p.id},'stockBags',this.value)">
+            <div class="sub-pieces sub-bag" id="sgp-${p.id}" style="display:none"></div>
+          </div>
+          <div class="stock-sep">=</div>
+          <div class="stock-col">
+            <div class="col-label label-total">合計</div>
+            <div class="total-box" id="tot-${p.id}">0<span class="total-unit">枚</span></div>
+          </div>
+        </div>
+        <div class="bottom-row">
+          <div class="bottom-col admin-only" id="daily-col-${p.id}" ${p.weeklyFixed !== null ? 'style="display:none"' : ''} data-weekly="${p.weeklyFixed !== null}">
+            <div class="daily-label-row">
+              <div class="daily-saved-dot" id="dot-${p.id}"></div>
+              <div class="col-label label-daily" style="margin-bottom:0">1日使用量(枚)</div>
+            </div>
+            <input type="number" inputmode="numeric" min="0" class="bg-daily"
+              id="du-${p.id}" value="" placeholder="0" oninput="onInput(${p.id},'dailyUse',this.value)">
+          </div>
+          <div class="bottom-col" id="weekly-col-${p.id}" ${p.weeklyFixed === null ? 'style="display:none"' : ''}>
+            <div class="col-label label-daily">週必要枚数</div>
+            <div id="weekly-disp-${p.id}" style="border:2px solid #a0d4b0;border-radius:10px;padding:10px 4px;text-align:center;background:#f0fdf6;font-size:16px;font-weight:800;color:#1a4a3a">
+              ${p.weeklyFixed}<span style="font-size:10px;font-weight:400">枚</span>
+            </div>
+            <input type="number" inputmode="numeric" min="0"
+              id="weekly-input-${p.id}"
+              style="display:none;width:100%;padding:8px 4px;border:2px solid #f57c00;border-radius:10px;font-size:16px;text-align:center;font-weight:800;font-family:inherit;outline:none;background:#fff8f0;margin-top:4px;box-sizing:border-box"
+              placeholder="${p.weeklyFixed}"
+              oninput="updateWeeklyFixed(${p.id}, this.value)">
+            <button onclick="resetWeeklyFixed(${p.id})" style="display:none;width:100%;margin-top:4px;padding:4px;border:none;border-radius:6px;background:#eee;color:#888;font-size:11px;cursor:pointer;font-family:inherit" id="weekly-reset-${p.id}">0にリセット</button>
+          </div>
+          <div class="bottom-col" id="after-col-${p.id}" style="flex:0.7">
+            <div class="col-label label-after" style="font-size:9px;color:#bbb">木曜届く前の残り</div>
+            <div class="after-box" id="af-${p.id}">
+              <div class="after-val" id="afv-${p.id}">0<span class="total-unit">枚</span></div>
+              <div class="after-del" id="afd-${p.id}" style="display:none"></div>
+            </div>
+          </div>
+          <div class="bottom-col" style="flex:1.3">
+            <div class="suggest-label" id="ol-${p.id}">注文箱数</div>
+            <input type="number" inputmode="numeric" min="0"
+              id="oq-${p.id}" value="" placeholder="0"
+              style="font-size:26px;padding:12px 4px;border:2.5px solid #e53935;border-radius:12px;background:#fff5f5;font-weight:800;color:#c0392b;width:100%;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none;"
+              oninput="onInput(${p.id},'orderQty',this.value)">
+            <div class="sub-pieces sub-order" id="oqp-${p.id}" style="display:none"></div>
+            <div class="prev-badge" id="prev-${p.id}" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function updateDailyBadge(pid) {
+  const saved = JSON.parse(localStorage.getItem(saveKey(currentFloor)) || "{}");
+  const hasSaved = saved[pid] !== undefined && saved[pid] > 0;
+  const dot = document.getElementById("dot-"+pid);
+  const badge = document.getElementById("bsaved-"+pid);
+  if (dot) dot.style.display = hasSaved ? "block" : "none";
+  if (badge) badge.style.display = hasSaved ? "" : "none";
+}
+
+function valOrEmpty(n) { return n === 0 ? "" : n; }
+
+function syncInputsToState() {
+  products.forEach(p => {
+    const s = state[currentFloor][p.id];
+    const sb = document.getElementById("sb-"+p.id);
+    const sg = document.getElementById("sg-"+p.id);
+    const du = document.getElementById("du-"+p.id);
+    const oq = document.getElementById("oq-"+p.id);
+    if (sb) sb.value = valOrEmpty(s.stockBoxes);
+    if (sg) sg.value = valOrEmpty(s.stockBags);
+    if (du) du.value = valOrEmpty(s.dailyUse);
+    if (oq) oq.value = valOrEmpty(s.orderQty);
+    updateCard(p.id);
+    updateDailyBadge(p.id);
+  });
+}
+
+function updateCard(pid) {
+  const p = products.find(x => x.id === pid);
+  const s = state[currentFloor][pid];
+  const stock = totalStock(p);
+  const suggested = calcOrder(p);
+  const atDel = calcAtDelivery(p);
+  const afterWeek = calcAfterWeek(p);
+  const hasInput = totalStock(p) > 0 || s.stockBoxes > 0 || s.stockBags > 0;
+  const isLow = p.special ? false : hasInput && (p.weeklyFixed !== null ? afterWeek < 0 : (s.dailyUse > 0 && afterWeek < s.dailyUse * 2));
+  const isMismatch = s.orderQty > 0 && s.orderQty !== suggested && suggested > 0;
+
+  const totEl = document.getElementById("tot-"+pid);
+  if (totEl) {
+    totEl.innerHTML = stock + '<span class="total-unit">枚</span>';
+    totEl.className = "total-box" + (stock > 0 ? " has-stock" : "");
+  }
+
+  // 4日分消費量（パッドのみ、1日使用量がある場合）
+  const use4El = document.getElementById("use4-"+pid);
+  const use4vEl = document.getElementById("use4v-"+pid);
+  if (use4El && use4vEl) {
+    if (p.weeklyFixed === null && s.dailyUse > 0) {
+      const use4pieces = s.dailyUse * DAYS_DELIVERY;
+      // 箱単位（切り上げ）と袋単位の余り
+      const boxes4 = Math.ceil(use4pieces / p.perBox);
+      const remainAfterBoxes = use4pieces % p.perBox;
+      const bags4 = remainAfterBoxes > 0 ? Math.ceil(remainAfterBoxes / p.perBag) : 0;
+      let txt = "";
+      if (boxes4 > 0 && bags4 > 0) txt = boxes4 + "箱" + bags4 + "袋";
+      else if (boxes4 > 0) txt = boxes4 + "箱";
+      else txt = bags4 + "袋";
+      use4vEl.textContent = txt;
+      // 7日消費
+      const use7pieces = s.dailyUse * getDaysWeek();
+      const boxes7 = Math.ceil(use7pieces / p.perBox);
+      const rem7 = use7pieces % p.perBox;
+      const bags7 = rem7 > 0 ? Math.ceil(rem7 / p.perBag) : 0;
+      let txt7 = "";
+      if (boxes7 > 0 && bags7 > 0) txt7 = boxes7 + "箱" + bags7 + "袋";
+      else if (boxes7 > 0) txt7 = boxes7 + "箱";
+      else txt7 = bags7 + "袋";
+      const use7vEl = document.getElementById("use7v-"+pid);
+      if (use7vEl) use7vEl.textContent = txt7;
+      use4El.style.display = "";
+    } else {
+      use4El.style.display = "none";
+    }
+  }
+
+  const sbpEl = document.getElementById("sbp-"+pid);
+  if (sbpEl) {
+    if (s.stockBoxes > 0) { sbpEl.style.display=""; sbpEl.textContent="= "+(s.stockBoxes*p.perBox)+"枚"; }
+    else sbpEl.style.display="none";
+  }
+
+  const sgpEl = document.getElementById("sgp-"+pid);
+  if (sgpEl) {
+    if (s.stockBags > 0) { sgpEl.style.display=""; sgpEl.textContent="= "+(s.stockBags*p.perBag)+"枚"; }
+    else sgpEl.style.display="none";
+  }
+
+  const olEl = document.getElementById("ol-"+pid);
+  if (olEl) {
+    if (isMismatch) olEl.style.color="#b07800"; else olEl.style.color="#1a4a3a";
+    olEl.innerHTML = "注文箱数" + (suggested > 0 ? `<span class="suggest-num">（推奨${suggested}）</span>` : "");
+  }
+
+  const oqEl = document.getElementById("oq-"+pid);
+  if (oqEl) oqEl.className = isMismatch ? "bg-warn" : "";
+
+  const oqpEl = document.getElementById("oqp-"+pid);
+  if (oqpEl) {
+    if (s.orderQty > 0) { oqpEl.style.display=""; oqpEl.textContent="= "+(s.orderQty*p.perBox)+"枚"; }
+    else oqpEl.style.display="none";
+  }
+
+  const afEl = document.getElementById("af-"+pid);
+  const afvEl = document.getElementById("afv-"+pid);
+  const afdEl = document.getElementById("afd-"+pid);
+  // 木曜届く前の残り = 現在庫 - 4日消費 - 1袋（余裕分）
+  const nextSunRem = Math.max(0, totalStock(p) - s.dailyUse * DAYS_DELIVERY - p.perBag);
+  const thurLow = hasInput && nextSunRem === 0 && s.dailyUse > 0;
+  if (afEl) afEl.className = "after-box" + (thurLow ? " low" : "");
+  if (afvEl) {
+    afvEl.className = "after-val" + (thurLow ? " low" : "");
+    const boxes = Math.floor(nextSunRem / p.perBox);
+    const remAfterBoxes = nextSunRem % p.perBox;
+    const bags = Math.floor(remAfterBoxes / p.perBag);
+    let stockDisp = "";
+    if (boxes > 0 && bags > 0) stockDisp = boxes + "箱" + bags + "袋";
+    else if (boxes > 0) stockDisp = boxes + "箱";
+    else if (bags > 0) stockDisp = bags + "袋";
+    else stockDisp = "0袋";
+    afvEl.innerHTML = stockDisp + '<div style="font-size:10px;font-weight:400;color:#888;margin-top:2px">' + nextSunRem + '枚</div>';
+  }
+  if (afdEl) { afdEl.style.display="none"; }
+
+  const lowEl = document.getElementById("low-"+pid);
+  if (lowEl) lowEl.style.display = isLow ? "" : "none";
+
+  const cardEl = document.getElementById("card-"+pid);
+  if (cardEl) cardEl.className = "card" + (p.cat === currentCat ? " visible" : "") + (isLow ? " low" : "");
+
+  updateSummary();
+}
+
+function updateSummary() {
+  const cats = ["pad","tape","pants"];
+  const group1 = ["pad"];
+  const group2 = ["tape","pants"];
+  let totalBoxes = 0, totalPieces = 0, html = "";
+  let group1Total = 0, group2Total = 0;
+
+  cats.forEach(cat => {
+    const items = products.filter(p => p.cat === cat && state[currentFloor][p.id].orderQty > 0);
+    if (!items.length) return;
+    const label = cat === "pad" ? "パッド類" : cat === "tape" ? "テープ止め" : "リハパン";
+    html += `<div class="summary-cat-label">${label}</div><div class="summary-items">`;
+    items.forEach(p => {
+      const qty = state[currentFloor][p.id].orderQty;
+      totalBoxes += qty; totalPieces += qty * p.perBox;
+      if (group1.includes(cat)) group1Total += qty;
+      if (group2.includes(cat)) group2Total += qty;
+      const dot = p.color && colorDot[p.color]
+        ? `<span style="width:10px;height:10px;border-radius:50%;background:${colorDot[p.color]};border:1px solid rgba(0,0,0,0.15);display:inline-block;margin-right:4px;flex-shrink:0;vertical-align:middle"></span>`
+        : '';
+      html += `<div class="summary-item">
+        <div class="summary-item-name">${dot}${p.short || p.name}</div>
+        <div class="summary-item-qty">${qty}箱</div>
+      </div>`;
+    });
+    html += "</div>";
+  });
+
+  // 2グループ合計
+  if (group1Total > 0 || group2Total > 0) {
+    html += `<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap">`;
+    if (group1Total > 0) html += `<div style="background:rgba(255,255,255,0.7);border:2px solid #e65100;border-radius:10px;padding:8px 20px;text-align:center"><div style="font-size:16px;font-weight:800;color:#1a1a1a">パッド計</div><div style="font-size:26px;font-weight:800;color:#e65100">${group1Total}箱</div></div>`;
+    if (group2Total > 0) html += `<div style="background:rgba(255,255,255,0.7);border:2px solid #e65100;border-radius:10px;padding:8px 20px;text-align:center"><div style="font-size:16px;font-weight:800;color:#1a1a1a">テープ・リハパン計</div><div style="font-size:26px;font-weight:800;color:#e65100">${group2Total}箱</div></div>`;
+    html += `</div>`;
+  }
+
+  document.getElementById("summary-body").innerHTML =
+    html || '<div class="summary-empty">注文箱数を入力してください</div>';
+  document.getElementById("total-boxes").textContent = totalBoxes + " 箱";
+  document.getElementById("total-pieces").textContent = totalPieces + " 枚";
+}
+
+function onInput(pid, field, val) {
+  state[currentFloor][pid][field] = Math.max(0, parseInt(val) || 0);
+  updateCard(pid);
+}
+
+function switchFloor(floor, btn) {
+  currentFloor = floor;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.querySelectorAll(".floor-tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("floor-banner").textContent = floorLabel(floor) + "の在庫を入力中";
+  document.getElementById("save-floor-label").textContent = floorLabel(floor);
+  syncInputsToState();
+  updateSaveDateLabel();
+  products.forEach(p => updatePrevBadge(p.id));
+  renderHistory();
+  updateWeeklyDisplay();
+  if (currentCat === 'room') buildRoomSection();
+}
+
+function switchCat(cat, btn) {
+  currentCat = cat;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.querySelectorAll(".tab").forEach(t => {
+    t.classList.remove("active");
+    const span = t.querySelector("span");
+    if (span) span.remove();
+  });
+  btn.classList.add("active");
+  // 表示中ラベルを追加
+  const label = document.createElement("span");
+  label.style.cssText = "font-size:9px;font-weight:600;opacity:0.8;display:block";
+  label.textContent = "表示中";
+  btn.appendChild(label);
+
+  const isRoom = cat === 'room';
+  // カードエリアと居室エリアの表示切替
+  document.getElementById('cards').style.display = isRoom ? 'none' : 'block';
+  if (!isRoom) { updateWeeklyDisplay(); if(isAdminMode) showWeeklyInputs(true); }
+  document.querySelector('.save-bar').style.display = (!isRoom && isAdminMode) ? 'flex' : 'none';
+  document.querySelector('[onclick="confirmOrder()"]').parentElement.style.display = isRoom ? 'none' : 'block';
+  document.getElementById('room-section').style.display = isRoom ? 'block' : 'none';
+
+  if (isRoom) {
+    buildRoomSection();
+    return;
+  }
+
+  products.forEach(p => {
+    const card = document.getElementById("card-"+p.id);
+    if (card) {
+      const s2 = state[currentFloor][p.id];
+      const isLow = p.weeklyFixed !== null ? calcAfterWeek(p) < 0 : (s2.dailyUse > 0 && calcAfterWeek(p) < s2.dailyUse * 2);
+      card.className = "card" + (p.cat === cat ? " visible" : "") + (isLow ? " low" : "");
+    }
+  });
+}
+
+function autoFill() {
+  products.forEach(p => {
+    state[currentFloor][p.id].orderQty = calcOrder(p);
+    const el = document.getElementById("oq-"+p.id);
+    if (el) el.value = valOrEmpty(state[currentFloor][p.id].orderQty);
+    updateCard(p.id);
+  });
+}
+
+function resetStock() {
+  if (!confirm(floorLabel(currentFloor) + "の在庫・注文数をリセットします。\n（1日使用量は保持されます）")) return;
+  products.forEach(p => {
+    const s = state[currentFloor][p.id];
+    const du = s.dailyUse; // 使用量は保持
+    state[currentFloor][p.id] = { stockBoxes:0, stockBags:0, dailyUse:du, orderQty:0 };
+    ["sb","sg","oq"].forEach(prefix => {
+      const el = document.getElementById(prefix+"-"+p.id);
+      if (el) el.value = 0;
+    });
+    updateCard(p.id);
+  });
+}
+
+
+
+// --- 注文履歴 ---
+const HISTORY_KEY = "diaper_history";
+const MAX_HISTORY = 12;
+
+function historyKey() { return HISTORY_KEY; }
+
+function loadHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(historyKey()) || "[]");
+  } catch(e) { return []; }
+}
+
+function saveHistory(hist) {
+  localStorage.setItem(historyKey(), JSON.stringify(hist));
+}
+
+function getLastOrder(floor, pid) {
+  const hist = loadHistory();
+  // 最新エントリを探す
+  for (let i = hist.length - 1; i >= 0; i--) {
+    const entry = hist[i];
+    if (entry.floor === floor && entry.orders[pid] !== undefined) {
+      return entry.orders[pid];
+    }
+  }
+  return null;
+}
+
+function confirmOrder() {
+  const anyOrder = products.some(p => state[currentFloor][p.id].orderQty > 0);
+  if (!anyOrder) {
+    alert("注文箱数が入力されていません。");
+    return;
+  }
+  if (!confirm(floorLabel(currentFloor) + "の注文を確定して履歴に保存しますか？")) return;
+  const scrollY = window.scrollY; // 現在位置を記憶
+
+  const hist = loadHistory();
+  const now = new Date();
+  const dateStr = now.getFullYear() + "/" +
+    ('0'+(now.getMonth()+1)).slice(-2) + "/" +
+    ('0'+now.getDate()).slice(-2);
+
+  const orders = {};
+  products.forEach(p => {
+    orders[p.id] = state[currentFloor][p.id].orderQty;
+  });
+
+  hist.push({ date: dateStr, floor: currentFloor, orders });
+
+  // フロアごとに12週分を保持
+  const floorEntries = hist.filter(h => h.floor === currentFloor);
+  const otherEntries = hist.filter(h => h.floor !== currentFloor);
+  const trimmed = floorEntries.slice(-MAX_HISTORY);
+  saveHistory([...otherEntries, ...trimmed].sort((a,b) => a.date < b.date ? -1 : 1));
+
+  showToast("✅ " + floorLabel(currentFloor) + "の注文を保存しました！");
+  renderHistory();
+  products.forEach(p => updatePrevBadge(p.id));
+  setTimeout(() => window.scrollTo({ top: scrollY, behavior: "instant" }), 50);
+}
+
+function updatePrevBadge(pid) {
+  const el = document.getElementById("prev-"+pid);
+  if (!el) return;
+  const last = getLastOrder(currentFloor, pid);
+  if (last !== null && last > 0) {
+    el.innerHTML = "前回：<span>" + last + "箱</span>";
+    el.style.display = "";
+  } else {
+    el.style.display = "none";
+  }
+}
+
+function renderHistory() {
+  const body = document.getElementById("history-body");
+  if (!body) return;
+  const hist = loadHistory().filter(h => h.floor === currentFloor).reverse();
+  if (!hist.length) {
+    body.innerHTML = '<div class="history-empty">まだ履歴がありません</div>';
+    return;
+  }
+  let html = "";
+  hist.forEach(entry => {
+    const items = products
+      .filter(p => entry.orders[p.id] > 0)
+      .map(p => `<div class="history-item">${p.short || p.name} ${entry.orders[p.id]}箱</div>`)
+      .join("");
+    html += `<div class="history-entry">
+      <div class="history-date">${entry.date}</div>
+      <div class="history-items">${items || '<span style="color:#aaa;font-size:11px">注文なし</span>'}</div>
+    </div>`;
+  });
+  body.innerHTML = html;
+}
+
+function toggleHistory() {
+  const body = document.getElementById("history-body");
+  const icon = document.getElementById("history-toggle-icon");
+  if (body.style.display === "none" || body.style.display === "") {
+    body.style.display = "block";
+    icon.textContent = "▲ 閉じる";
+    renderHistory();
+  } else {
+    body.style.display = "none";
+    icon.textContent = "▼ 開く";
+  }
+}
+
+
+// --- 居室データ ---
+const ROOMS = {
+  '2F': [201,202,203,205,206,207,208,210,211,212,213,215,216,217,218],
+  '3F': [301,302,303,305,306,307,308,310,311,312,313,315,316],
+};
+// 4と9のつく部屋を除外
+Object.keys(ROOMS).forEach(f => {
+  ROOMS[f] = ROOMS[f].filter(n => {
+    const s = String(n);
+    return !s.includes('4') && !s.includes('9');
+  });
+});
+
+const ROOM_KEY = 'diaper_rooms';
+
+function loadRoomData() {
+  try { return JSON.parse(localStorage.getItem(ROOM_KEY) || '{}'); }
+  catch(e) { return {}; }
+}
+function saveRoomData(data) {
+  localStorage.setItem(ROOM_KEY, JSON.stringify(data));
+}
+
+function getRoomState(floor, roomNo) {
+  const data = loadRoomData();
+  return data[floor + '_' + roomNo] || { products: {} };
+}
+function setRoomState(floor, roomNo, state) {
+  const data = loadRoomData();
+  data[floor + '_' + roomNo] = state;
+  saveRoomData(data);
+}
+
+// 全居室の銘柄別1日使用量を集計してstateに反映
+function reflectRoomToDaily() {
+  const totals = {};
+  products.forEach(p => { totals[p.id] = 0; });
+
+  const rooms = ROOMS[currentFloor] || [];
+  rooms.forEach(roomNo => {
+    const rs = getRoomState(currentFloor, roomNo);
+    products.forEach(p => {
+      const val = rs.products[p.id];
+      if (val && val.qty > 0) {
+        totals[p.id] += (parseInt(val.qty) || 0);
+      }
+    });
+  });
+
+  // パッド：1日使用量に反映
+  // テープ・パンツ：集計数×3＋1袋 を週必要枚数として反映
+  products.forEach(p => {
+    if (p.weeklyFixed === null) {
+      state[currentFloor][p.id].dailyUse = totals[p.id];
+    } else {
+      // 集計数×3＋1袋
+      const weekly = totals[p.id] * 3 + p.perBag;
+      state[currentFloor][p.id].weeklyOverride = weekly > 0 ? weekly : null;
+    }
+  });
+  syncInputsToState();
+  updateWeeklyDisplay();
+  products.filter(p => p.weeklyFixed !== null).forEach(p => updateCard(p.id));
+  showToast('✅ 居室合計を使用量に反映しました！');
+}
+
+// 週必要枚数の表示を更新
+function updateWeeklyDisplay() {
+  products.filter(p => p.weeklyFixed !== null).forEach(p => {
+    const override = state[currentFloor][p.id].weeklyOverride;
+    const custom = getWeeklyFixed(p.id);
+    let val, isOverride = false;
+    if (override !== null && override !== undefined) {
+      val = override; isOverride = true;
+    } else if (custom !== null && custom > 0) {
+      val = custom;
+    } else {
+      val = p.weeklyFixed;
+    }
+    const disp = document.getElementById('weekly-disp-' + p.id);
+    if (disp) {
+      disp.style.borderColor = isOverride ? '#f57c00' : '#a0d4b0';
+      disp.style.background = isOverride ? '#fff8f0' : '#f0fdf6';
+      disp.style.color = isOverride ? '#c05000' : '#1a4a3a';
+      const label = isOverride ? '<div style="font-size:9px;margin-top:2px">居室集計より</div>' : '';
+      disp.innerHTML = `${val}<span style="font-size:10px;font-weight:400">枚</span>${label}`;
+    }
+    const input = document.getElementById('weekly-input-' + p.id);
+    if (input && document.activeElement !== input) {
+      input.placeholder = `空欄=デフォルト(${p.weeklyFixed})`;
+    }
+  });
+}
+
+// 居室管理画面を描画
+function buildRoomSection() {
+  const sec = document.getElementById('room-section');
+  if (!sec) return;
+  const rooms = ROOMS[currentFloor] || [];
+
+  let html = `<div class="room-controls">
+    <button class="btn-room-reflect" onclick="reflectRoomToDaily()">📊 集計して1日使用量に反映</button>
+  </div>
+  <div class="room-reflect-info">
+    各居室の使用枚数を登録→「反映」ボタンで1日使用量を自動集計します。
+  </div>`;
+
+  rooms.forEach(roomNo => {
+    const rs = getRoomState(currentFloor, roomNo);
+    // 使用中の銘柄サマリー
+    const usedItems = products.filter(p => rs.products[p.id] && rs.products[p.id].checked && rs.products[p.id].qty > 0);
+    const summaryText = usedItems.length > 0
+      ? usedItems.map(p => p.short + ' ' + rs.products[p.id].qty + '枚').join('・')
+      : '未登録';
+
+    let productRows = '';
+    const catLabels = { pad: 'パッド類', tape: 'テープ止め', pants: 'フィットパンツ' };
+    let lastCat = null;
+    products.filter(p => !p.special).forEach(p => {
+      if (p.cat !== lastCat) {
+        productRows += `<div style="font-size:15px;font-weight:700;color:#2a5a2a;background:#f0f7f0;padding:6px 8px;margin:6px -14px 4px">${catLabels[p.cat]}</div>`;
+        lastCat = p.cat;
+      }
+      const pd = rs.products[p.id] || { checked: false, qty: 0 };
+      const qty = pd.qty || 0;
+      const dotHtml = p.color
+        ? `<span class="room-product-dot" style="background:${colorDot[p.color]||'#ccc'}"></span>`
+        : '<span style="width:14px;flex-shrink:0"></span>';
+      productRows += `
+        <div class="room-counter-row" id="crow-${roomNo}-${p.id}">
+          ${dotHtml}
+          <span class="room-product-label">${p.short}</span>
+          <button class="counter-btn counter-btn-minus" onclick="counterChange(${roomNo},${p.id},-1)">－</button>
+          <span class="counter-val${qty === 0 ? ' zero' : ''}" id="rq-${roomNo}-${p.id}">${qty}</span>
+          <button class="counter-btn counter-btn-plus" onclick="counterChange(${roomNo},${p.id},1)">＋</button>
+          <button class="counter-btn counter-btn-zero" id="czero-${roomNo}-${p.id}" onclick="counterChange(${roomNo},${p.id},-(parseInt(document.getElementById('rq-${roomNo}-${p.id}').textContent)||0))" style="${qty===0?'opacity:0.2;pointer-events:none':''}">✕</button>
+          <span class="counter-unit">枚/日</span>
+        </div>`;
+    });
+
+    html += `
+    <div class="room-card" id="room-card-${roomNo}">
+      <div class="room-card-header" onclick="toggleRoom(${roomNo})">
+        <div>
+          <div class="room-no">${roomNo}号室</div>
+          <div class="room-summary" id="rsummary-${roomNo}">${summaryText}</div>
+        </div>
+        <div class="room-toggle" id="rtoggle-${roomNo}">▼</div>
+      </div>
+      <div class="room-body" id="rbody-${roomNo}">
+        ${productRows}
+      </div>
+    </div>`;
+  });
+
+  sec.innerHTML = html;
+}
+
+function toggleRoom(roomNo) {
+  const body = document.getElementById('rbody-' + roomNo);
+  const toggle = document.getElementById('rtoggle-' + roomNo);
+  if (!body) return;
+  const isOpen = body.style.display === 'block';
+  body.style.display = isOpen ? 'none' : 'block';
+  toggle.textContent = isOpen ? '▼' : '▲';
+}
+
+
+function counterChange(roomNo, pid, delta) {
+  const el = document.getElementById('rq-' + roomNo + '-' + pid);
+  if (!el) return;
+  const current = parseInt(el.textContent) || 0;
+  const newVal = Math.max(0, current + delta);
+  el.textContent = newVal;
+  el.className = 'counter-val' + (newVal === 0 ? ' zero' : '');
+
+  // 行背景
+  const row = document.getElementById('crow-' + roomNo + '-' + pid);
+  if (row) {
+    row.style.background = newVal > 0 ? '#f0fdf6' : '';
+    const zeroBtn = row.querySelector('.counter-btn-zero');
+    if (zeroBtn) {
+      zeroBtn.style.opacity = newVal > 0 ? '1' : '0.2';
+      zeroBtn.style.pointerEvents = newVal > 0 ? '' : 'none';
+    }
+  }
+
+  // 保存
+  const rs = getRoomState(currentFloor, roomNo);
+  if (!rs.products) rs.products = {};
+  rs.products[pid] = { checked: newVal > 0, qty: newVal };
+  setRoomState(currentFloor, roomNo, rs);
+
+  // サマリー更新
+  const usedItems = products.filter(p => rs.products[p.id] && rs.products[p.id].qty > 0);
+  const summaryEl = document.getElementById('rsummary-' + roomNo);
+  if (summaryEl) {
+    summaryEl.textContent = usedItems.length > 0
+      ? usedItems.map(p => p.short + ' ' + rs.products[p.id].qty + '枚').join('・')
+      : '未登録';
+  }
+}
+
+function updateRoomProduct(roomNo, pid) {
+  const inp = document.getElementById('rq-' + roomNo + '-' + pid);
+  if (!inp) return;
+
+  const qty = parseInt(inp.value) || 0;
+
+  // 入力値に応じて行の背景色を変更
+  const row = inp.closest('.room-product-row');
+  if (row) row.style.background = qty > 0 ? '#f0fdf6' : '#fff';
+
+  // 保存
+  const rs = getRoomState(currentFloor, roomNo);
+  if (!rs.products) rs.products = {};
+  rs.products[pid] = { checked: qty > 0, qty };
+  setRoomState(currentFloor, roomNo, rs);
+
+  // サマリー更新
+  const usedItems = products.filter(p =>
+    rs.products[p.id] && rs.products[p.id].qty > 0
+  );
+  const summaryEl = document.getElementById('rsummary-' + roomNo);
+  if (summaryEl) {
+    summaryEl.textContent = usedItems.length > 0
+      ? usedItems.map(p => p.short + ' ' + rs.products[p.id].qty + '枚').join('・')
+      : '未登録';
+  }
+}
+
+
+
+// --- 連休モード ---
+function toggleHoliday() {
+  isHolidayMode = !isHolidayMode;
+  const btn = document.getElementById('holiday-btn');
+  const banner = document.getElementById('holiday-banner');
+  const subHeader = document.querySelector('.header-sub');
+  if (isHolidayMode) {
+    btn.textContent = '🏖 連休モード ON（タップでOFFに戻す）';
+    btn.className = 'btn-holiday active';
+    banner.style.display = 'block';
+    if (subHeader) subHeader.textContent = '🏖 連休モード：日曜注文 → 木曜納品 → 翌々日曜まで14日分';
+  } else {
+    btn.textContent = '🏖 連休モード（14日分計算）をONにする';
+    btn.className = 'btn-holiday';
+    banner.style.display = 'none';
+    if (subHeader) subHeader.textContent = '🗓 日曜注文 → 🚚 木曜納品（4日後）→ 翌木曜まで7日分';
+  }
+  // 全カード再計算
+  products.forEach(p => updateCard(p.id));
+  updateWeeklyDisplay();
+}
+
+// --- モード切替 ---
+let isAdminMode = false;
+
+function toggleMode() {
+  isAdminMode = !isAdminMode;
+  const adminEls = document.querySelectorAll('.admin-only');
+  const btn = document.getElementById('mode-btn');
+  const banner = document.getElementById('mode-banner');
+  const staffLabel = document.getElementById('staff-label');
+
+  adminEls.forEach(el => {
+    if (isAdminMode) {
+      // daily-colはweeklyFixed=trueのものは非表示のまま
+      if (el.id && el.id.startsWith('daily-col-') && el.dataset.weekly === 'true') return;
+      if (el.classList.contains('save-bar')) el.style.display = 'flex';
+      else if (el.tagName === 'BUTTON') el.style.display = 'inline-block';
+      else el.style.display = 'block';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+
+  if (isAdminMode) {
+    btn.textContent = 'スタッフ画面に戻る';
+    btn.className = 'btn-mode btn-mode-staff';
+    banner.style.display = 'none';
+    if (staffLabel) staffLabel.textContent = '⚙️ 管理者';
+    showWeeklyInputs(true);
+    // 居室管理タブを表示
+    document.getElementById('tab-room').style.display = 'inline-block';
+  } else {
+    btn.textContent = '管理者';
+    btn.className = 'btn-mode btn-mode-admin';
+    banner.style.display = 'none';
+    if (staffLabel) staffLabel.textContent = '👕 スタッフ';
+    showWeeklyInputs(false);
+    // 居室管理タブ非表示・パッド類に戻す
+    document.getElementById('tab-room').style.display = 'none';
+    if (currentCat === 'room') {
+      const padTab = document.querySelector('.tab');
+      switchCat('pad', padTab);
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      padTab.classList.add('active');
+    }
+  }
+}
+
+
+// --- 週必要枚数カスタム値 ---
+const WEEKLY_FIXED_KEY = 'diaper_weekly_fixed';
+
+function loadWeeklyFixed() {
+  try { return JSON.parse(localStorage.getItem(WEEKLY_FIXED_KEY) || '{}'); }
+  catch(e) { return {}; }
+}
+function saveWeeklyFixed(data) {
+  localStorage.setItem(WEEKLY_FIXED_KEY, JSON.stringify(data));
+}
+function getWeeklyFixed(pid) {
+  const data = loadWeeklyFixed();
+  return data[pid] !== undefined ? data[pid] : null;
+}
+
+
+function resetWeeklyFixed(pid) {
+  const data = loadWeeklyFixed();
+  data[pid] = 0;
+  saveWeeklyFixed(data);
+  const input = document.getElementById('weekly-input-' + pid);
+  if (input) input.value = 0;
+  updateWeeklyDisplay();
+  const p = products.find(x => x.id === pid);
+  if (p) updateCard(pid);
+  showToast('0にリセットしました');
+}
+function updateWeeklyFixed(pid, val) {
+  const data = loadWeeklyFixed();
+  if (val === '' || val === null) {
+    delete data[pid]; // 空欄ならカスタム値を削除（固定値に戻る）
+  } else {
+    const num = parseInt(val);
+    if (!isNaN(num)) data[pid] = num;
+  }
+  saveWeeklyFixed(data);
+  updateWeeklyDisplay();
+  const p = products.find(x => x.id === pid);
+  if (p) updateCard(pid);
+}
+
+function showWeeklyInputs(show) {
+  products.filter(p => p.weeklyFixed !== null).forEach(p => {
+    const input = document.getElementById('weekly-input-' + p.id);
+    const disp = document.getElementById('weekly-disp-' + p.id);
+    if (!input) return;
+    const resetBtn = document.getElementById('weekly-reset-' + p.id);
+    if (show) {
+      const override = state[currentFloor][p.id].weeklyOverride;
+      const custom = getWeeklyFixed(p.id);
+      if (override !== null && override !== undefined) {
+        input.value = override;
+      } else if (custom !== null && custom > 0) {
+        input.value = custom;
+      } else {
+        input.value = '';
+      }
+      input.style.display = 'block';
+      if (resetBtn) resetBtn.style.display = 'block';
+      if (disp) disp.style.display = 'none';
+    } else {
+      input.style.display = 'none';
+      if (resetBtn) resetBtn.style.display = 'none';
+      if (disp) disp.style.display = 'block';
+    }
+  });
+}
+
+
+function exportRoomData() {
+  const data = {};
+  try { Object.assign(data, JSON.parse(localStorage.getItem('diaper_rooms') || '{}')); } catch(e) {}
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const date = new Date().toLocaleDateString('ja-JP').replace(/\//g, '-');
+  a.download = 'room-data-' + date + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 居室データをバックアップしました');
+}
+
+function importRoomData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      localStorage.setItem('diaper_rooms', JSON.stringify(data));
+      showToast('📥 居室データをインポートしました！');
+      buildRoomSection();
+    } catch(err) {
+      showToast('❌ ファイルが正しくありません');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+// --- エクスポート・インポート ---
+function exportData() {
+  const data = { version: 1, floors: {} };
+  FLOORS.forEach(f => {
+    data.floors[f] = {};
+    products.forEach(p => {
+      data.floors[f][p.id] = state[f][p.id].dailyUse;
+    });
+  });
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const now = new Date();
+  const ymd = now.getFullYear() + ('0'+(now.getMonth()+1)).slice(-2) + ('0'+now.getDate()).slice(-2);
+  a.href = url;
+  a.download = 'diaper-backup-' + ymd + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 書き出しました！');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const statusEl = document.getElementById('import-status');
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.floors) throw new Error('形式が違います');
+      FLOORS.forEach(f => {
+        if (!data.floors[f]) return;
+        products.forEach(p => {
+          const val = data.floors[f][p.id];
+          if (val !== undefined) {
+            state[f][p.id].dailyUse = val;
+          }
+        });
+        // localStorageにも保存
+        const saveData = {};
+        products.forEach(p => { saveData[p.id] = state[f][p.id].dailyUse; });
+        localStorage.setItem(saveKey(f), JSON.stringify(saveData));
+      });
+      syncInputsToState();
+      statusEl.style.display = '';
+      statusEl.className = 'ok';
+      statusEl.textContent = '✓ 読み込み完了！1日使用量が復元されました。';
+      showToast('📥 読み込み完了！');
+    } catch(err) {
+      statusEl.style.display = '';
+      statusEl.className = 'err';
+      statusEl.textContent = '❌ 読み込み失敗：' + err.message;
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+
+// --- ホイールで数値が変わらないようにする ---
+document.addEventListener('wheel', function(e) {
+  if (document.activeElement && document.activeElement.type === 'number') {
+    document.activeElement.blur();
+  }
+}, { passive: true });
+
+// --- 初期化 ---
+FLOORS.forEach(f => loadDailyUse(f));
+buildCards();
+syncInputsToState();
+updateSaveDateLabel();
+products.forEach(p => updatePrevBadge(p.id));
+renderHistory();
+updateWeeklyDisplay();
+</script>
+</div>
+</body>
+</html>
