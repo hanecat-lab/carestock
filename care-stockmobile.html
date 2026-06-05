@@ -1251,7 +1251,7 @@ function setRoomState(floor, roomNo, state) {
 }
 
 // 全居室の銘柄別1日使用量を集計してstateに反映
-function reflectRoomToDaily() {
+function reflectRoomToDaily(silent) {
   const totals = {};
   products.forEach(p => { totals[p.id] = 0; });
 
@@ -1277,10 +1277,12 @@ function reflectRoomToDaily() {
       state[currentFloor][p.id].weeklyOverride = weekly > 0 ? weekly : null;
     }
   });
-  syncInputsToState();
+  if (!silent) syncInputsToState();
   updateWeeklyDisplay();
-  products.filter(p => p.weeklyFixed !== null).forEach(p => updateCard(p.id));
-  showToast('✅ 居室合計を使用量に反映しました！');
+  products.forEach(p => updateCard(p.id));
+  if (!silent) showToast('✅ 居室合計を使用量に反映しました！');
+  const lbl = document.getElementById('room-reflect-label');
+  if (lbl) lbl.style.display = 'block';
 }
 
 // 週必要枚数の表示を更新
@@ -1708,6 +1710,7 @@ updateSaveDateLabel();
 products.forEach(p => updatePrevBadge(p.id));
 renderHistory();
 updateWeeklyDisplay();
+reflectRoomToDaily(true);  // 居室管理を自動反映
 </script>
 </div>
 </body>
