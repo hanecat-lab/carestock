@@ -439,22 +439,8 @@ function switchFloor(f, btn) {
   document.querySelectorAll('.floor-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   loadDaily();
+  reflectRoom(true);
   buildCards();
-  // 翌日曜在庫予測
-  const sunEl = document.getElementById('sun-'+pid);
-  const sunWrap = document.getElementById('sun-wrap-'+pid);
-  if (sunEl && !p.special) {
-    const sunStock = calcSundayStock(p);
-    const sunLow = sunStock < 0;
-    const sunBoxes = Math.floor(Math.max(0, sunStock) / p.perBox);
-    const sunBagsRem = Math.max(0, sunStock) % p.perBox;
-    const sunBags = Math.floor(sunBagsRem / p.perBag);
-    let sunDisp = sunLow ? '不足' : ((sunBoxes > 0 ? sunBoxes+'箱' : '') + (sunBags > 0 ? sunBags+'袋' : '')) || '0袋';
-    sunEl.innerHTML = sunDisp + '<div style="font-size:9px;color:#aaa;margin-top:1px">' + Math.round(sunStock) + '枚</div>';
-    sunEl.style.color = sunLow ? '#e53935' : '#555';
-    if (sunWrap) sunWrap.className = 'box-after' + (sunLow ? ' low' : '');
-  }
-
   updateSummary();
 }
 
