@@ -834,33 +834,13 @@ function exportHistoryExcel() {
   const history = loadHistory();
   if (!history.length) { showToast('履歴がありません'); return; }
 
-  // TSV形式でExcel互換のデータを作成
-  let rows = [];
-  rows.push(['日付', 'フロア', '商品名', '在庫箱数', '在庫袋数', '在庫枚数', '注文箱数']);
-
-  history.forEach(h => {
-    (h.items || []).forEach(item => {
-      rows.push([
-        h.week || '',
-        h.floor || '',
-        item.name || '',
-        item.stockBoxes !== undefined ? item.stockBoxes : '',
-        item.stockBags !== undefined ? item.stockBags : '',
-        item.stock !== undefined ? item.stock : '',
-        item.qty || 0
-      ]);
-    });
-    // 区切り行
-    rows.push(['', '', '', '', '', '', '']);
-  });
-
-  // フロアごとにソート（同日同フロアをまとめる）
+  // フロアごとにソート
   const sorted = [...history].sort((a,b) => {
     const fd = (a.floor||'').localeCompare(b.floor||'');
     return fd !== 0 ? fd : (a.week||'').localeCompare(b.week||'');
   });
 
-  rows = [['日付','フロア','商品名','在庫箱数','在庫袋数','在庫枚数','注文箱数']];
+  const rows = [['日付','フロア','商品名','在庫箱数','在庫袋数','在庫枚数','注文箱数']];
   sorted.forEach(h => {
     (h.items||[]).forEach((item, i) => {
       rows.push([
@@ -877,13 +857,8 @@ function exportHistoryExcel() {
   });
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:11},{wch:5},{wch:9},{wch:6},{wch:6},{wch:8},{wch:6}];
 
-  // 列幅設定（商品名6文字分=約9、数字列は6）
-  ws['!cols'] = [
-    {wch:11},{wch:5},{wch:9},{wch:6},{wch:6},{wch:8},{wch:6}
-  ];
-
-  // 数字列（D〜G）を中央揃えに
   const range = XLSX.utils.decode_range(ws['!ref']);
   for (let R = 1; R <= range.e.r; R++) {
     for (let C = 3; C <= 6; C++) {
@@ -899,6 +874,7 @@ function exportHistoryExcel() {
   XLSX.writeFile(wb, 'order-history-' + date + '.xlsx');
   showToast('📊 Excelファイルを書き出しました');
 }
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
