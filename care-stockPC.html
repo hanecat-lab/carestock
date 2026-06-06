@@ -214,12 +214,27 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
       <button class="sb-tool-btn" onclick="toggleHistory()"
         style="border:2px solid #aaa;background:#f5f5f5;color:#333">📋 注文履歴</button>
       <div style="border-top:1px solid #a5d6a7;margin:6px 0"></div>
-      <div class="sb-title">居室管理データ</div>
-      <button class="sb-tool-btn" onclick="exportRoomData()"
-        style="border:2px solid #1976d2;background:#e3f2fd;color:#1976d2">📤 バックアップ</button>
-      <button class="sb-tool-btn" onclick="document.getElementById('room-import').click()"
-        style="border:2px solid #388e3c;background:#e8f5e9;color:#388e3c">📥 インポート</button>
-      <input type="file" id="room-import" accept=".json" style="display:none" onchange="importRoomData(this)">
+      <div class="sb-title">🗂 データバックアップ</div>
+      <button class="sb-tool-btn" onclick="exportAllDataPc()"
+        style="border:2px solid #1976d2;background:#e3f2fd;color:#1976d2">📤 全データ書き出し</button>
+      <label class="sb-tool-btn" style="border:2px solid #388e3c;background:#e8f5e9;color:#388e3c;display:block;text-align:center;cursor:pointer">
+        📥 全データ読み込み
+        <input type="file" accept=".json" style="display:none" onchange="importAllDataPc(this)">
+      </label>
+      <div style="border-top:1px solid #a5d6a7;margin:6px 0 4px"></div>
+      <div class="sb-title" style="font-size:10px">🏠 フロア別（使用量＋居室）</div>
+      <button class="sb-tool-btn" onclick="exportFloorDataPc('2F')"
+        style="border:2px solid #1976d2;background:#e3f2fd;color:#1976d2">📤 2階 書き出し</button>
+      <label class="sb-tool-btn" style="border:2px solid #388e3c;background:#e8f5e9;color:#388e3c;display:block;text-align:center;cursor:pointer">
+        📥 2階 読み込み
+        <input type="file" accept=".json" style="display:none" onchange="importFloorDataPc(this,'2F')">
+      </label>
+      <button class="sb-tool-btn" onclick="exportFloorDataPc('3F')"
+        style="border:2px solid #1976d2;background:#e3f2fd;color:#1976d2">📤 3階 書き出し</button>
+      <label class="sb-tool-btn" style="border:2px solid #388e3c;background:#e8f5e9;color:#388e3c;display:block;text-align:center;cursor:pointer">
+        📥 3階 読み込み
+        <input type="file" accept=".json" style="display:none" onchange="importFloorDataPc(this,'3F')">
+      </label>
     </div>
     <!-- モード切替ボタン（左下） -->
     <div style="margin-top:auto;padding-top:10px">
@@ -893,6 +908,95 @@ function exportHistoryExcel() {
 
 
 
+
+function exportAllDataPc() {
+  const data = { version: 2, floors: {} };
+  ['2F','3F'].forEach(f => {
+    data.floors[f] = {};
+    products.forEach(p => { data.floors[f][p.id] = state[f][p.id].dailyUse; });
+  });
+  try { data.rooms = JSON.parse(localStorage.getItem('diaper_rooms') || '{}'); } catch(e) { data.rooms = {}; }
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toLocaleDateString('ja-JP').replace(/\//g, '-');
+  a.href = url; a.download = 'diaper-backup-pc-' + date + '.json'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 全データを書き出しました');
+}
+
+function importAllDataPc(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.floors) {
+        ['2F','3F'].forEach(f => {
+          if (!data.floors[f]) return;
+          products.forEach(p => {
+            const val = data.floors[f][p.id];
+            if (val !== undefined) state[f][p.id].dailyUse = val;
+          });
+          const saveData = {};
+          products.forEach(p => { saveData[p.id] = state[f][p.id].dailyUse; });
+          localStorage.setItem(SAVE_KEY(f), JSON.stringify(saveData));
+        });
+      }
+      if (data.rooms) localStorage.setItem('diaper_rooms', JSON.stringify(data.rooms));
+      reflectRoom(true); buildCards(); updateSummary();
+      showToast('📥 全データを読み込みました！');
+    } catch(err) { showToast('❌ ファイルが正しくありません'); }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function exportFloorDataPc(f) {
+  const data = { floor: f, daily: {} };
+  products.forEach(p => { data.daily[p.id] = state[f][p.id].dailyUse; });
+  const roomData = {};
+  try {
+    const all = JSON.parse(localStorage.getItem('diaper_rooms') || '{}');
+    Object.keys(all).forEach(k => { if (k.startsWith(f + '_')) roomData[k] = all[k]; });
+  } catch(e) {}
+  data.rooms = roomData;
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toLocaleDateString('ja-JP').replace(/\//g, '-');
+  a.href = url; a.download = 'floor-' + f + '-' + date + '.json'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 ' + f + 'のデータを書き出しました');
+}
+
+function importFloorDataPc(input, targetFloor) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.daily) {
+        products.forEach(p => {
+          if (data.daily[p.id] !== undefined) state[targetFloor][p.id].dailyUse = data.daily[p.id];
+        });
+        localStorage.setItem(SAVE_KEY(targetFloor), JSON.stringify(data.daily));
+      }
+      if (data.rooms) {
+        const all = {};
+        try { Object.assign(all, JSON.parse(localStorage.getItem('diaper_rooms') || '{}')); } catch(e) {}
+        Object.keys(all).forEach(k => { if (k.startsWith(targetFloor + '_')) delete all[k]; });
+        Object.assign(all, data.rooms);
+        localStorage.setItem('diaper_rooms', JSON.stringify(all));
+      }
+      reflectRoom(true); buildCards(); updateSummary();
+      showToast('📥 ' + targetFloor + 'のデータを読み込みました！');
+    } catch(err) { showToast('❌ ファイルが正しくありません'); }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
