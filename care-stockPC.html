@@ -285,11 +285,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
       <div class="logic-title">📐 計算ロジック</div>
       <div class="logic-sec">【パッド類】</div>
       <div>現在庫 ＝ 箱数×1箱枚数 ＋ 袋数×1袋枚数</div>
-      <div>推奨注文 ＝ ⌈（7日分 − 木曜残庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
+      <div>推奨注文 ＝ ⌈（7日分 ＋ 1袋 − 木曜残庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
       <div class="logic-sec">【テープ止め・リハパン】</div>
-      <div>推奨注文 ＝ ⌈（週必要枚数 − 現在庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
+      <div>推奨注文 ＝ ⌈（週必要枚数 ＋ 1袋 − 現在庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
       <div class="logic-sec">【翌日曜在庫予測】</div>
-      <div>パッド類：木曜残庫 ＋ 注文箱数×1箱枚数 − 1日使用量×3日</div>
+      <div>パッド類：木曜残庫 ＋ 注文箱数×1箱枚数 − 1日使用量×3日 − 1袋×0.5</div>
       <div>テープ・リハパン：木曜残庫 ＋ 注文箱数×1箱枚数 − 居室集計×2（入浴使用）− 1袋×0.5（予備）</div>
       <div class="logic-sec admin-tool">【木曜届く前の残り】</div>
       <div class="admin-tool">現在庫 − 1日使用量×4日 − 予備1袋</div>
@@ -441,7 +441,7 @@ function calcSundayStock(p) {
   const atDel = calcAtDelivery(p);
   const ordered = s.orderQty * p.perBox;
   if (p.weeklyFixed === null) {
-    return atDel + ordered - s.dailyUse * 3;
+    return atDel + ordered - s.dailyUse * 3 - p.perBag * 0.5;  // -1袋×0.5追加
   } else {
     let roomTotal = 0;
     (ROOMS[floor] || []).forEach(rn => {
@@ -457,7 +457,7 @@ function calcOrder(p) {
   if (p.special) return totalStock(p) <= p.perBox ? 4 : 0;
   if (p.weeklyFixed === null && state[floor][p.id].dailyUse === 0) return 0;
   const atDel = p.weeklyFixed !== null ? totalStock(p) : totalStock(p) - state[floor][p.id].dailyUse * DAYS_DEL;
-  const needed = weeklyNeed(p) - atDel;
+  const needed = weeklyNeed(p) + p.perBag - atDel;  // +1袋追加
   return needed <= 0 ? 0 : Math.ceil(needed / p.perBox) + 1;
 }
 function calcAfter(p) {
