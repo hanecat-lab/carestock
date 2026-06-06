@@ -442,8 +442,8 @@
     <div style="margin-top:6px">【テープ止め・リハパン】</div>
     <div>推奨注文 ＝ ⌈（入浴日使用枚数 ＋ 1袋 − 現在庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
     <div style="margin-top:6px">【来週の日曜の在庫予想】</div>
-    <div>パッド類：木曜残庫 ＋ 注文箱数×1箱枚数 − 1日使用量×3日 − 1袋×0.5</div>
-    <div>テープ・リハパン：木曜残庫 ＋ 注文箱数×1箱枚数 − 居室集計×2（入浴使用）− 1袋×0.5（予備）</div>
+    <div>パッド類：現在庫 ＋ 注文箱数×1箱枚数 − 1日使用量×7日 − 1袋×1.5</div>
+    <div>テープ・リハパン：現在庫 ＋ 注文箱数×1箱枚数 − 居室集計×4（入浴使用）− 2袋（予備）</div>
     <div class="admin-only" style="margin-top:6px">【木曜届く前の残り】</div>
     <div class="admin-only">木曜届く前の残り ＝ 現在庫 − 1日使用量×4日 − 予備1袋</div>
   </div>
@@ -625,16 +625,25 @@ function calcOrder(p) {
   return needed <= 0 ? 0 : Math.ceil(needed / p.perBox) + 1; // 予備1箱追加
 }
 function calcAtDelivery(p) {
-  if (p.weeklyFixed !== null) return totalStock(p);
-  return Math.max(0, totalStock(p) - state[currentFloor][p.id].dailyUse * DAYS_DELIVERY);
+  if (p.weeklyFixed !== null) {
+    // テープ・リハパン：現在庫 - 居室集計×2 - 1袋
+    let roomTotal = 0;
+    (ROOMS[currentFloor] || []).forEach(rn => {
+      const rs = getRoomState(currentFloor, rn);
+      const v = rs.products[String(p.id)];
+      if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
+    });
+    return Math.max(0, totalStock(p) - roomTotal * 2 - p.perBag);
+  }
+  // パッド類：現在庫 - 1日使用量×4日 - 1袋
+  return Math.max(0, totalStock(p) - state[currentFloor][p.id].dailyUse * DAYS_DELIVERY - p.perBag);
 }
 
 function calcSundayStock(p) {
   const s = state[currentFloor][p.id];
-  const atDel = calcAtDelivery(p);
   const ordered = s.orderQty * p.perBox;
   if (p.weeklyFixed === null) {
-    return atDel + ordered - s.dailyUse * 3 - p.perBag * 0.5;  // -1袋×0.5追加
+    return totalStock(p) + ordered - s.dailyUse * 7 - p.perBag * 1.5;
   } else {
     let roomTotal = 0;
     (ROOMS[currentFloor] || []).forEach(rn => {
@@ -642,7 +651,7 @@ function calcSundayStock(p) {
       const v = rs.products[String(p.id)];
       if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
     });
-    return atDel + ordered - roomTotal * 2 - p.perBag * 0.5;
+    return totalStock(p) + ordered - roomTotal * 4 - p.perBag * 2;
   }
 }
 
@@ -926,8 +935,19 @@ function updateCard(pid) {
   const afEl = document.getElementById("af-"+pid);
   const afvEl = document.getElementById("afv-"+pid);
   const afdEl = document.getElementById("afd-"+pid);
-  // 木曜届く前の残り = 現在庫 - 4日消費 - 1袋（余裕分）
-  const nextSunRem = Math.max(0, totalStock(p) - s.dailyUse * DAYS_DELIVERY - p.perBag);
+  // 木曜届く前の残り
+  let nextSunRem;
+  if (p.weeklyFixed !== null) {
+    let roomTotal = 0;
+    (ROOMS[currentFloor] || []).forEach(rn => {
+      const rs = getRoomState(currentFloor, rn);
+      const v = rs.products[String(p.id)];
+      if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
+    });
+    nextSunRem = Math.max(0, totalStock(p) - roomTotal * 2 - p.perBag);
+  } else {
+    nextSunRem = Math.max(0, totalStock(p) - s.dailyUse * DAYS_DELIVERY - p.perBag);
+  }
   const thurLow = hasInput && nextSunRem === 0 && s.dailyUse > 0;
   if (afEl) afEl.className = "after-box" + (thurLow ? " low" : "");
   if (afvEl) {
