@@ -441,7 +441,7 @@
     <div>推奨注文 ＝ ⌈（7日分 − 木曜到着時残庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
     <div style="margin-top:6px">【テープ止め・リハパン】</div>
     <div>推奨注文 ＝ ⌈（入浴日使用枚数 ＋ 1袋 − 現在庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
-    <div style="margin-top:6px">【翌日曜在庫予測】</div>
+    <div style="margin-top:6px">【来週の日曜の在庫予想】</div>
     <div>パッド類：木曜残庫 ＋ 注文箱数×1箱枚数 − 1日使用量×3日 − 1袋×0.5</div>
     <div>テープ・リハパン：木曜残庫 ＋ 注文箱数×1箱枚数 − 居室集計×2（入浴使用）− 1袋×0.5（予備）</div>
     <div class="admin-only" style="margin-top:6px">【木曜届く前の残り】</div>
@@ -703,7 +703,7 @@ function buildCards() {
             </div>
           </div>
           <div class="bottom-col" id="sun-col-${p.id}" style="flex:0.7">
-            <div class="col-label label-after" style="font-size:9px;color:#bbb">翌日曜在庫予測</div>
+            <div class="col-label label-after" style="font-size:9px;color:#bbb">来週の日曜の在庫予想</div>
             <div class="after-box" id="sun-${p.id}">
               <div class="after-val" id="sunv-${p.id}" style="font-size:12px">-</div>
             </div>
@@ -799,7 +799,7 @@ function buildCards() {
             </div>
           </div>
           <div class="bottom-col" id="sun-col-${p.id}" style="flex:0.7">
-            <div class="col-label label-after" style="font-size:9px;color:#bbb">翌日曜在庫予測</div>
+            <div class="col-label label-after" style="font-size:9px;color:#bbb">来週の日曜の在庫予想</div>
             <div class="after-box" id="sun-${p.id}">
               <div class="after-val" id="sunv-${p.id}" style="font-size:12px">-</div>
             </div>
@@ -944,7 +944,7 @@ function updateCard(pid) {
   }
   if (afdEl) { afdEl.style.display="none"; }
 
-  // 翌日曜在庫予測
+  // 来週の日曜の在庫予想
   const sunEl = document.getElementById('sunv-'+pid);
   if (sunEl && !p.special) {
     const sunStock = calcSundayStock(p);
