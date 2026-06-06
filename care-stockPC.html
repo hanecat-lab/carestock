@@ -598,7 +598,7 @@ function buildCards() {
       + bottomRow
       + '<div style="margin-top:8px">'
       + '<div style="font-size:25px;font-weight:700;color:#c62828">注文箱数 <span class="sug-lbl" id="sug-' + p.id + '">' + (sug>0?'（推奨'+sug+'）':'') + '</span></div>'
-      + '<input type="number" class="order-in" value="' + (s.orderQty||'') + '" placeholder="0" oninput="onInput(' + p.id + ',\'orderQty\',this.value)"></div>'
+      + '<input type="number" class="order-in" min="0" value="' + (s.orderQty||'') + '" placeholder="0" oninput="onInput(' + p.id + ',\'orderQty\',this.value)"></div>'
       + '</div></div>';
   }).join('');
 
