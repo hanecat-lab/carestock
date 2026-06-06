@@ -839,46 +839,47 @@ function exportHistoryExcel() {
     return fd !== 0 ? fd : (a.week||'').localeCompare(b.week||'');
   });
 
-  // 1行目：ヘッダー上段（在庫をD列でまとめ）
-  // 2行目：ヘッダー下段
-  const rows = [
-    ['日付','フロア','商品名','在庫','','注文箱数'],
-    ['','','','箱','袋','']
-  ];
-
+  const rows = [];
   sorted.forEach(h => {
-    (h.items||[]).forEach((item, i) => {
+    // A1:日付、B1:空、C1:在庫（B1:C1結合）
+    rows.push([h.week||'', '', '在庫', '', '']);
+    // A2:フロア、B2:箱、C2:袋、D2:注文数
+    rows.push([h.floor||'', '箱', '袋', '注文数']);
+    // 3行目以降：商品データ
+    (h.items||[]).forEach(item => {
       rows.push([
-        i === 0 ? (h.week||'') : '',
-        i === 0 ? (h.floor||'') : '',
         item.name||'',
         item.stockBoxes !== undefined ? item.stockBoxes : '',
         item.stockBags !== undefined ? item.stockBags : '',
         item.qty||0
       ]);
     });
-    rows.push(['','','','','','']);
+    // 区切り空行
+    rows.push(['','','','']);
   });
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
 
-  // 列幅（全体的に狭く）
-  ws['!cols'] = [{wch:9},{wch:4},{wch:8},{wch:4},{wch:4},{wch:5}];
+  // 列幅
+  ws['!cols'] = [{wch:8},{wch:4},{wch:4},{wch:5}];
 
-  // D1:E1を結合（在庫ラベル）
-  ws['!merges'] = [{ s:{r:0,c:3}, e:{r:0,c:4} }];
+  // 各グループのB1:C1を「在庫」で結合
+  const merges = [];
+  let rowIdx = 0;
+  sorted.forEach(h => {
+    merges.push({ s:{r:rowIdx,c:1}, e:{r:rowIdx,c:2} });
+    rowIdx += (h.items||[]).length + 3; // ヘッダー2行+データ+空行
+  });
+  ws['!merges'] = merges;
 
-  // 中央揃え（数字列D〜F、3行目以降）
+  // 中央揃え（B列以降）
   const range = XLSX.utils.decode_range(ws['!ref']);
   for (let R = 0; R <= range.e.r; R++) {
-    for (let C = 0; C <= 5; C++) {
+    for (let C = 1; C <= 3; C++) {
       const addr = XLSX.utils.encode_cell({r:R, c:C});
       if (!ws[addr]) ws[addr] = {v:'', t:'s'};
       if (!ws[addr].s) ws[addr].s = {};
-      // 数字列は中央揃え
-      if (C >= 3) {
-        ws[addr].s.alignment = { horizontal: 'center' };
-      }
+      ws[addr].s.alignment = { horizontal: 'center' };
     }
   }
 
@@ -888,6 +889,7 @@ function exportHistoryExcel() {
   XLSX.writeFile(wb, 'order-history-' + date + '.xlsx');
   showToast('📊 Excelファイルを書き出しました');
 }
+
 
 
 
