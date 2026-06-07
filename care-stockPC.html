@@ -226,6 +226,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
       <div class="sb-title" style="margin-top:4px">管理者ツール</div>
       <button class="sb-tool-btn" onclick="toggleHoliday()"
         style="border:2px solid #e65100;background:#fff8f0;color:#e65100" id="hol-btn">🏖 連休モード</button>
+      <div id="hol-weeks-ui" style="display:none;margin-top:4px;text-align:center">
+        <div style="font-size:10px;color:#e65100;margin-bottom:4px;font-weight:700">注文週数を選択</div>
+        <div style="display:flex;gap:4px;justify-content:center">
+          <button onclick="setOrderWeeks(1)" id="wk-btn-1" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;background:#f5f5f5">1週</button>
+          <button onclick="setOrderWeeks(2)" id="wk-btn-2" style="padding:4px 8px;border:1px solid #ff8f00;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;background:#fff3e0;font-weight:700">2週</button>
+          <button onclick="setOrderWeeks(3)" id="wk-btn-3" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;background:#f5f5f5">3週</button>
+          <button onclick="setOrderWeeks(4)" id="wk-btn-4" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;background:#f5f5f5">4週</button>
+        </div>
+      </div>
       <button class="sb-tool-btn" onclick="toggleHistory()"
         style="border:2px solid #aaa;background:#f5f5f5;color:#333">📋 注文履歴</button>
       <div style="border-top:1px solid #a5d6a7;margin:6px 0"></div>
