@@ -160,35 +160,34 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 /* ステップバー */
 #step-bar {
   display: flex; align-items: stretch;
-  background: #f1f8f1; border-bottom: 2px solid #a5d6a7;
+  background: #e3f0fb; border-bottom: 2px solid #90caf9;
   padding: 0; gap: 0; font-family: inherit;
   position: sticky; top: 0; z-index: 99;
 }
 .step-item {
   flex: 1; display: flex; align-items: center; justify-content: center;
   gap: 8px; padding: 9px 12px;
-  font-size: 13px; font-weight: 700; color: #888;
-  border-right: 1px solid #c8e6c9;
-  position: relative; transition: background 0.2s;
-  cursor: default;
+  font-size: 20px; font-weight: 700; color: #1565c0;
+  border-right: 1px solid #90caf9;
+  position: relative; cursor: default;
 }
 .step-item:last-child { border-right: none; }
 .step-num {
-  width: 22px; height: 22px; border-radius: 50%;
+  width: 26px; height: 26px; border-radius: 50%;
   background: #fff; color: #222;
   border: 2px solid #333;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 800; flex-shrink: 0;
+  font-size: 13px; font-weight: 800; flex-shrink: 0;
 }
-.step-item.active { background: #e8f5e9; color: #1a6a2a; }
-.step-item.done { color: #555; }
+.step-item.active { background: #bbdefb; color: #0d47a1; }
+.step-item.done { color: #42a5f5; }
 .step-arrow {
   position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
   width: 0; height: 0;
   border-top: 10px solid transparent; border-bottom: 10px solid transparent;
-  border-left: 10px solid #c8e6c9; z-index: 1;
+  border-left: 10px solid #90caf9; z-index: 1;
 }
-.step-item.active .step-arrow { border-left-color: #a5d6a7; }
+.step-item.active .step-arrow { border-left-color: #64b5f6; }
 
 .holiday-banner { display: none; background: #ffebee; color: #c62828;
   padding: 7px; font-size: 12px; font-weight: 700; text-align: center;
