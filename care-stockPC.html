@@ -738,19 +738,35 @@ function saveDaily() {
 }
 
 function confirmOrder() {
-  // 全商品の注文箱数を記録（0含む）
+  const today = new Date().toLocaleDateString('ja-JP');
+  const history = loadHistory();
+  const todayEntry = history.find(h => h.week === today && h.floor === floor);
+  if (todayEntry) {
+    showConfirm('本日（' + today + '）の' + floor + 'の注文履歴が既に存在します。\n上書きしますか？', doConfirmOrder);
+    return;
+  }
+  doConfirmOrder();
+}
+
+function doConfirmOrder() {
+  const today = new Date().toLocaleDateString('ja-JP');
   const items = products.filter(p => !p.special).map(p => ({
     id: p.id,
     name: p.short||p.name,
     qty: state[floor][p.id].orderQty || 0
   }));
-  if (!items.length) { showToast('注文箱数を入力してください'); return; }
   const history = loadHistory();
-  history.unshift({ week: new Date().toLocaleDateString('ja-JP'), floor, items });
-  if (history.length > 12) history.pop();
+  // 同日上書き
+  const existIdx = history.findIndex(h => h.week === today && h.floor === floor);
+  if (existIdx >= 0) {
+    history[existIdx] = { week: today, floor, items };
+  } else {
+    history.unshift({ week: today, floor, items });
+    if (history.length > 52) history.pop();
+  }
   saveHistory(history);
-  // 来週日曜の在庫予想を履歴として保存（4週分）
-  const sunRecord = { date: new Date().toLocaleDateString('ja-JP'), floor, items: {}, stocks: {} };
+  // 来週日曜の在庫予想を履歴として保存（4週分・同日上書き）
+  const sunRecord = { date: today, floor, items: {}, stocks: {} };
   products.forEach(p => {
     sunRecord.items[p.id] = Math.round(calcSundayStock(p));
     sunRecord.stocks[p.id] = { boxes: state[floor][p.id].stockBoxes || 0, bags: state[floor][p.id].stockBags || 0 };
@@ -758,13 +774,18 @@ function confirmOrder() {
   const sunHistKey = 'diaper_sun_hist_' + floor;
   let sunHist = [];
   try { sunHist = JSON.parse(localStorage.getItem(sunHistKey) || '[]'); } catch(e) {}
-  sunHist.unshift(sunRecord);
-  if (sunHist.length > 4) sunHist = sunHist.slice(0, 4);
+  const sameIdx = sunHist.findIndex(h => h.date === today);
+  if (sameIdx >= 0) {
+    sunHist[sameIdx] = sunRecord;
+  } else {
+    sunHist.unshift(sunRecord);
+    if (sunHist.length > 4) sunHist = sunHist.slice(0, 4);
+  }
   localStorage.setItem(sunHistKey, JSON.stringify(sunHist));
-  // 後方互換：最新を従来キーにも保存
   localStorage.setItem('diaper_sun_record_' + floor, JSON.stringify(sunRecord));
   showToast('✅ 注文を確定しました！');
 }
+
 
 function toggleHistory() {
   const sec = document.getElementById('history-sec');
