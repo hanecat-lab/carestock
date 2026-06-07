@@ -301,7 +301,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
       <div class="logic-sec">【テープ止め・リハパン】</div>
       <div>推奨注文 ＝ ⌈（週必要枚数 ＋ 1袋 − 現在庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
       <div class="logic-sec">【来週の日曜の在庫予想】</div>
-      <div>パッド類：現在庫 ＋ 注文箱数×1箱枚数 − 1日使用量×7日 − 1袋×1.5</div>
+      <div>パッド類：現在庫 ＋ 注文箱数×1箱枚数 − 1日使用量×7日 − 1袋×1.5（予備）</div>
       <div>テープ・リハパン：現在庫 ＋ 注文箱数×1箱枚数 − 居室集計×4（入浴使用）− 2袋（予備）</div>
       <div class="logic-sec admin-tool">【木曜届く前の残り】</div>
       <div class="admin-tool">パッド類：現在庫 − 1日使用量×4日 − 予備1袋</div>
@@ -440,8 +440,17 @@ function weeklyNeed(p) {
 
 
 function calcAtDelivery(p) {
-  // 木曜到着時残庫
-  if (p.weeklyFixed !== null) return totalStock(p);
+  if (p.weeklyFixed !== null) {
+    // テープ・リハパン：現在庫 - 居室集計×2 - 1袋×0.5
+    let roomTotal = 0;
+    (ROOMS[floor] || []).forEach(rn => {
+      const rs = getRoomState(floor, rn);
+      const v = rs.products[String(p.id)];
+      if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
+    });
+    return totalStock(p) - roomTotal * 2 - p.perBag * 0.5;
+  }
+  // パッド類：現在庫 - 1日使用量×4日 - 1袋
   const s = state[floor][p.id];
   return totalStock(p) - s.dailyUse * DAYS_DEL - p.perBag;
 }
@@ -450,7 +459,7 @@ function calcSundayStock(p) {
   const atDel = calcAtDelivery(p);
   const ordered = s.orderQty * p.perBox;
   if (p.weeklyFixed === null) {
-    return atDel + ordered - s.dailyUse * 3 - p.perBag * 0.5;  // -1袋×0.5追加
+    return totalStock(p) + ordered - s.dailyUse * 7 - p.perBag * 1.5;
   } else {
     let roomTotal = 0;
     (ROOMS[floor] || []).forEach(rn => {
@@ -463,7 +472,7 @@ function calcSundayStock(p) {
 }
 
 function calcOrder(p) {
-  if (p.special) return totalStock(p) <= p.perBox ? 4 : 0;
+  if (p.special) { return totalStock(p) <= p.perBag * 7 ? 5 : 0; }
   if (p.weeklyFixed === null && state[floor][p.id].dailyUse === 0) return 0;
   const atDel = p.weeklyFixed !== null ? totalStock(p) : totalStock(p) - state[floor][p.id].dailyUse * DAYS_DEL;
   const needed = weeklyNeed(p) + p.perBag - atDel;  // +1袋追加
