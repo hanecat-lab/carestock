@@ -131,11 +131,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 .grp-total { text-align: right; font-size: 20px; font-weight: 800; color: #e65100; border: 2px solid #e65100; border-radius: 8px; padding: 4px 10px; margin-bottom: 6px; }
 .grp-total-lbl { font-size: 11px; color: #555; }
 .btn-confirm {
-  width: 100%; padding: 13px; border: none; border-radius: 12px;
-  background: #f57c00; color: #fff; font-size: 15px; font-weight: 800;
+  width: 100%; padding: 13px; border: 2px solid #2e7d32; border-radius: 12px;
+  background: #fff; color: #2e7d32; font-size: 22px; font-weight: 800;
   cursor: pointer; font-family: inherit;
 }
-.btn-confirm:active { background: #e65100; }
+.btn-confirm:hover { background: #f5f5f5; }
+.btn-confirm:active { background: #eee; }
 .logic-box {
   background: #f0f7f0; border-radius: 8px; padding: 10px;
   font-size: 10.5px; color: #3a5a3a; line-height: 1.8; flex-shrink: 0;
@@ -267,7 +268,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
       <div id="summary"></div>
     </div>
     <div id="grp-totals"></div>
-    <button class="btn-confirm" onclick="confirmOrder()">✅ 注文確定・履歴に保存</button>
+    <button class="btn-confirm" onclick="confirmOrder()"><span style="color:#f57c00;margin-right:6px">✅</span>注文確定・保存</button>
     <button onclick="toggleHistory()"
       style="width:100%;padding:8px;border-radius:8px;border:1px solid #aaa;background:#f5f5f5;color:#555;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📋 注文履歴</button>
     <button onclick="exportHistoryExcel()"
