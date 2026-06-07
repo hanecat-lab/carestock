@@ -175,15 +175,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 .step-item:last-child { border-right: none; }
 .step-num {
   width: 22px; height: 22px; border-radius: 50%;
-  background: #ccc; color: #fff;
+  background: #fff; color: #222;
+  border: 2px solid #333;
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 800; flex-shrink: 0;
-  transition: background 0.2s;
 }
 .step-item.active { background: #e8f5e9; color: #1a6a2a; }
-.step-item.active .step-num { background: #2e7d32; }
 .step-item.done { color: #555; }
-.step-item.done .step-num { background: #81c784; }
 .step-arrow {
   position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
   width: 0; height: 0;
@@ -318,7 +316,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 
   <div id="right-panel">
     <div>
-      <div class="panel-title" style="font-size:23px">📋 今週の注文内容</div>
+      <div style="font-size:13px;font-weight:800;color:#1a6a2a;margin-bottom:4px;display:flex;align-items:center;gap:6px"><span style="background:#fff;color:#222;border:2px solid #333;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800">3</span>内容を確認して確定</div><div class="panel-title" style="font-size:23px">📋 今週の注文内容</div>
       <div id="summary"></div>
     </div>
     <div id="grp-totals"></div>
@@ -681,7 +679,7 @@ function buildCards() {
       + '<span class="badge badge-box">📦 1箱=' + Math.round(p.perBox/p.perBag) + '袋(' + p.perBox + '枚)</span>'
       + '<span class="badge badge-bag">🛍 1袋=' + p.perBag + '枚</span></div>'
       + '<div class="card-body">'
-      + '<div style="font-size:18px;font-weight:800;color:#2a6a3a;margin-bottom:14px;padding:6px 16px;background:#fff;border:2.5px solid #4a7c59;border-radius:8px;display:inline-block;letter-spacing:1px;box-shadow:0 2px 6px rgba(74,124,89,0.15)">現在の在庫入力</div>'
+      + '<div style="font-size:18px;font-weight:800;color:#2a6a3a;margin-bottom:14px;padding:6px 16px;background:#fff;border:2.5px solid #4a7c59;border-radius:8px;display:inline-block;letter-spacing:1px;box-shadow:0 2px 6px rgba(74,124,89,0.15)"><span style="font-size:14px;background:#fff;color:#222;border:2px solid #333;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800">1</span>現在の在庫入力</div>'
       + '<div class="stock-grid">'
       + '<div><div class="stock-lbl" style="color:#a07000">📦 箱数</div>'
       + '<input type="number" class="stock-in si-box" min="0" value="' + (s.stockBoxes||'') + '" placeholder="0" oninput="onInput(' + p.id + ',\'stockBoxes\',this.value)"></div>'
@@ -694,7 +692,7 @@ function buildCards() {
       + '<span style="font-size:10px;color:#aaa">枚</span></div>'
       + bottomRow
       + '<div style="margin-top:8px">'
-      + '<div style="font-size:25px;font-weight:700;color:#c62828">注文箱数 <span class="sug-lbl" id="sug-' + p.id + '">' + (sug>0?'推奨 : '+sug+' 箱':'') + '</span></div>'
+      + '<div style="font-size:25px;font-weight:700;color:#c62828"><span style="font-size:16px;background:#fff;color:#222;border:2px solid #333;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;vertical-align:middle;flex-shrink:0;font-weight:800">2</span>注文箱数 <span class="sug-lbl" id="sug-' + p.id + '">' + (sug>0?'推奨 : '+sug+' 箱':'') + '</span></div>'
       + '<input type="number" class="order-in" min="0" value="' + (s.orderQty||'') + '" placeholder="0" oninput="onInput(' + p.id + ',\'orderQty\',this.value)"></div>'
       + '</div></div>';
   }).join('');
