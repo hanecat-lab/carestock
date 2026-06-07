@@ -596,7 +596,7 @@ function colorHex(c) {
 
 function buildCards() {
   const list = cat==='pad' ? products.filter(p=>p.cat==='pad') :
-               cat==='tape' ? products.filter(p=>p.cat==='tape') :
+               cat==='tape' ? [...products.filter(p=>p.cat==='tape'), ...products.filter(p=>p.special)] :
                cat==='pants' ? products.filter(p=>p.cat==='pants'&&!p.special) : [];
 
   document.getElementById('cards').innerHTML = list.map(p => {
