@@ -456,6 +456,7 @@
     <div class="history-toggle" id="history-toggle-icon">▼ 開く</div>
   </div>
   <div id="history-body"></div>
+  <div id="sun-hist-mobile" style="display:none;margin-top:8px"></div>
 </div>
 
 <!-- バックアップ -->
@@ -1267,12 +1268,15 @@ function deleteHistory(key) {
 function toggleHistory() {
   const body = document.getElementById("history-body");
   const icon = document.getElementById("history-toggle-icon");
+  const sunPanel = document.getElementById('sun-hist-mobile');
   if (body.style.display === "none" || body.style.display === "") {
     body.style.display = "block";
+    if (sunPanel) sunPanel.style.display = "block";
     icon.textContent = "▲ 閉じる";
     renderHistory();
   } else {
     body.style.display = "none";
+    if (sunPanel) sunPanel.style.display = "none";
     icon.textContent = "▼ 開く";
   }
 }
