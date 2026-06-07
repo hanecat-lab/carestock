@@ -19,7 +19,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
   font-size: 12px; font-weight: 700; font-family: inherit; background: #f0f0f0; color: #333; }
 .btn-mode.admin { background: #ffe082; color: #5a3a00; }
 
-#layout { display: grid; grid-template-columns: 190px 1fr 350px; min-height: 100vh; }
+#layout { display: grid; grid-template-columns: 190px 1fr minmax(250px, 320px); min-height: 100vh; }
 
 /* サイドバー */
 #sidebar {
@@ -78,8 +78,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 }
 .stock-lbl { font-size: 25px; font-weight: 700; text-align: center; margin-bottom: 3px; }
 .stock-in {
-  width: 100%; padding: 14px 4px; border-radius: 8px;
-  border: 2px solid #ddd; font-size: 28px; font-weight: 800;
+  width: 100%; padding: 10px 4px; border-radius: 8px;
+  border: 2px solid #ddd; font-size: 20px; font-weight: 800;
   text-align: center; font-family: inherit; outline: none;
 }
 .si-box { background: #fffde7; border-color: #c8a000; }
@@ -103,10 +103,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
   text-align: center; font-family: inherit; outline: none; background: #fff8f0; margin-top: 4px;
 }
 .order-in {
-  width: 100%; padding: 14px; border-radius: 8px;
-  border: 2px solid #e53935; font-size: 36px; font-weight: 800;
+  width: 100%; padding: 10px; border-radius: 8px;
+  border: 2px solid #e53935; font-size: 32px; font-weight: 800;
   text-align: center; font-family: inherit; outline: none;
-  width: 480px;
+  width: 350px;
   background: #fff5f5; color: #c62828; margin-top: 4px;
 }
 .sug-lbl { font-size: 18px; color: #1565c0; font-weight: 700; }
