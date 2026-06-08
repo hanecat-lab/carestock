@@ -1117,11 +1117,11 @@ function doConfirmOrder(dateStr) {
     orders[p.id] = { qty: state[currentFloor][p.id].orderQty || 0 };
   });
   // 同日上書き
-  const existIdx = hist.findIndex(function(h) { return h.date === dateStr && h.floor === currentFloor); }
+  const existIdx = hist.findIndex(function(h) { return h.date === dateStr && h.floor === currentFloor; })
   if (existIdx >= 0) {
-    hist[existIdx] = { date: dateStr, floor: currentFloor, orders };
+    hist[existIdx] = { date: dateStr, floor: currentFloor, orders: orders };
   } else {
-    hist.push({ date: dateStr, floor: currentFloor, orders });
+    hist.push({ date: dateStr, floor: currentFloor, orders: orders });
   }
   const floorEntries = hist.filter(function(h) { return h.floor === currentFloor; }).slice(-MAX_HISTORY);
   const otherEntries = hist.filter(function(h) { return h.floor !== currentFloor; });
