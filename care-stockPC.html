@@ -15,6 +15,99 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; background: #e8ede8; min-height: 100vh; }
 
+
+/* 注文確認ポップアップ */
+#order-confirm-popup {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+#order-confirm-popup.show { display: flex; }
+#order-confirm-inner {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px 28px;
+  width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+.popup-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: #2e7d32;
+  margin-bottom: 16px;
+  text-align: center;
+  border-bottom: 2px solid #a5d6a7;
+  padding-bottom: 10px;
+}
+.popup-group-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  color: #888;
+  margin: 10px 0 4px;
+}
+.popup-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  margin-bottom: 3px;
+}
+.popup-item-name { font-size: 16px; font-weight: 700; color: #333; }
+.popup-item-qty { font-size: 22px; font-weight: 900; color: #e65100; }
+.popup-item-unit { font-size: 12px; color: #999; margin-left: 4px; }
+.popup-totals {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0;
+}
+.popup-total-box {
+  flex: 1;
+  border: 2px solid #e65100;
+  border-radius: 8px;
+  padding: 6px;
+  text-align: center;
+}
+.popup-total-lbl { font-size: 10px; color: #888; display: block; }
+.popup-total-val { font-size: 22px; font-weight: 900; color: #e65100; }
+.popup-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.popup-btn-ok {
+  flex: 1;
+  padding: 12px;
+  background: #fff;
+  color: #2e7d32;
+  border: 2px solid #2e7d32;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  font-family: inherit;
+}
+.popup-btn-ok:hover { background: #f1f8f1; }
+.popup-btn-cancel {
+  flex: 1;
+  padding: 12px;
+  background: #f5f5f5;
+  color: #888;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.popup-btn-cancel:hover { background: #eee; }
 .btn-mode { padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer;
   font-size: 12px; font-weight: 700; font-family: inherit; background: #f0f0f0; color: #333; }
 .btn-mode.admin { background: #ffe082; color: #5a3a00; }
@@ -351,8 +444,8 @@ const ROOMS = {
   '3F': [301,302,303,305,306,307,308,310,311,312,313,315,316],
 };
 // 4と9のつく部屋を除外
-Object.keys(ROOMS).forEach(f => {
-  ROOMS[f] = ROOMS[f].filter(n => {
+Object.keys(ROOMS).forEach(function(f) {
+  ROOMS[f] = ROOMS[f].filter(function(n) {
     const s = String(n);
     return !s.includes('4') && !s.includes('9');
   });
@@ -405,7 +498,7 @@ function getWeeklyFixed(pid) {
 
 
 // ===== PC版変数 =====
-const SAVE_KEY = f => 'diaper_daily_pc_' + f;
+function SAVE_KEY(f) { return 'diaper_daily_pc_' + f; }
 const DAYS_DEL = 4;
 let floor = '2F';
 let cat = 'pad';
@@ -416,9 +509,9 @@ let state = {};
 
 // ===== 初期化 =====
 function initState() {
-  ['2F','3F'].forEach(f => {
+  ['2F','3F'].forEach(function(f) {
     state[f] = {};
-    products.forEach(p => {
+    products.forEach(function(p) {
       state[f][p.id] = { stockBoxes:0, stockBags:0, dailyUse:0, orderQty:0, weeklyOverride:null };
     });
   });
@@ -427,7 +520,7 @@ function initState() {
 function loadDaily() {
   try {
     const d = JSON.parse(localStorage.getItem(SAVE_KEY(floor)) || '{}');
-    products.forEach(p => { if (d[p.id] !== undefined) state[floor][p.id].dailyUse = d[p.id]; });
+    products.forEach(function(p) { if (d[p.id] !== undefined) state[floor][p.id].dailyUse = d[p.id]; });
   } catch(e) {}
 }
 
@@ -453,7 +546,7 @@ function calcAtDelivery(p) {
   if (p.weeklyFixed !== null) {
     // テープ・リハパン：現在庫 - 居室集計×2 - 1袋×0.5
     let roomTotal = 0;
-    (ROOMS[floor] || []).forEach(rn => {
+    (ROOMS[floor] || []).forEach(function(rn) {
       const rs = getRoomState(floor, rn);
       const v = rs.products[String(p.id)];
       if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
@@ -472,7 +565,7 @@ function calcSundayStock(p) {
     return totalStock(p) + ordered - s.dailyUse * 7 - p.perBag * 1.5;
   } else {
     let roomTotal = 0;
-    (ROOMS[floor] || []).forEach(rn => {
+    (ROOMS[floor] || []).forEach(function(rn) {
       const rs = getRoomState(floor, rn);
       const v = rs.products[String(p.id)];
       if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
@@ -493,7 +586,7 @@ function calcAfter(p) {
   if (p.weeklyFixed !== null) {
     // テープ・リハパン：現在庫 - 居室集計×2 - 1袋
     let roomTotal = 0;
-    (ROOMS[floor] || []).forEach(rn => {
+    (ROOMS[floor] || []).forEach(function(rn) {
       const rs = getRoomState(floor, rn);
       const v = rs.products[String(p.id)];
       if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
@@ -510,7 +603,7 @@ function switchFloor(f, btn) {
   localStorage.setItem('last_floor_pc', f);
   const hf = document.getElementById('header-floor');
 
-  document.querySelectorAll('.floor-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.floor-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
   loadDaily();
   reflectRoom(true);
@@ -525,7 +618,7 @@ function switchFloor(f, btn) {
 function switchCat(c, btn) {
   cat = c;
   const cls = {pad:'ap',tape:'at',pants:'an',room:'ar'};
-  document.querySelectorAll('.cat-btn').forEach(b => {
+  document.querySelectorAll('.cat-btn').forEach(function(b) {
     b.classList.remove('ap','at','an','ar');
     b.textContent = b.dataset.label || b.textContent.replace('▶ ','');
   });
@@ -551,7 +644,7 @@ function toggleMode() {
     if (label) { label.textContent = '📋 注文シート'; label.style.color = '#e65100'; }
     if (modeDisplay) { modeDisplay.style.background = '#fff3e0'; modeDisplay.style.borderColor = '#e65100'; }
   }
-  document.querySelectorAll('.admin-tool').forEach(el => el.classList.toggle('show', isAdmin));
+  document.querySelectorAll('.admin-tool').forEach(function(el) { el.classList.toggle('show', isAdmin); });
   buildCards();
 }
 
@@ -567,7 +660,7 @@ function toggleHoliday() {
 
 function setOrderWeeks(n) {
   orderWeeks = n;
-  [1,2,3,4].forEach(i => {
+  [1,2,3,4].forEach(function(i) {
     const btn = document.getElementById('wk-btn-' + i);
     if (btn) {
       btn.style.border = i === n ? '1px solid #ff8f00' : '1px solid #ddd';
@@ -601,11 +694,13 @@ function colorHexText(c) {
 }
 
 function buildCards() {
-  const list = cat==='pad' ? products.filter(p=>p.cat==='pad') :
-               cat==='tape' ? [...products.filter(p=>p.cat==='tape'), ...products.filter(p=>p.special)] :
-               cat==='pants' ? products.filter(p=>p.cat==='pants'&&!p.special) : [];
+  var list;
+  if (cat==='pad') { list = products.filter(function(p){return p.cat==='pad';}); }
+  else if (cat==='tape') { list = products.filter(function(p){return p.cat==='tape';}).concat(products.filter(function(p){return p.special;})); }
+  else if (cat==='pants') { list = products.filter(function(p){return p.cat==='pants'&&!p.special;}); }
+  else { list = []; }
 
-  document.getElementById('cards').innerHTML = list.map(p => {
+  document.getElementById('cards').innerHTML = list.map(function(p) {
     const s = state[floor][p.id];
     const sug = calcOrder(p);
     const wn = weeklyNeed(p);
@@ -662,12 +757,12 @@ function buildCards() {
       + '</div></div>';
   }).join('');
 
-  list.forEach(p => updateCard(p.id));
+  list.forEach(function(p) { updateCard(p.id); });
 }
 
 
 function updateCard(pid) {
-  const p = products.find(x => x.id === pid);
+  const p = products.find(function(x) { return x.id === pid; });
   const s = state[floor][pid];
   const stock = totalStock(p);
   const sug = calcOrder(p);
@@ -743,29 +838,28 @@ function updateSummary() {
   let padTot = 0, tapePantsTot = 0;
 
   const groups = [
-    { label:'パッド類', list: products.filter(p=>p.cat==='pad'&&!p.special) },
-    { label:'テープ止め', list: products.filter(p=>p.cat==='tape') },
-    { label:'リハパン', list: products.filter(p=>p.cat==='pants'&&!p.special) },
-    { label:'その他', list: products.filter(p=>p.special) },
+    { label:'パッド類', list: products.filter(function(p){return p.cat==='pad'&&!p.special;}) },
+    { label:'テープ止め', list: products.filter(function(p){return p.cat==='tape';}) },
+    { label:'リハパン', list: products.filter(function(p){return p.cat==='pants'&&!p.special;}) },
+    { label:'その他', list: products.filter(function(p){return p.special;}) },
   ];
 
-  groups.forEach(g => {
+  groups.forEach(function(g) {
     let ghtml = '';
-    g.list.forEach(p => {
+    g.list.forEach(function(p) {
       const qty = state[floor][p.id].orderQty || 0;
       if (!qty) return;
-      const dot = p.color ? `<span class="sum-dot" style="background:${colorMap[p.color]||'#ccc'}"></span>` : '<span class="sum-dot" style="background:#ddd"></span>';
-      ghtml += `<div class="sum-item">${dot}<span class="sum-name">${p.short||p.name}</span><span class="sum-qty">${qty}</span><span class="sum-unit">箱</span></div>`;
+      var dot = p.color ? '<span class="sum-dot" style="background:' + (colorMap[p.color]||'#ccc') + '"></span>' : '<span class="sum-dot" style="background:#ddd"></span>';
+      ghtml += '<div class="sum-item">' + dot + '<span class="sum-name">' + (p.short||p.name) + '</span><span class="sum-qty">' + qty + '</span><span class="sum-unit">箱</span></div>';
       if (p.cat==='pad') padTot += qty;
       else tapePantsTot += qty;
     });
-    if (ghtml) html += `<div class="grp-lbl">${g.label}</div>${ghtml}`;
+    if (ghtml) html += '<div class="grp-lbl">' + g.label + '</div>' + ghtml;
   });
 
   sumEl.innerHTML = html || '<div style="font-size:11px;color:#bbb;padding:6px">注文箱数を入力してください</div>';
-  totEl.innerHTML = `
-    <div class="grp-total"><span class="grp-total-lbl">パッド計</span>${padTot}<span style="margin-left:8px">箱</span></div>
-    <div class="grp-total"><span class="grp-total-lbl">テープ・リハパン計</span>${tapePantsTot}<span style="margin-left:8px">箱</span></div>`;
+  totEl.innerHTML = '<div class="grp-total"><span class="grp-total-lbl">パッド計</span>' + padTot + '<span style="margin-left:8px">箱</span></div>' +
+    '<div class="grp-total"><span class="grp-total-lbl">テープ・リハパン計</span>' + tapePantsTot + '<span style="margin-left:8px">箱</span></div>';
   // 最新の注文内容が見えるよう一番下にスクロール
   const scrollEl = document.getElementById('right-panel-scroll');
   if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
@@ -773,49 +867,81 @@ function updateSummary() {
 
 function saveDaily() {
   const d = {};
-  products.forEach(p => { d[p.id] = state[floor][p.id].dailyUse; });
+  products.forEach(function(p) { d[p.id] = state[floor][p.id].dailyUse; });
   localStorage.setItem(SAVE_KEY(floor), JSON.stringify(d));
   showToast('💾 1日使用量を保存しました');
 }
 
 function confirmOrder() {
-  const today = new Date().toLocaleDateString('ja-JP');
-  const history = loadHistory();
-  const todayEntry = history.find(h => h.week === today && h.floor === floor);
-  if (todayEntry) {
-    showConfirm('本日（' + today + '）の' + floor + 'の注文履歴が既に存在します。\n上書きしますか？', doConfirmOrder);
-    return;
+  var colorMap = {'白小':'#f0f0f0','白大':'#e0e0e0','グレー':'#9e9e9e','緑':'#66bb6a',
+    '青':'#42a5f5','紫':'#ab47bc','濃い紫':'#6a1b9a','深緑':'#2e7d32'};
+  var catDef = [
+    { label:'パッド類', cat:'pad', special:false },
+    { label:'テープ止め', cat:'tape', special:false },
+    { label:'リハビリパンツ', cat:'pants', special:false },
+    { label:'その他', cat:null, special:true }
+  ];
+  var html = '';
+  var padTot = 0;
+  var tapeTot = 0;
+  var i, j, p, qty, dot, ordered, g;
+  for (i = 0; i < catDef.length; i++) {
+    g = catDef[i];
+    ordered = [];
+    for (j = 0; j < products.length; j++) {
+      p = products[j];
+      var match = g.special ? p.special : (p.cat === g.cat && !p.special);
+      if (match && (state[floor][p.id].orderQty || 0) > 0) ordered.push(p);
+    }
+    if (!ordered.length) continue;
+    html += '<div class="popup-group-lbl">▼ ' + g.label + '</div>';
+    for (j = 0; j < ordered.length; j++) {
+      p = ordered[j];
+      qty = state[floor][p.id].orderQty || 0;
+      dot = p.color ? '<span style="width:10px;height:10px;border-radius:50%;background:' + (colorMap[p.color]||'#ccc') + ';display:inline-block;margin-right:6px;border:1px solid rgba(0,0,0,0.1)"></span>' : '<span style="width:10px;height:10px;display:inline-block;margin-right:6px"></span>';
+      html += '<div class="popup-item">' + dot + '<span class="popup-item-name">' + (p.short||p.name) + '</span><div><span class="popup-item-qty">' + qty + '</span><span class="popup-item-unit">笱</span></div></div>';
+      if (p.cat === 'pad') padTot += qty;
+      else tapeTot += qty;
+    }
   }
-  doConfirmOrder();
+  if (!html) { html = '<div style="text-align:center;color:#aaa;padding:20px">注文筱数が入力されていません</div>'; }
+  document.getElementById('popup-content').innerHTML = html;
+  document.getElementById('popup-pad-tot').textContent = padTot;
+  document.getElementById('popup-tape-tot').textContent = tapeTot;
+  document.getElementById('order-confirm-popup').style.display = 'flex';
+}
+
+function closeOrderPopup() {
+  document.getElementById('order-confirm-popup').style.display = 'none';
 }
 
 function doConfirmOrder() {
   const today = new Date().toLocaleDateString('ja-JP');
-  const items = products.filter(p => !p.special).map(p => ({
+  const items = products.filter(function(p) { return !p.special; }).map(function(p) { return {
     id: p.id,
     name: p.short||p.name,
     qty: state[floor][p.id].orderQty || 0
-  }));
+  }; });
   const history = loadHistory();
   // 同日上書き
-  const existIdx = history.findIndex(h => h.week === today && h.floor === floor);
+  const existIdx = history.findIndex(function(h) { return h.week === today && h.floor === floor; });
   if (existIdx >= 0) {
-    history[existIdx] = { week: today, floor, items };
+    history[existIdx] = { week: today, floor: floor, items: items };
   } else {
-    history.unshift({ week: today, floor, items });
+    history.unshift({ week: today, floor: floor, items: items });
     if (history.length > 52) history.pop();
   }
   saveHistory(history);
   // 来週日曜の在庫予想を履歴として保存（4週分・同日上書き）
-  const sunRecord = { date: today, floor, items: {}, stocks: {} };
-  products.forEach(p => {
+  const sunRecord = { date: today, floor: floor, items: {}, stocks: {} };
+  products.forEach(function(p) {
     sunRecord.items[p.id] = Math.round(calcSundayStock(p));
     sunRecord.stocks[p.id] = { boxes: state[floor][p.id].stockBoxes || 0, bags: state[floor][p.id].stockBags || 0 };
   });
   const sunHistKey = 'diaper_sun_hist_' + floor;
-  let sunHist = [];
+  var sunHist = [];
   try { sunHist = JSON.parse(localStorage.getItem(sunHistKey) || '[]'); } catch(e) {}
-  const sameIdx = sunHist.findIndex(h => h.date === today);
+  const sameIdx = sunHist.findIndex(function(h) { return h.date === today; });
   if (sameIdx >= 0) {
     sunHist[sameIdx] = sunRecord;
   } else {
@@ -843,14 +969,14 @@ function renderHistory() {
   }
 
   // フロアでフィルタ
-  const floorHist = history.filter(h => h.floor === floor);
+  const floorHist = history.filter(function(h) { return h.floor === floor; });
   if (!floorHist.length) {
     document.getElementById('history-content').innerHTML = '履歴なし';
     return;
   }
 
   // 日付でソート（新しい順）
-  const sorted = [...floorHist].sort((a,b) => (b.week||'').localeCompare(a.week||''));
+  var sorted = floorHist.slice().sort(function(a,b) { return (b.week||'').localeCompare(a.week||''); });
 
   // 商品リスト（吸水シート含む全商品）
   const prods = products;
@@ -858,7 +984,7 @@ function renderHistory() {
   let html = '<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:11px;min-width:100%">';
   // ヘッダー行：商品名 + 日付列
   html += '<tr style="background:#f0f0f0"><th style="padding:4px 8px;text-align:left;white-space:nowrap">商品</th>';
-  sorted.forEach((h, hi) => {
+  sorted.forEach(function(h, hi) {
     const wk = h.week || '';
     html += '<th style="padding:4px 8px;text-align:center;white-space:nowrap">' + wk
       + '<br><button onclick="deletePcHistoryByDate(\'' + wk + '\')" style="font-size:8px;padding:1px 5px;border:1px solid #ffaaaa;border-radius:4px;background:#fff5f5;color:#e53935;cursor:pointer;font-family:inherit;margin-top:2px">削除</button></th>';
@@ -871,18 +997,18 @@ function renderHistory() {
     { key: 'tape', label: 'テープ止め', includeSpecial: true },
     { key: 'pants', label: 'リハパン', includeSpecial: false }
   ];
-  cats.forEach(cat => {
+  cats.forEach(function(cat) {
     const catProds = cat.includeSpecial
-      ? products.filter(p => p.cat === cat.key || p.special)
-      : products.filter(p => p.cat === cat.key);
+      ? products.filter(function(p) { return p.cat === cat.key || p.special; })
+      : products.filter(function(p) { return p.cat === cat.key; });
     if (!catProds.length) return;
     // カテゴリ見出し行
     html += '<tr style="background:#e8f5e9"><td colspan="' + (sorted.length+1) + '" style="padding:3px 8px;font-size:10px;font-weight:800;color:#2a7a2a">' + cat.label + '</td></tr>';
-    catProds.forEach(p => {
+    catProds.forEach(function(p) {
       html += '<tr style="border-bottom:1px solid #eee">';
       html += '<td style="padding:4px 8px;font-weight:700;white-space:nowrap">' + (p.short||p.name) + '</td>';
-      sorted.forEach(h => {
-        const item = (h.items||[]).find(i => i.id === p.id);
+      sorted.forEach(function(h) {
+        const item = (h.items||[]).find(function(i) { return i.id === p.id; });
         const qty = item !== undefined ? (item.qty || 0) : 0;
         const color = qty > 0 ? '#e65100' : '#bbb';
         html += '<td style="padding:4px 8px;text-align:center;color:' + color + ';font-weight:' + (qty>0?'800':'400') + '">' + qty + '</td>';
@@ -906,28 +1032,26 @@ function toggleHistMonth(header) {
 
 function buildRoom() {
   const rooms = ROOMS[floor] || [];
-  document.getElementById('room-content').innerHTML = rooms.map(rn => {
-    const rs = getRoomState(floor, rn);
-    const cnt = products.filter(p=>rs.products[String(p.id)]&&rs.products[String(p.id)].qty>0).length;
-    return `<div class="room-card">
-      <div class="room-hd" onclick="toggleRoomPc(${rn})" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-        <span>${rn}号室 ${cnt?'<span style="font-size:11px;color:#2a7a2a">'+cnt+'種類</span>':''}</span>
-        <span id="rtoggle-${rn}" style="font-size:12px;color:#666">▼</span>
-      </div>
-      <div id="rbody-${rn}" style="display:none;padding:2px 0">
-      ${products.filter(p=>!p.special).map(p => {
-        const qty = rs.products[String(p.id)] ? rs.products[String(p.id)].qty : 0;
-        return `<div class="room-row" style="display:grid;grid-template-columns:1fr auto;align-items:center">
-          <span style="font-size:13px;text-align:right;padding-right:12px">${p.short||p.name}</span>
-          <div style="display:flex;align-items:center;gap:6px">
-            <button class="c-btn" onclick="cChange(${rn},${p.id},-1)">−</button>
-            <span class="c-val" id="rq-${rn}-${p.id}">${qty}</span>
-            <button class="c-btn plus" onclick="cChange(${rn},${p.id},1)">＋</button>
-          </div>
-        </div>`;
-      }).join('')}
-      </div>
-    </div>`;
+  document.getElementById('room-content').innerHTML = rooms.map(function(rn) {
+    var rs = getRoomState(floor, rn);
+    var cnt = products.filter(function(p){return rs.products[String(p.id)]&&rs.products[String(p.id)].qty>0;}).length;
+    var rowsHtml = products.filter(function(p){return !p.special;}).map(function(p) {
+      var qty = rs.products[String(p.id)] ? rs.products[String(p.id)].qty : 0;
+      return '<div class="room-row" style="display:grid;grid-template-columns:1fr auto;align-items:center">'
+        + '<span style="font-size:13px;text-align:right;padding-right:12px">' + (p.short||p.name) + '</span>'
+        + '<div style="display:flex;align-items:center;gap:6px">'
+        + '<button class="c-btn" onclick="cChange(' + rn + ',' + p.id + ',-1)">−</button>'
+        + '<span class="c-val" id="rq-' + rn + '-' + p.id + '">' + qty + '</span>'
+        + '<button class="c-btn plus" onclick="cChange(' + rn + ',' + p.id + ',1)">＋</button>'
+        + '</div></div>';
+    }).join('');
+    return '<div class="room-card">'
+      + '<div class="room-hd" onclick="toggleRoomPc(' + rn + ')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">'
+      + '<span>' + rn + '号室 ' + (cnt ? '<span style="font-size:11px;color:#2a7a2a">' + cnt + '種類</span>' : '') + '</span>'
+      + '<span id="rtoggle-' + rn + '" style="font-size:12px;color:#666">▼</span>'
+      + '</div>'
+      + '<div id="rbody-' + rn + '" style="display:none;padding:2px 0">' + rowsHtml + '</div>'
+      + '</div>';
   }).join('');
 }
 
@@ -953,15 +1077,15 @@ function cChange(rn, pid, d) {
 
 function reflectRoom(silent) {
   const totals = {};
-  products.forEach(p => { totals[p.id] = 0; });
-  (ROOMS[floor]||[]).forEach(rn => {
+  products.forEach(function(p) { totals[p.id] = 0; });
+  (ROOMS[floor]||[]).forEach(function(rn) {
     const rs = getRoomState(floor, rn);
-    products.forEach(p => {
+    products.forEach(function(p) {
       const v = rs.products[String(p.id)];
       if (v && v.qty > 0) totals[p.id] += parseInt(v.qty)||0;
     });
   });
-  products.forEach(p => {
+  products.forEach(function(p) {
     if (p.weeklyFixed === null) {
       state[floor][p.id].dailyUse = totals[p.id];
     } else {
@@ -974,9 +1098,9 @@ function reflectRoom(silent) {
   updateSummary();
   if (!silent) showToast('✅ 居室合計を反映しました！');
   // データがある場合のみ反映済みラベルを表示
-  const hasRoomData = (ROOMS[floor]||[]).some(rn => {
+  var hasRoomData = (ROOMS[floor]||[]).some(function(rn) {
     const rs = getRoomState(floor, rn);
-    return rs.products && Object.keys(rs.products).some(k => rs.products[k] && rs.products[k].qty > 0);
+    return rs.products && Object.keys(rs.products).some(function(k) { return rs.products[k] && rs.products[k].qty > 0; });
   });
   const lbl = document.getElementById('room-reflect-label');
   if (lbl) lbl.style.display = hasRoomData ? 'block' : 'none';
@@ -1002,7 +1126,7 @@ function importRoomData(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
       localStorage.setItem('diaper_rooms', JSON.stringify(data));
@@ -1019,7 +1143,7 @@ function importRoomData(input) {
 
 function deletePcHistory(key) {
   const hist = loadHistory();
-  const newHist = hist.filter(h => (h.week + '_' + h.floor) !== key);
+  const newHist = hist.filter(function(h) { return (h.week + '_' + h.floor) !== key; });
   saveHistory(newHist);
   // 履歴パネルを再描画（開閉せず）
 renderHistory();
@@ -1029,14 +1153,14 @@ function exportHistoryExcel() {
   const history = loadHistory();
   if (!history.length) { showToast('履歴がありません'); return; }
 
-  const floorHist = history.filter(h => h.floor === floor);
+  const floorHist = history.filter(function(h) { return h.floor === floor; });
   if (!floorHist.length) { showToast('このフロアの履歴がありません'); return; }
 
-  const sorted = [...floorHist].sort((a,b) => (a.week||'').localeCompare(b.week||''));
-  const prods = products.filter(p => !p.special);
+  var sorted = floorHist.slice().sort(function(a,b) { return (a.week||'').localeCompare(b.week||''); });
+  const prods = products.filter(function(p) { return !p.special; });
 
   // ヘッダー行：商品名 + 日付列
-  const rows = [['商品', ...sorted.map(h => h.week||'')]];
+  const rows = [['商品'].concat(sorted.map(function(h) { return h.week||''; }))];
 
   // カテゴリ別に商品を追加
   const cats = [
@@ -1044,17 +1168,17 @@ function exportHistoryExcel() {
     { key: 'tape', label: '【テープ止め】', includeSpecial: true },
     { key: 'pants', label: '【リハパン】' }
   ];
-  cats.forEach(cat => {
+  cats.forEach(function(cat) {
     const catProds = cat.includeSpecial
-      ? products.filter(p => p.cat === cat.key || p.special)
-      : products.filter(p => p.cat === cat.key);
+      ? products.filter(function(p) { return p.cat === cat.key || p.special; })
+      : products.filter(function(p) { return p.cat === cat.key; });
     if (!catProds.length) return;
     // カテゴリ行
-    rows.push([cat.label, ...sorted.map(() => '')]);
-    catProds.forEach(p => {
+    rows.push([cat.label].concat(sorted.map(function() { return ''; })));
+    catProds.forEach(function(p) {
       const row = [p.short||p.name];
-      sorted.forEach(h => {
-        const item = (h.items||[]).find(i => i.id === p.id);
+      sorted.forEach(function(h) {
+        const item = (h.items||[]).find(function(i) { return i.id === p.id; });
         row.push(item !== undefined ? (item.qty || 0) : 0);
       });
       rows.push(row);
@@ -1062,7 +1186,7 @@ function exportHistoryExcel() {
   });
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:12}, ...sorted.map(() => ({wch:9}))];
+  ws['!cols'] = [{wch:12}].concat(sorted.map(function() { return {wch:9}; }));
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '注文履歴_' + floor);
@@ -1078,9 +1202,9 @@ function exportHistoryExcel() {
 
 function exportAllDataPc() {
   const data = { version: 2, floors: {} };
-  ['2F','3F'].forEach(f => {
+  ['2F','3F'].forEach(function(f) {
     data.floors[f] = {};
-    products.forEach(p => { data.floors[f][p.id] = state[f][p.id].dailyUse; });
+    products.forEach(function(p) { data.floors[f][p.id] = state[f][p.id].dailyUse; });
   });
   try { data.rooms = JSON.parse(localStorage.getItem('diaper_rooms') || '{}'); } catch(e) { data.rooms = {}; }
   const json = JSON.stringify(data, null, 2);
@@ -1096,18 +1220,18 @@ function exportAllDataPc() {
 function importAllDataPc(input) {
   const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
       if (data.floors) {
-        ['2F','3F'].forEach(f => {
+        ['2F','3F'].forEach(function(f) {
           if (!data.floors[f]) return;
-          products.forEach(p => {
+          products.forEach(function(p) {
             const val = data.floors[f][p.id];
             if (val !== undefined) state[f][p.id].dailyUse = val;
           });
           const saveData = {};
-          products.forEach(p => { saveData[p.id] = state[f][p.id].dailyUse; });
+          products.forEach(function(p) { saveData[p.id] = state[f][p.id].dailyUse; });
           localStorage.setItem(SAVE_KEY(f), JSON.stringify(saveData));
         });
       }
@@ -1122,11 +1246,11 @@ function importAllDataPc(input) {
 
 function exportFloorDataPc(f) {
   const data = { floor: f, daily: {} };
-  products.forEach(p => { data.daily[p.id] = state[f][p.id].dailyUse; });
+  products.forEach(function(p) { data.daily[p.id] = state[f][p.id].dailyUse; });
   const roomData = {};
   try {
     const all = JSON.parse(localStorage.getItem('diaper_rooms') || '{}');
-    Object.keys(all).forEach(k => { if (k.startsWith(f + '_')) roomData[k] = all[k]; });
+    Object.keys(all).forEach(function(k) { if (k.startsWith(f + '_')) roomData[k] = all[k]; });
   } catch(e) {}
   data.rooms = roomData;
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1141,11 +1265,11 @@ function exportFloorDataPc(f) {
 function importFloorDataPc(input, targetFloor) {
   const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
       if (data.daily) {
-        products.forEach(p => {
+        products.forEach(function(p) {
           if (data.daily[p.id] !== undefined) state[targetFloor][p.id].dailyUse = data.daily[p.id];
         });
         localStorage.setItem(SAVE_KEY(targetFloor), JSON.stringify(data.daily));
@@ -1153,7 +1277,7 @@ function importFloorDataPc(input, targetFloor) {
       if (data.rooms) {
         const all = {};
         try { Object.assign(all, JSON.parse(localStorage.getItem('diaper_rooms') || '{}')); } catch(e) {}
-        Object.keys(all).forEach(k => { if (k.startsWith(targetFloor + '_')) delete all[k]; });
+        Object.keys(all).forEach(function(k) { if (k.startsWith(targetFloor + '_')) delete all[k]; });
         Object.assign(all, data.rooms);
         localStorage.setItem('diaper_rooms', JSON.stringify(all));
       }
@@ -1197,18 +1321,18 @@ function renderSunHist() {
   // 表示する商品（注文があったもの）
   let html = '<table style="border-collapse:collapse;width:100%;font-size:10px;table-layout:fixed">';
   html += '<tr style="background:#f0f0f0"><th style="padding:3px 6px;text-align:left">商品</th>';
-  hist.forEach((h, hi) => {
+  hist.forEach(function(h, hi) {
     html += '<th style="padding:3px 6px;text-align:center;white-space:nowrap">' + h.date
       + '<br><button onclick="deleteSunHist(' + hi + ')" style="font-size:8px;padding:1px 5px;border:1px solid #ffaaaa;border-radius:4px;background:#fff5f5;color:#e53935;cursor:pointer;font-family:inherit;margin-top:2px">削除</button></th>';
   });
   html += '</tr>';
 
-  products.forEach(p => {
-    const hasData = hist.some(h => h.items && h.items[p.id] !== undefined);
+  products.forEach(function(p) {
+    var hasData = hist.some(function(h) { return h.items && h.items[p.id] !== undefined; });
     if (!hasData) return;
     html += '<tr style="border-bottom:1px solid #eee">';
     html += '<td style="padding:3px 6px;font-weight:700">' + (p.short||p.name) + '</td>';
-    hist.forEach(h => {
+    hist.forEach(function(h) {
       const val = h.items ? h.items[p.id] : undefined;
       if (val === undefined) { html += '<td style="padding:3px 6px;text-align:center;color:#bbb">-</td>'; return; }
       const boxes = Math.floor(Math.max(0,val)/p.perBox);
@@ -1252,7 +1376,7 @@ function deleteSunHist(idx) {
 
 function deletePcHistoryByDate(week) {
   const history = loadHistory();
-  const newHist = history.filter(h => !(h.week === week && h.floor === floor));
+  const newHist = history.filter(function(h) { return !(h.week === week && h.floor === floor); });
   saveHistory(newHist);
   renderHistory();
   showToast('🗑 ' + week + 'の履歴を削除しました');
@@ -1260,10 +1384,10 @@ function deletePcHistoryByDate(week) {
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
 }
 
-document.addEventListener('wheel', e => { if(document.activeElement.type==='number') document.activeElement.blur(); }, {passive:false});
+document.addEventListener('wheel', function(e) { if(document.activeElement.type==='number') document.activeElement.blur(); }, {passive:false});
 
 // 初期化実行
 initState();
@@ -1273,7 +1397,7 @@ if (savedFloor && (savedFloor === '2F' || savedFloor === '3F')) {
   floor = savedFloor;
   const btn = document.getElementById('fb-' + savedFloor);
   if (btn) {
-    document.querySelectorAll('.floor-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.floor-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
   }
   const hf = document.getElementById('header-floor');
