@@ -383,7 +383,7 @@
     </div>
     <div class="btn-group">
       <button class="btn-auto" id="auto-btn" onclick="autoFill()" style="pointer-events:none;opacity:0.8;cursor:default">⚡ 自動入力中</button>
-      <span id="staff-label" style="font-size:11px;font-weight:800;color:#3a5a3a;background:rgba(255,255,255,0.3);padding:4px 8px;border-radius:6px;white-space:nowrap">👕 スタッフ</span>
+      <span id="staff-label" style="font-size:11px;font-weight:800;color:#3a5a3a;background:rgba(255,255,255,0.3);padding:4px 8px;border-radius:6px;white-space:nowrap">📋 注文シート</span>
     </div>
   </div>
   <div class="header-sub">🗓 日曜注文 → 🚚 木曜納品（4日後）→ 翌木曜まで7日分</div>
@@ -435,17 +435,20 @@
     <button class="btn-confirm" onclick="confirmOrder()">✅ 注文確定・履歴に保存</button>
   </div>
   <div class="logic-box">
-    <div class="logic-title">📐 計算ロジック</div>
-    <div>【パッド類】</div>
-    <div>現在庫 ＝ 箱数×1箱枚数 ＋ 袋数×1袋枚数</div>
-    <div>推奨注文 ＝ ⌈（7日分 − 木曜到着時残庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
-    <div style="margin-top:6px">【テープ止め・リハパン】</div>
-    <div>推奨注文 ＝ ⌈（入浴日使用枚数 ＋ 1袋 − 現在庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
-    <div style="margin-top:6px">【来週の日曜の在庫予想】</div>
-    <div>パッド類：現在庫 ＋ 注文箱数×1箱枚数 − 1日使用量×7日 − 1袋×1.5（予備）</div>
-    <div>テープ・リハパン：現在庫 ＋ 注文箱数×1箱枚数 − 居室集計×4（入浴使用）− 2袋（予備）</div>
-    <div class="admin-only" style="margin-top:6px">【木曜届く前の残り】</div>
-    <div class="admin-only">木曜届く前の残り ＝ 現在庫 − 1日使用量×4日 − 予備1袋</div>
+    <button onclick="var b=this.nextElementSibling;b.style.display=b.style.display==='none'?'block':'none';this.textContent=this.textContent.startsWith('▶')?'▼ 計算ロジック':'▶ 計算ロジック'"
+      style="width:100%;text-align:left;background:none;border:none;cursor:pointer;font-size:11px;font-weight:800;color:#0a2a0a;padding:0;font-family:inherit">▶ 計算ロジック</button>
+    <div style="display:none;margin-top:6px">
+      <div>【パッド類】</div>
+      <div>現在庫 ＝ 箱数×1箱枚数 ＋ 袋数×1袋枚数</div>
+      <div>推奨注文 ＝ ⌈（7日分 − 木曜到着時残庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
+      <div style="margin-top:6px">【テープ止め・リハパン】</div>
+      <div>推奨注文 ＝ ⌈（入浴日使用枚数 ＋ 1袋 − 現在庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
+      <div style="margin-top:6px">【来週の日曜の在庫予想】</div>
+      <div>パッド類：現在庫 ＋ 注文箱数×1箱枚数 − 1日使用量×7日 − 1袋×1.5（予備）</div>
+      <div>テープ・リハパン：現在庫 ＋ 注文箱数×1箱枚数 − 居室集計×4（入浴使用）− 2袋（予備）</div>
+      <div class="admin-only" style="margin-top:6px">【木曜届く前の残り】</div>
+      <div class="admin-only">木曜届く前の残り ＝ 現在庫 − 1日使用量×4日 − 予備1袋</div>
+    </div>
   </div>
 </div>
 
@@ -462,7 +465,13 @@
 <!-- バックアップ -->
 <div style="padding: 4px 12px;">
   <button id="mode-btn" class="btn-mode btn-mode-admin" onclick="toggleMode()" style="width:100%;padding:2px;border-radius:6px;font-size:9px;">⚙️ 管理者に切り替え</button>
-  <button id="holiday-btn" class="btn-holiday" onclick="toggleHoliday()">🏖 連休モード（14日分計算）をONにする</button>
+  <button id="holiday-btn" class="btn-holiday" onclick="toggleHoliday()">🏖 連休モード</button>
+  <div id="holiday-weeks" style="display:none;display:none;flex-wrap:wrap;gap:4px;margin-top:4px">
+    <button onclick="setOrderWeeks(1)" id="wk-btn-1" style="flex:1;padding:4px;font-size:18px;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-family:inherit;background:#f5f5f5">1週</button>
+    <button onclick="setOrderWeeks(2)" id="wk-btn-2" style="flex:1;padding:4px;font-size:18px;border:1px solid #ff8f00;border-radius:6px;cursor:pointer;font-family:inherit;background:#fff3e0;font-weight:700">2週</button>
+    <button onclick="setOrderWeeks(3)" id="wk-btn-3" style="flex:1;padding:4px;font-size:18px;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-family:inherit;background:#f5f5f5">3週</button>
+    <button onclick="setOrderWeeks(4)" id="wk-btn-4" style="flex:1;padding:4px;font-size:18px;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-family:inherit;background:#f5f5f5">4週</button>
+  </div>
 </div>
 
 <div id="backup-section" class="admin-only">
@@ -800,7 +809,6 @@ function buildCards() {
               style="display:none;width:100%;padding:8px 4px;border:2px solid #f57c00;border-radius:10px;font-size:16px;text-align:center;font-weight:800;font-family:inherit;outline:none;background:#fff8f0;margin-top:4px;box-sizing:border-box"
               placeholder="${p.weeklyFixed}"
               oninput="updateWeeklyFixed(${p.id}, this.value)">
-            <button onclick="resetWeeklyFixed(${p.id})" style="display:none;width:100%;margin-top:4px;padding:4px;border:none;border-radius:6px;background:#eee;color:#888;font-size:11px;cursor:pointer;font-family:inherit" id="weekly-reset-${p.id}">0にリセット</button>
           </div>
           <div class="bottom-col admin-only" id="after-col-${p.id}" style="flex:0.7">
             <div class="col-label label-after" style="font-size:9px;color:#bbb">木曜届く前の残り</div>
@@ -1530,24 +1538,45 @@ function updateRoomProduct(roomNo, pid) {
 
 
 // --- 連休モード ---
+var orderWeeks = 2;
+
+function setOrderWeeks(n) {
+  orderWeeks = n;
+  for (var i = 1; i <= 4; i++) {
+    var b = document.getElementById('wk-btn-' + i);
+    if (!b) continue;
+    if (i === n) {
+      b.style.borderColor = '#ff8f00'; b.style.background = '#fff3e0'; b.style.fontWeight = '700';
+    } else {
+      b.style.borderColor = '#ddd'; b.style.background = '#f5f5f5'; b.style.fontWeight = 'normal';
+    }
+  }
+  var banner = document.getElementById('holiday-banner');
+  if (banner) banner.textContent = '🏖 連休モード：' + (n * 7) + '日分（' + n + '週）で計算中';
+  products.forEach(function(p) { updateCard(p.id); });
+  updateWeeklyDisplay();
+}
+
 function toggleHoliday() {
   isHolidayMode = !isHolidayMode;
-  const btn = document.getElementById('holiday-btn');
-  const banner = document.getElementById('holiday-banner');
-  const subHeader = document.querySelector('.header-sub');
+  var btn = document.getElementById('holiday-btn');
+  var banner = document.getElementById('holiday-banner');
+  var weeks = document.getElementById('holiday-weeks');
+  var subHeader = document.querySelector('.header-sub');
   if (isHolidayMode) {
     btn.textContent = '🏖 連休モード ON（タップでOFFに戻す）';
     btn.className = 'btn-holiday active';
     banner.style.display = 'block';
-    if (subHeader) subHeader.textContent = '🏖 連休モード：日曜注文 → 木曜納品 → 翌々日曜まで14日分';
+    if (weeks) weeks.style.display = 'flex';
+    if (subHeader) subHeader.textContent = '🏖 連休モード：' + (orderWeeks * 7) + '日分で計算中';
   } else {
-    btn.textContent = '🏖 連休モード（14日分計算）をONにする';
+    btn.textContent = '🏖 連休モード';
     btn.className = 'btn-holiday';
     banner.style.display = 'none';
+    if (weeks) weeks.style.display = 'none';
     if (subHeader) subHeader.textContent = '🗓 日曜注文 → 🚚 木曜納品（4日後）→ 翌木曜まで7日分';
   }
-  // 全カード再計算
-  products.forEach(p => updateCard(p.id));
+  products.forEach(function(p) { updateCard(p.id); });
   updateWeeklyDisplay();
 }
 
@@ -1585,7 +1614,7 @@ function toggleMode() {
     btn.textContent = '⚙️ 管理者に切り替え';
     btn.className = 'btn-mode btn-mode-admin';
     banner.style.display = 'none';
-    if (staffLabel) staffLabel.textContent = '👕 スタッフ';
+    if (staffLabel) staffLabel.textContent = '📋 注文シート';
     showWeeklyInputs(false);
     // 居室管理タブ非表示・パッド類に戻す
     document.getElementById('tab-room').style.display = 'none';
