@@ -135,7 +135,7 @@
   input[type=number] {
     width: 100%; padding: 10px 4px;
     border: 1.5px solid #dde8e4; border-radius: 10px;
-    font-size: 18px; text-align: center; font-weight: 700;
+    font-size: 26px; text-align: center; font-weight: 700;
     background: #fafffe; outline: none;
     font-family: inherit; color: #1a3a2e; -webkit-appearance: none;
   }
@@ -834,7 +834,7 @@ function buildCards() {
             <input type="number" inputmode="numeric" min="0" class="bg-daily"
               id="du-${p.id}" value="" placeholder="0" oninput="onInput(${p.id},'dailyUse',this.value)">
           </div>
-          <div class="bottom-col" id="weekly-col-${p.id}" ${p.weeklyFixed === null ? 'style="display:none"' : ''}>
+          <div class="bottom-col" id="weekly-col-${p.id}" ${(p.weeklyFixed === null || ((p.cat === "tape" || p.cat === "pants") && !isAdmin)) ? "style=\"display:none\"" : ""}>
             <div class="col-label label-daily">週必要枚数</div>
             <div id="weekly-disp-${p.id}" style="border:2px solid #a0d4b0;border-radius:10px;padding:10px 4px;text-align:center;background:#f0fdf6;font-size:16px;font-weight:800;color:#1a4a3a">
               ${p.weeklyFixed}<span style="font-size:10px;font-weight:400">枚</span>
@@ -900,6 +900,16 @@ function syncInputsToState() {
     updateCard(p.id);
     updateDailyBadge(p.id);
   });
+}
+
+function updateWeeklyColVisibility(pid) {
+  var p = products.find(function(x) { return x.id === pid; });
+  if (!p) return;
+  var col = document.getElementById('weekly-col-' + pid);
+  if (!col) return;
+  if ((p.cat === 'tape' || p.cat === 'pants') && !isAdmin) {
+    col.style.display = 'none';
+  }
 }
 
 function updateCard(pid) {
@@ -1597,7 +1607,7 @@ function setOrderWeeks(n) {
   }
   var banner = document.getElementById('holiday-banner');
   if (banner) banner.textContent = '🏖 連休モード：' + (n * 7) + '日分（' + n + '週）で計算中';
-  products.forEach(function(p) { updateCard(p.id); });
+  products.forEach(function(p) { updateCard(p.id); updateWeeklyColVisibility(p.id); });
   updateWeeklyDisplay();
 }
 
@@ -1620,7 +1630,7 @@ function toggleHoliday() {
     if (weeks) weeks.style.display = 'none';
     if (subHeader) subHeader.textContent = '🗓 日曜注文 → 🚚 木曜納品（4日後）→ 翌木曜まで7日分';
   }
-  products.forEach(function(p) { updateCard(p.id); });
+  products.forEach(function(p) { updateCard(p.id); updateWeeklyColVisibility(p.id); });
   updateWeeklyDisplay();
 }
 
