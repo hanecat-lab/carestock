@@ -1288,7 +1288,9 @@ function importAllDataPc(input) {
         const rd = data['reflectDate_'+f] || '';
         if (rd) localStorage.setItem('diaper_room_reflect_date_' + f, rd);
       });
-      reflectRoom(true); buildCards(); updateSummary(); updateRoomReflectLabel();
+      reflectRoom(true); buildCards(); updateSummary();
+      var prevFloor = floor;
+      ['2F','3F'].forEach(function(f) { floor = f; updateRoomReflectLabel(); }); floor = prevFloor; updateRoomReflectLabel();
       showToast('📥 全データを読み込みました！');
     } catch(err) { showToast('❌ ファイルが正しくありません'); }
     input.value = '';
@@ -1300,9 +1302,12 @@ function importAllDataPc(input) {
 function exportAllDataPc() {
   var data = {};
   try { data.all = JSON.parse(localStorage.getItem('diaper_rooms') || '{}'); } catch(e) { data.all = {}; }
+  var today = new Date();
+  var todayStr = (today.getMonth()+1) + '/' + today.getDate();
   ['2F','3F'].forEach(function(f) {
     try { data['daily_'+f] = JSON.parse(localStorage.getItem(SAVE_KEY(f)) || '{}'); } catch(e) {}
-    data['reflectDate_'+f] = localStorage.getItem('diaper_room_reflect_date_' + f) || '';
+    // 書き出し日付を記録（既存の日付があればそれを使い、なければ今日）
+    data['reflectDate_'+f] = localStorage.getItem('diaper_room_reflect_date_' + f) || todayStr;
   });
   var json = JSON.stringify(data, null, 2);
   var blob = new Blob([json], { type: 'application/json' });
@@ -1320,7 +1325,8 @@ function exportFloorDataPc(f) {
     Object.keys(all).forEach(function(k) { if (k.startsWith(f + '_')) roomData[k] = all[k]; });
   } catch(e) {}
   data.rooms = roomData;
-  data.reflectDate = localStorage.getItem('diaper_room_reflect_date_' + f) || '';
+  var td = new Date();
+  data.reflectDate = localStorage.getItem('diaper_room_reflect_date_' + f) || ((td.getMonth()+1) + '/' + td.getDate());
   var json = JSON.stringify(data, null, 2);
   var blob = new Blob([json], { type: 'application/json' });
   var date = new Date().toLocaleDateString('ja-JP').replace(/\//g, '-');
@@ -1349,7 +1355,15 @@ function importFloorDataPc(input, targetFloor) {
       if (data.reflectDate) {
         localStorage.setItem('diaper_room_reflect_date_' + targetFloor, data.reflectDate);
       }
-      reflectRoom(true); buildCards(); updateSummary(); updateRoomReflectLabel();
+      var prevFloor2 = floor;
+      floor = targetFloor;
+      reflectRoom(true);
+      buildCards();
+      updateSummary();
+      updateRoomReflectLabel();
+      floor = prevFloor2;
+      // 現在のフロアのラベルも更新
+      updateRoomReflectLabel();
       showToast('📥 ' + targetFloor + 'のデータを読み込みました！');
     } catch(err) { showToast('❌ ファイルが正しくありません'); }
     input.value = '';
