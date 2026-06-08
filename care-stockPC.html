@@ -352,16 +352,19 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
         style="border:2px solid #aaa;background:#f5f5f5;color:#333">📋 注文履歴</button>
       <div style="border-top:1px solid #a5d6a7;margin:6px 0"></div>
       <div class="sb-title">🗂 データバックアップ</div>
+      <button class="sb-tool-btn" onclick="exportAllDataPc()" style="border:2px solid #e65100;background:#fff8f0;color:#e65100">📤 全データ書き出し</button>
       <label class="sb-tool-btn" style="border:2px solid #1976d2;background:#e3f2fd;color:#1976d2;display:block;text-align:center;cursor:pointer">
         📥 全データ読み込み
         <input type="file" accept=".json" style="display:none" onchange="importAllDataPc(this)">
       </label>
       <div style="border-top:1px solid #a5d6a7;margin:6px 0 4px"></div>
       <div class="sb-title" style="font-size:10px">🏠 フロア別（使用量＋居室）</div>
+      <button class="sb-tool-btn" onclick="exportFloorDataPc('2F')" style="border:2px solid #e65100;background:#fff8f0;color:#e65100">📤 2階 書き出し</button>
       <label class="sb-tool-btn" style="border:2px solid #1976d2;background:#e3f2fd;color:#1976d2;display:block;text-align:center;cursor:pointer">
         📥 2階 読み込み
         <input type="file" accept=".json" style="display:none" onchange="importFloorDataPc(this,'2F')">
       </label>
+      <button class="sb-tool-btn" onclick="exportFloorDataPc('3F')" style="border:2px solid #e65100;background:#fff8f0;color:#e65100">📤 3階 書き出し</button>
       <label class="sb-tool-btn" style="border:2px solid #1976d2;background:#e3f2fd;color:#1976d2;display:block;text-align:center;cursor:pointer">
         📥 3階 読み込み
         <input type="file" accept=".json" style="display:none" onchange="importFloorDataPc(this,'3F')">
@@ -1284,6 +1287,37 @@ function importAllDataPc(input) {
   reader.readAsText(file);
 }
 
+
+function exportAllDataPc() {
+  var data = {};
+  try { data.all = JSON.parse(localStorage.getItem('diaper_rooms') || '{}'); } catch(e) { data.all = {}; }
+  ['2F','3F'].forEach(function(f) {
+    try { data['daily_'+f] = JSON.parse(localStorage.getItem(SAVE_KEY(f)) || '{}'); } catch(e) {}
+    data['reflectDate_'+f] = localStorage.getItem('diaper_room_reflect_date_' + f) || '';
+  });
+  var json = JSON.stringify(data, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var date = new Date().toLocaleDateString('ja-JP').replace(/\//g, '-');
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'all-data-' + date + '.json'; a.click();
+  showToast('📤 全データを書き出しました');
+}
+
+function exportFloorDataPc(f) {
+  var data = { floor: f };
+  try { data.daily = JSON.parse(localStorage.getItem(SAVE_KEY(f)) || '{}'); } catch(e) { data.daily = {}; }
+  var roomData = {};
+  try {
+    var all = JSON.parse(localStorage.getItem('diaper_rooms') || '{}');
+    Object.keys(all).forEach(function(k) { if (k.startsWith(f + '_')) roomData[k] = all[k]; });
+  } catch(e) {}
+  data.rooms = roomData;
+  data.reflectDate = localStorage.getItem('diaper_room_reflect_date_' + f) || '';
+  var json = JSON.stringify(data, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var date = new Date().toLocaleDateString('ja-JP').replace(/\//g, '-');
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'floor-' + f + '-' + date + '.json'; a.click();
+  showToast('📤 ' + f + 'のデータを書き出しました');
+}
 function importFloorDataPc(input, targetFloor) {
   const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
