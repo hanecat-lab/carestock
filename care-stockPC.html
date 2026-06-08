@@ -1116,6 +1116,12 @@ function cChange(rn, pid, d) {
   if (!rs.products) rs.products = {};
   rs.products[String(pid)] = { checked: v > 0, qty: v };
   setRoomState(floor, rn, rs);
+  // 変更時に自動で日時保存・反映
+  var now = new Date();
+  var dateStr = (now.getMonth()+1) + '/' + now.getDate();
+  localStorage.setItem('diaper_room_reflect_date_' + floor, dateStr);
+  reflectRoom(true);
+  updateRoomReflectLabel();
 }
 
 function updateRoomReflectLabel() {

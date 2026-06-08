@@ -1707,6 +1707,17 @@ function counterChange(roomNo, pid, delta) {
       ? usedItems.map(p => p.short + ' ' + rs.products[p.id].qty + '枚').join('・')
       : '未登録';
   }
+  // 変更時に自動で日時保存・反映
+  var now = new Date();
+  var dateStr = (now.getMonth()+1) + '/' + now.getDate();
+  localStorage.setItem('diaper_room_reflect_date_' + currentFloor, dateStr);
+  reflectRoomToDaily(true);
+  updateRoomReflectLabelMobile();
+  // floor-bannerも更新
+  var bannerEl = document.getElementById('floor-banner');
+  if (bannerEl && hasRoomDataForFloor(currentFloor)) {
+    bannerEl.innerHTML = (currentFloor === '2F' ? '2階' : '3階') + 'の在庫を入力中 <span style="font-size:10px">(' + dateStr + ' 反映済み)</span>';
+  }
 }
 
 function updateRoomProduct(roomNo, pid) {
