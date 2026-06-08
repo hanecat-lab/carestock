@@ -819,6 +819,30 @@ function updateCard(pid) {
 
   // 来週の日曜の在庫予想
   const sunEl = document.getElementById('sun-'+pid);
+  // 4日分・7日分消費量
+  var use4El = document.getElementById('use4-'+pid);
+  var use4vEl = document.getElementById('use4v-'+pid);
+  var use7vEl = document.getElementById('use7v-'+pid);
+  if (use4El && use4vEl && use7vEl) {
+    if (p.weeklyFixed === null && s.dailyUse > 0) {
+      var use4pieces = s.dailyUse * 4;
+      var boxes4 = Math.ceil(use4pieces / p.perBox);
+      var rem4 = use4pieces % p.perBox;
+      var bags4 = rem4 > 0 ? Math.ceil(rem4 / p.perBag) : 0;
+      var txt4 = (boxes4 > 0 ? boxes4 + '箱' : '') + (bags4 > 0 ? bags4 + '袋' : '');
+      use4vEl.textContent = txt4;
+      var use7pieces = s.dailyUse * getDays();
+      var boxes7 = Math.ceil(use7pieces / p.perBox);
+      var rem7 = use7pieces % p.perBox;
+      var bags7 = rem7 > 0 ? Math.ceil(rem7 / p.perBag) : 0;
+      var txt7 = (boxes7 > 0 ? boxes7 + '箱' : '') + (bags7 > 0 ? bags7 + '袋' : '');
+      use7vEl.textContent = txt7;
+      use4El.style.display = '';
+    } else {
+      use4El.style.display = 'none';
+    }
+  }
+
   if (sunEl && !p.special) {
     const sunStock = calcSundayStock(p);
     const sunLow = sunStock < 0;
@@ -1094,6 +1118,23 @@ function cChange(rn, pid, d) {
   setRoomState(floor, rn, rs);
 }
 
+function updateRoomReflectLabel() {
+  var hasRoomData = (ROOMS[floor]||[]).some(function(rn) {
+    var rs = getRoomState(floor, rn);
+    return rs.products && Object.keys(rs.products).some(function(k) { return rs.products[k] && rs.products[k].qty > 0; });
+  });
+  var lbl = document.getElementById('room-reflect-label');
+  if (lbl) {
+    if (hasRoomData) {
+      var savedDate = localStorage.getItem('diaper_room_reflect_date_' + floor) || '';
+      lbl.textContent = '✅ 居室管理を反映済み' + (savedDate ? '　' + savedDate : '');
+      lbl.style.display = 'block';
+    } else {
+      lbl.style.display = 'none';
+    }
+  }
+}
+
 function reflectRoom(silent) {
   const totals = {};
   products.forEach(function(p) { totals[p.id] = 0; });
@@ -1115,14 +1156,28 @@ function reflectRoom(silent) {
   // 反映後は常にbuildCardsで再描画（stateの値をinputに反映させるため）
   buildCards();
   updateSummary();
-  if (!silent) showToast('✅ 居室合計を反映しました！');
+  if (!silent) {
+    showToast('✅ 居室合計を反映しました！');
+    var now = new Date();
+    var dateStr = now.getFullYear() + '/' + (now.getMonth()+1) + '/' + now.getDate() + ' ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+    localStorage.setItem('diaper_room_reflect_date_' + floor, dateStr);
+    updateRoomReflectLabel();
+  }
   // データがある場合のみ反映済みラベルを表示
   var hasRoomData = (ROOMS[floor]||[]).some(function(rn) {
     const rs = getRoomState(floor, rn);
     return rs.products && Object.keys(rs.products).some(function(k) { return rs.products[k] && rs.products[k].qty > 0; });
   });
   const lbl = document.getElementById('room-reflect-label');
-  if (lbl) lbl.style.display = hasRoomData ? 'block' : 'none';
+  if (lbl) {
+    if (hasRoomData) {
+      var savedDate = localStorage.getItem('diaper_room_reflect_date_' + floor) || '';
+      lbl.textContent = '✅ 居室管理を反映済み' + (savedDate ? '　' + savedDate : '');
+      lbl.style.display = 'block';
+    } else {
+      lbl.style.display = 'none';
+    }
+  }
 }
 
 
