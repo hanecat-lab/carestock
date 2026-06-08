@@ -1279,7 +1279,7 @@ function importAllDataPc(input) {
         });
       }
       if (data.rooms) localStorage.setItem('diaper_rooms', JSON.stringify(data.rooms));
-      reflectRoom(true); buildCards(); updateSummary();
+      reflectRoom(true); buildCards(); updateSummary(); updateRoomReflectLabel();
       showToast('📥 全データを読み込みました！');
     } catch(err) { showToast('❌ ファイルが正しくありません'); }
     input.value = '';
@@ -1340,7 +1340,7 @@ function importFloorDataPc(input, targetFloor) {
       if (data.reflectDate) {
         localStorage.setItem('diaper_room_reflect_date_' + targetFloor, data.reflectDate);
       }
-      reflectRoom(true); buildCards(); updateSummary();
+      reflectRoom(true); buildCards(); updateSummary(); updateRoomReflectLabel();
       showToast('📥 ' + targetFloor + 'のデータを読み込みました！');
     } catch(err) { showToast('❌ ファイルが正しくありません'); }
     input.value = '';
