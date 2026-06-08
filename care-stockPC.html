@@ -1119,34 +1119,6 @@ function cChange(rn, pid, d) {
   if (!rs.products) rs.products = {};
   rs.products[String(pid)] = { checked: v > 0, qty: v };
   setRoomState(floor, rn, rs);
-  // 変更時に自動で日時保存・反映（buildCards不要の軽量版）
-  var now = new Date();
-  var dateStr = (now.getMonth()+1) + '/' + now.getDate();
-  localStorage.setItem('diaper_room_reflect_date_' + floor, dateStr);
-  reflectRoomQuick();
-  updateRoomReflectLabel();
-}
-
-function reflectRoomQuick() {
-  var totals = {};
-  products.forEach(function(p) { totals[p.id] = 0; });
-  (ROOMS[floor]||[]).forEach(function(rn) {
-    var rs = getRoomState(floor, rn);
-    products.forEach(function(p) {
-      var v = rs.products[String(p.id)];
-      if (v && v.qty > 0) totals[p.id] += parseInt(v.qty)||0;
-    });
-  });
-  products.forEach(function(p) {
-    if (p.weeklyFixed === null) {
-      state[floor][p.id].dailyUse = totals[p.id];
-    } else {
-      var w = totals[p.id] * 4 + p.perBag;
-      state[floor][p.id].weeklyOverride = w > 0 ? w : null;
-    }
-    updateCard(p.id);
-  });
-  updateSummary();
 }
 
 function updateRoomReflectLabel() {
@@ -1288,9 +1260,7 @@ function importAllDataPc(input) {
         const rd = data['reflectDate_'+f] || '';
         if (rd) localStorage.setItem('diaper_room_reflect_date_' + f, rd);
       });
-      reflectRoom(true); buildCards(); updateSummary();
-      var prevFloor = floor;
-      ['2F','3F'].forEach(function(f) { floor = f; updateRoomReflectLabel(); }); floor = prevFloor; updateRoomReflectLabel();
+      reflectRoom(true); buildCards(); updateSummary(); updateRoomReflectLabel();
       showToast('📥 全データを読み込みました！');
     } catch(err) { showToast('❌ ファイルが正しくありません'); }
     input.value = '';
@@ -1355,15 +1325,7 @@ function importFloorDataPc(input, targetFloor) {
       if (data.reflectDate) {
         localStorage.setItem('diaper_room_reflect_date_' + targetFloor, data.reflectDate);
       }
-      var prevFloor2 = floor;
-      floor = targetFloor;
-      reflectRoom(true);
-      buildCards();
-      updateSummary();
-      updateRoomReflectLabel();
-      floor = prevFloor2;
-      // 現在のフロアのラベルも更新
-      updateRoomReflectLabel();
+      reflectRoom(true); buildCards(); updateSummary(); updateRoomReflectLabel();
       showToast('📥 ' + targetFloor + 'のデータを読み込みました！');
     } catch(err) { showToast('❌ ファイルが正しくありません'); }
     input.value = '';
@@ -1489,7 +1451,6 @@ loadDaily();
 reflectRoom(true);  // 居室管理を自動反映（起動時はトースト非表示）
 buildCards();
 updateSummary();
-updateRoomReflectLabel();
 </script>
 </body>
 </html>
