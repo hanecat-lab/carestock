@@ -494,7 +494,6 @@
   <button id="mode-btn" class="btn-mode btn-mode-admin" onclick="toggleMode()" style="width:100%;padding:2px;border-radius:6px;font-size:9px;">⚙️ 管理者に切り替え</button>
   <button id="holiday-btn" class="btn-holiday" onclick="toggleHoliday()">🏖 連休モード</button>
   <div id="holiday-weeks" style="display:none;display:none;flex-wrap:wrap;gap:4px;margin-top:4px">
-    <button onclick="setOrderWeeks(1)" id="wk-btn-1" style="flex:1;padding:4px;font-size:18px;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-family:inherit;background:#f5f5f5">1週</button>
     <button onclick="setOrderWeeks(2)" id="wk-btn-2" style="flex:1;padding:4px;font-size:18px;border:1px solid #ff8f00;border-radius:6px;cursor:pointer;font-family:inherit;background:#fff3e0;font-weight:700">2週</button>
     <button onclick="setOrderWeeks(3)" id="wk-btn-3" style="flex:1;padding:4px;font-size:18px;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-family:inherit;background:#f5f5f5">3週</button>
     <button onclick="setOrderWeeks(4)" id="wk-btn-4" style="flex:1;padding:4px;font-size:18px;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-family:inherit;background:#f5f5f5">4週</button>
@@ -571,9 +570,9 @@ let currentCat = "pad";
 
 // state[floor][pid] = { stockBoxes, stockBags, dailyUse, orderQty }
 const state = {};
-FLOORS.forEach(f => {
+FLOORS.forEach(function(f) {
   state[f] = {};
-  products.forEach(p => {
+  products.forEach(function(p) {
     state[f][p.id] = { stockBoxes:0, stockBags:0, dailyUse:0, orderQty:0, weeklyOverride:null };
   });
 });
@@ -585,14 +584,14 @@ function saveDateKey(floor) { return "diaper_saved_at_" + floor; }
 
 function saveDailyUse() {
   const data = {};
-  products.forEach(p => { data[p.id] = state[currentFloor][p.id].dailyUse; });
+  products.forEach(function(p) { data[p.id] = state[currentFloor][p.id].dailyUse; });
   localStorage.setItem(saveKey(currentFloor), JSON.stringify(data));
   // 保存日時を記録
   const now = new Date();
   localStorage.setItem(saveDateKey(currentFloor), now.toISOString());
   showToast("💾 " + floorLabel(currentFloor) + "の使用量を保存しました！");
   updateSaveDateLabel();
-  products.forEach(p => updateDailyBadge(p.id));
+  products.forEach(function(p) updateDailyBadge(p.id));
 }
 
 function updateSaveDateLabel() {
@@ -612,7 +611,7 @@ function loadDailyUse(floor) {
     const raw = localStorage.getItem(saveKey(floor));
     if (!raw) return;
     const data = JSON.parse(raw);
-    products.forEach(p => {
+    products.forEach(function(p) {
       if (data[p.id] !== undefined) {
         state[floor][p.id].dailyUse = data[p.id];
       }
@@ -630,7 +629,7 @@ function showToast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg;
   t.style.opacity = 1;
-  setTimeout(() => { t.style.opacity = 0; }, 2000);
+  setTimeoutfunction(() { t.style.opacity = 0; }, 2000);
 }
 
 // --- 計算 ---
@@ -665,7 +664,7 @@ function calcAtDelivery(p) {
   if (p.weeklyFixed !== null) {
     // テープ・リハパン：現在庫 - 居室集計×2 - 1袋×0.5
     let roomTotal = 0;
-    (ROOMS[currentFloor] || []).forEach(rn => {
+    (ROOMS[currentFloor] || []).forEach(function(rn) {
       const rs = getRoomState(currentFloor, rn);
       const v = rs.products[String(p.id)];
       if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
@@ -683,7 +682,7 @@ function calcSundayStock(p) {
     return totalStock(p) + ordered - s.dailyUse * 7 - p.perBag * 1.5;
   } else {
     let roomTotal = 0;
-    (ROOMS[currentFloor] || []).forEach(rn => {
+    (ROOMS[currentFloor] || []).forEach(function(rn) {
       const rs = getRoomState(currentFloor, rn);
       const v = rs.products[String(p.id)];
       if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
@@ -701,7 +700,7 @@ function calcAfterWeek(p) {
 function buildCards() {
   const container = document.getElementById("cards");
   container.innerHTML = "";
-  products.forEach(p => {
+  products.forEach(function(p) {
     const card = document.createElement("div");
     const isVisible = p.cat === currentCat || (currentCat === 'tape' && p.special);
     card.className = "card" + (isVisible ? " visible" : "");
@@ -709,186 +708,17 @@ function buildCards() {
 
     // 吸水シートは箱+袋在庫・注文・納品後在庫つきカード
     if (p.special) {
-      card.innerHTML = `
-      <div class="card-header">
-        <div style="flex:1"><div class="card-name">${p.short || p.name}</div></div>
-      </div>
-      <div class="card-badges">
-        <span class="badge-box">📦 1箱 = ${p.bagPerBox}袋（${p.perBox}枚）</span>
-        <span class="badge-bag">🛍 1袋 = ${p.perBag}枚</span>
-      </div>
-      <div class="card-body">
-        <div style="font-size:13px;font-weight:800;color:#2a6a3a;margin-bottom:6px"><span style="font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle">1</span>現在の在庫</div>
-        <div class="stock-row">
-          <div class="stock-col">
-            <div class="col-label label-box">📦 箱数</div>
-            <div class="spin-wrap">
-              <button class="spin-btn minus" onclick="stepInput('sb-'+${p.id},-1,'stockBoxes',${p.id})">－</button>
-              <input type="number" inputmode="numeric" min="0" class="bg-box"
-                id="sb-${p.id}" value="" placeholder="0"
-                style="-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center"
-                oninput="onInput(${p.id},'stockBoxes',this.value)">
-              <button class="spin-btn plus" onclick="stepInput('sb-'+${p.id},1,'stockBoxes',${p.id})">＋</button>
-            </div>
-            <div class="sub-pieces sub-box" id="sbp-${p.id}" style="display:none"></div>
-          </div>
-          <div class="stock-sep">+</div>
-          <div class="stock-col">
-            <div class="col-label label-bag">🛍 袋数</div>
-            <div class="spin-wrap">
-              <button class="spin-btn minus" onclick="stepInput('sg-'+${p.id},-1,'stockBags',${p.id})">－</button>
-              <input type="number" inputmode="numeric" min="0" class="bg-bag"
-                id="sg-${p.id}" value="" placeholder="0"
-                style="-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center"
-                oninput="onInput(${p.id},'stockBags',this.value)">
-              <button class="spin-btn plus" onclick="stepInput('sg-'+${p.id},1,'stockBags',${p.id})">＋</button>
-            </div>
-            <div class="sub-pieces sub-bag" id="sgp-${p.id}" style="display:none"></div>
-          </div>
-        </div>
-        <div style="text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px">
-          <span style="font-size:12px;color:#888">合計：</span>
-          <span class="total-box" id="tot-${p.id}" style="font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0">0</span>
-          <span style="font-size:11px;color:#888">枚</span>
-        </div>
-        <div class="bottom-row">
-          <div class="bottom-col admin-only" id="after-col-${p.id}" style="flex:0.7">
-            <div class="col-label label-after" style="font-size:9px;color:#bbb">木曜届く前の残り</div>
-            <div class="after-box" id="af-${p.id}">
-              <div class="after-val" id="afv-${p.id}">0<span class="total-unit">枚</span></div>
-              <div class="after-del" id="afd-${p.id}" style="display:none"></div>
-            </div>
-          </div>
-          <div class="bottom-col" id="sun-col-${p.id}" style="flex:0.7">
-            <div class="col-label label-after" style="font-size:9px;color:#bbb">来週の日曜の在庫予想</div>
-            <div class="after-box" id="sun-${p.id}">
-              <div class="after-val" id="sunv-${p.id}" style="font-size:12px">-</div>
-            </div>
-          </div>
-          <div class="bottom-col" style="flex:1.3">
-            <div class="suggest-label" id="ol-${p.id}"><span style="font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle">2</span>${p.short || p.name} 注文箱数</div>
-            <div class="spin-wrap">
-              <button class="spin-btn minus" onclick="stepInput('oq-'+${p.id},-1,'orderQty',${p.id})">－</button>
-              <input type="number" inputmode="numeric" min="0"
-                id="oq-${p.id}" value="" placeholder="0"
-                style="font-size:26px;padding:12px 4px;border:2.5px solid #e53935;border-radius:8px;background:#fff5f5;font-weight:800;color:#c0392b;flex:1;min-width:0;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none"
-                oninput="onInput(${p.id},'orderQty',this.value)">
-              <button class="spin-btn plus plus-ord" onclick="stepInput('oq-'+${p.id},1,'orderQty',${p.id})">＋</button>
-            </div>
-            <div class="sub-pieces sub-order" id="oqp-${p.id}" style="display:none"></div>
-          </div>
-        </div>
-      </div>`;
+      card.innerHTML = "\n      <div class=\"card-header\">\n        <div style=\"flex:1\"><div class=\"card-name\">" + (p.short || p.name) + "</div></div>\n      </div>\n      <div class=\"card-badges\">\n        <span class=\"badge-box\">📦 1箱 = " + (p.bagPerBox) + "袋（" + (p.perBox) + "枚）</span>\n        <span class=\"badge-bag\">🛍 1袋 = " + (p.perBag) + "枚</span>\n      </div>\n      <div class=\"card-body\">\n        <div style=\"font-size:13px;font-weight:800;color:#2a6a3a;margin-bottom:6px\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">1</span>現在の在庫</div>\n        <div class=\"stock-row\">\n          <div class=\"stock-col\">\n            <div class=\"col-label label-box\">📦 箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sb-'+" + (p.id) + ",-1,'stockBoxes'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-box\"\n                id=\"sb-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBoxes',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sb-'+" + (p.id) + ",1,'stockBoxes'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-box\" id=\"sbp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n          <div class=\"stock-sep\">+</div>\n          <div class=\"stock-col\">\n            <div class=\"col-label label-bag\">🛍 袋数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sg-'+" + (p.id) + ",-1,'stockBags'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-bag\"\n                id=\"sg-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBags',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sg-'+" + (p.id) + ",1,'stockBags'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-bag\" id=\"sgp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n        <div style=\"text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px\">\n          <span style=\"font-size:12px;color:#888\">合計：</span>\n          <span class=\"total-box\" id=\"tot-" + (p.id) + "\" style=\"font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0\">0</span>\n          <span style=\"font-size:11px;color:#888\">枚</span>\n        </div>\n        <div class=\"bottom-row\">\n          <div class=\"bottom-col admin-only\" id=\"after-col-" + (p.id) + "\" style=\"flex:0.7\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:#bbb\">木曜届く前の残り</div>\n            <div class=\"after-box\" id=\"af-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"afv-" + (p.id) + "\">0<span class=\"total-unit\">枚</span></div>\n              <div class=\"after-del\" id=\"afd-" + (p.id) + "\" style=\"display:none\"></div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" id=\"sun-col-" + (p.id) + "\" style=\"flex:0.7\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:#bbb\">来週の日曜の在庫予想</div>\n            <div class=\"after-box\" id=\"sun-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"sunv-" + (p.id) + "\" style=\"font-size:12px\">-</div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" style=\"flex:1.3\">\n            <div class=\"suggest-label\" id=\"ol-" + (p.id) + "\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>" + (p.short || p.name) + " 注文箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('oq-'+" + (p.id) + ",-1,'orderQty'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n                id=\"oq-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"font-size:26px;padding:12px 4px;border:2.5px solid #e53935;border-radius:8px;background:#fff5f5;font-weight:800;color:#c0392b;flex:1;min-width:0;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none\"\n                oninput=\"onInput(" + (p.id) + ",'orderQty',this.value)\">\n              <button class=\"spin-btn plus plus-ord\" onclick=\"stepInput('oq-'+" + (p.id) + ",1,'orderQty'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-order\" id=\"oqp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n      </div>";
       container.appendChild(card);
       return;
     }
 
     const dotHtml = p.color
-      ? `<div class="color-dot" style="background:${colorDot[p.color]||'#ccc'}"></div>` : "";
+      ? "<div class=\"color-dot\" style=\"background:" + (colorDot[p.color]||'#ccc') + "\"></div>" : "";
     const subHtml = p.abs
-      ? `<div class="card-sub">${p.name}　${p.abs}</div>` : "";
+      ? "<div class=\"card-sub\">" + (p.name) + "　" + (p.abs) + "</div>" : "";
 
-    card.innerHTML = `
-      <div class="card-header">
-        ${dotHtml}
-        <div style="flex:1">
-          <div class="card-name">${p.short || p.name}</div>
-          ${subHtml}
-        </div>
-        <div class="badge-low" id="low-${p.id}" style="display:none">⚠ 不足注意</div>
-      </div>
-      <div class="card-badges">
-        <span class="badge-box">📦 1箱 = ${Math.round(p.perBox/p.perBag)}袋（${p.perBox}枚）</span>
-        <span class="badge-bag">🛍 1袋 = ${p.perBag}枚</span>
-      </div>
-      <div class="card-body">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div style="font-size:13px;font-weight:800;color:#2a6a3a"><span style="font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle">1</span>現在の在庫</div>
-          <div id="use4-${p.id}" class="admin-only" style="font-size:10px;color:#888;display:none;text-align:right;line-height:1.9">
-            <span style="color:#aaa;font-size:9px">※1枚でも使えば1袋カウント</span><br>
-            日〜水消費：<span id="use4v-${p.id}" style="font-weight:700;color:#c07000"></span><br>
-            7日消費：<span id="use7v-${p.id}" style="font-weight:700;color:#888"></span>
-          </div>
-        </div>
-        <div class="stock-row">
-          <div class="stock-col">
-            <div class="col-label label-box">📦 箱数</div>
-            <div class="spin-wrap">
-              <button class="spin-btn minus" onclick="stepInput('sb-'+${p.id},-1,'stockBoxes',${p.id})">－</button>
-              <input type="number" inputmode="numeric" min="0" class="bg-box"
-                id="sb-${p.id}" value="" placeholder="0"
-                style="-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center"
-                oninput="onInput(${p.id},'stockBoxes',this.value)">
-              <button class="spin-btn plus" onclick="stepInput('sb-'+${p.id},1,'stockBoxes',${p.id})">＋</button>
-            </div>
-            <div class="sub-pieces sub-box" id="sbp-${p.id}" style="display:none"></div>
-          </div>
-          <div class="stock-sep">+</div>
-          <div class="stock-col">
-            <div class="col-label label-bag">🛍 袋数</div>
-            <div class="spin-wrap">
-              <button class="spin-btn minus" onclick="stepInput('sg-'+${p.id},-1,'stockBags',${p.id})">－</button>
-              <input type="number" inputmode="numeric" min="0" class="bg-bag"
-                id="sg-${p.id}" value="" placeholder="0"
-                style="-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center"
-                oninput="onInput(${p.id},'stockBags',this.value)">
-              <button class="spin-btn plus" onclick="stepInput('sg-'+${p.id},1,'stockBags',${p.id})">＋</button>
-            </div>
-            <div class="sub-pieces sub-bag" id="sgp-${p.id}" style="display:none"></div>
-          </div>
-        </div>
-        <div style="text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px">
-          <span style="font-size:12px;color:#888">合計：</span>
-          <span class="total-box" id="tot-${p.id}" style="font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0">0</span>
-          <span style="font-size:11px;color:#888">枚</span>
-        </div>
-        <div class="bottom-row">
-
-          <div class="bottom-col admin-only" id="daily-col-${p.id}" ${p.weeklyFixed !== null ? 'style="display:none"' : ''} data-weekly="${p.weeklyFixed !== null}">
-            <div class="daily-label-row">
-              <div class="daily-saved-dot" id="dot-${p.id}"></div>
-              <div class="col-label label-daily" style="margin-bottom:0">1日使用量(枚)</div>
-            </div>
-            <input type="number" inputmode="numeric" min="0" class="bg-daily"
-              id="du-${p.id}" value="" placeholder="0" oninput="onInput(${p.id},'dailyUse',this.value)">
-          </div>
-          <div class="bottom-col" id="weekly-col-${p.id}" ${(p.weeklyFixed === null || ((p.cat === "tape" || p.cat === "pants") && !isAdminMode)) ? "style=\"display:none\"" : ""}>
-            <div class="col-label label-daily">週必要枚数</div>
-            <div id="weekly-disp-${p.id}" style="border:2px solid #a0d4b0;border-radius:10px;padding:10px 4px;text-align:center;background:#f0fdf6;font-size:16px;font-weight:800;color:#1a4a3a">
-              ${p.weeklyFixed}<span style="font-size:10px;font-weight:400">枚</span>
-            </div>
-            <input type="number" inputmode="numeric" min="0"
-              id="weekly-input-${p.id}"
-              style="display:none;width:100%;padding:8px 4px;border:2px solid #f57c00;border-radius:10px;font-size:16px;text-align:center;font-weight:800;font-family:inherit;outline:none;background:#fff8f0;margin-top:4px;box-sizing:border-box"
-              placeholder="${p.weeklyFixed}"
-              oninput="updateWeeklyFixed(${p.id}, this.value)">
-          </div>
-          <div class="bottom-col admin-only" id="after-col-${p.id}" style="flex:0.7">
-            <div class="col-label label-after" style="font-size:9px;color:#bbb">木曜届く前の残り</div>
-            <div class="after-box" id="af-${p.id}">
-              <div class="after-val" id="afv-${p.id}">0<span class="total-unit">枚</span></div>
-              <div class="after-del" id="afd-${p.id}" style="display:none"></div>
-            </div>
-          </div>
-          <div class="bottom-col" style="flex:1.3">
-            <div class="suggest-label" id="ol-${p.id}"><span style="font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle">2</span>${p.short || p.name} 注文箱数</div>
-            <div class="spin-wrap">
-              <button class="spin-btn minus" onclick="stepInput('oq-'+${p.id},-1,'orderQty',${p.id})">－</button>
-              <input type="number" inputmode="numeric" min="0"
-                id="oq-${p.id}" value="" placeholder="0"
-                style="font-size:26px;padding:12px 4px;border:2.5px solid #e53935;border-radius:8px;background:#fff5f5;font-weight:800;color:#c0392b;flex:1;min-width:0;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none"
-                oninput="onInput(${p.id},'orderQty',this.value)">
-              <button class="spin-btn plus plus-ord" onclick="stepInput('oq-'+${p.id},1,'orderQty',${p.id})">＋</button>
-            </div>
-            <div class="sub-pieces sub-order" id="oqp-${p.id}" style="display:none"></div>
-            <div style="text-align:right;font-size:15px;color:#aaa;margin-top:4px" id="sun-col-${p.id}">
-              来週日曜在庫予想：<span id="sunv-${p.id}">-</span>
-            </div>
-            <div class="prev-badge" id="prev-${p.id}" style="display:none"></div>
-          </div>
-        </div>
-      </div>
-    `;
+    card.innerHTML = "\n      <div class=\"card-header\">\n        " + (dotHtml) + "\n        <div style=\"flex:1\">\n          <div class=\"card-name\">" + (p.short || p.name) + "</div>\n          " + (subHtml) + "\n        </div>\n        <div class=\"badge-low\" id=\"low-" + (p.id) + "\" style=\"display:none\">⚠ 不足注意</div>\n      </div>\n      <div class=\"card-badges\">\n        <span class=\"badge-box\">📦 1箱 = " + (Math.round(p.perBox/p.perBag)) + "袋（" + (p.perBox) + "枚）</span>\n        <span class=\"badge-bag\">🛍 1袋 = " + (p.perBag) + "枚</span>\n      </div>\n      <div class=\"card-body\">\n        <div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:6px\">\n          <div style=\"font-size:13px;font-weight:800;color:#2a6a3a\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">1</span>現在の在庫</div>\n          <div id=\"use4-" + (p.id) + "\" class=\"admin-only\" style=\"font-size:10px;color:#888;display:none;text-align:right;line-height:1.9\">\n            <span style=\"color:#aaa;font-size:9px\">※1枚でも使えば1袋カウント</span><br>\n            日〜水消費：<span id=\"use4v-" + (p.id) + "\" style=\"font-weight:700;color:#c07000\"></span><br>\n            7日消費：<span id=\"use7v-" + (p.id) + "\" style=\"font-weight:700;color:#888\"></span>\n          </div>\n        </div>\n        <div class=\"stock-row\">\n          <div class=\"stock-col\">\n            <div class=\"col-label label-box\">📦 箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sb-'+" + (p.id) + ",-1,'stockBoxes'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-box\"\n                id=\"sb-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBoxes',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sb-'+" + (p.id) + ",1,'stockBoxes'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-box\" id=\"sbp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n          <div class=\"stock-sep\">+</div>\n          <div class=\"stock-col\">\n            <div class=\"col-label label-bag\">🛍 袋数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sg-'+" + (p.id) + ",-1,'stockBags'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-bag\"\n                id=\"sg-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBags',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sg-'+" + (p.id) + ",1,'stockBags'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-bag\" id=\"sgp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n        <div style=\"text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px\">\n          <span style=\"font-size:12px;color:#888\">合計：</span>\n          <span class=\"total-box\" id=\"tot-" + (p.id) + "\" style=\"font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0\">0</span>\n          <span style=\"font-size:11px;color:#888\">枚</span>\n        </div>\n        <div class=\"bottom-row\">\n\n          <div class=\"bottom-col admin-only\" id=\"daily-col-" + (p.id) + "\" " + (p.weeklyFixed !== null ? 'style="display:none"' : '') + " data-weekly=\"" + (p.weeklyFixed !== null) + "\">\n            <div class=\"daily-label-row\">\n              <div class=\"daily-saved-dot\" id=\"dot-" + (p.id) + "\"></div>\n              <div class=\"col-label label-daily\" style=\"margin-bottom:0\">1日使用量(枚)</div>\n            </div>\n            <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-daily\"\n              id=\"du-" + (p.id) + "\" value=\"\" placeholder=\"0\" oninput=\"onInput(" + (p.id) + ",'dailyUse',this.value)\">\n          </div>\n          <div class=\"bottom-col\" id=\"weekly-col-" + (p.id) + "\" " + ((p.weeklyFixed === null || ((p.cat === "tape" || p.cat === "pants") && !isAdminMode)) ? "style=\"display:none\"" : "") + ">\n            <div class=\"col-label label-daily\">週必要枚数</div>\n            <div id=\"weekly-disp-" + (p.id) + "\" style=\"border:2px solid #a0d4b0;border-radius:10px;padding:10px 4px;text-align:center;background:#f0fdf6;font-size:16px;font-weight:800;color:#1a4a3a\">\n              " + (p.weeklyFixed) + "<span style=\"font-size:10px;font-weight:400\">枚</span>\n            </div>\n            <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n              id=\"weekly-input-" + (p.id) + "\"\n              style=\"display:none;width:100%;padding:8px 4px;border:2px solid #f57c00;border-radius:10px;font-size:16px;text-align:center;font-weight:800;font-family:inherit;outline:none;background:#fff8f0;margin-top:4px;box-sizing:border-box\"\n              placeholder=\"" + (p.weeklyFixed) + "\"\n              oninput=\"updateWeeklyFixed(" + (p.id) + ", this.value)\">\n          </div>\n          <div class=\"bottom-col admin-only\" id=\"after-col-" + (p.id) + "\" style=\"flex:0.7\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:#bbb\">木曜届く前の残り</div>\n            <div class=\"after-box\" id=\"af-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"afv-" + (p.id) + "\">0<span class=\"total-unit\">枚</span></div>\n              <div class=\"after-del\" id=\"afd-" + (p.id) + "\" style=\"display:none\"></div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" style=\"flex:1.3\">\n            <div class=\"suggest-label\" id=\"ol-" + (p.id) + "\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>" + (p.short || p.name) + " 注文箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('oq-'+" + (p.id) + ",-1,'orderQty'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n                id=\"oq-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"font-size:26px;padding:12px 4px;border:2.5px solid #e53935;border-radius:8px;background:#fff5f5;font-weight:800;color:#c0392b;flex:1;min-width:0;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none\"\n                oninput=\"onInput(" + (p.id) + ",'orderQty',this.value)\">\n              <button class=\"spin-btn plus plus-ord\" onclick=\"stepInput('oq-'+" + (p.id) + ",1,'orderQty'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-order\" id=\"oqp-" + (p.id) + "\" style=\"display:none\"></div>\n            <div style=\"text-align:right;font-size:15px;color:#aaa;margin-top:4px\" id=\"sun-col-" + (p.id) + "\">\n              来週日曜在庫予想：<span id=\"sunv-" + (p.id) + "\">-</span>\n            </div>\n            <div class=\"prev-badge\" id=\"prev-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n      </div>\n    ";
     container.appendChild(card);
   });
 }
@@ -905,7 +735,7 @@ function updateDailyBadge(pid) {
 function valOrEmpty(n) { return n === 0 ? "" : n; }
 
 function syncInputsToState() {
-  products.forEach(p => {
+  products.forEach(function(p) {
     const s = state[currentFloor][p.id];
     const sb = document.getElementById("sb-"+p.id);
     const sg = document.getElementById("sg-"+p.id);
@@ -931,7 +761,7 @@ function updateWeeklyColVisibility(pid) {
 }
 
 function updateCard(pid) {
-  const p = products.find(x => x.id === pid);
+  const p = products.find(function(x) x.id === pid);
   const s = state[currentFloor][pid];
   const stock = totalStock(p);
   const suggested = calcOrder(p);
@@ -1013,7 +843,7 @@ function updateCard(pid) {
   let nextSunRem;
   if (p.weeklyFixed !== null) {
     let roomTotal = 0;
-    (ROOMS[currentFloor] || []).forEach(rn => {
+    (ROOMS[currentFloor] || []).forEach(function(rn) {
       const rs = getRoomState(currentFloor, rn);
       const v = rs.products[String(p.id)];
       if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
@@ -1070,33 +900,30 @@ function updateSummary() {
   let totalBoxes = 0, totalPieces = 0, html = "";
   let group1Total = 0, group2Total = 0;
 
-  cats.forEach(cat => {
-    const items = products.filter(p => p.cat === cat && state[currentFloor][p.id].orderQty > 0);
+  cats.forEach(function(cat) {
+    const items = products.filter(function(p) p.cat === cat && state[currentFloor][p.id].orderQty > 0);
     if (!items.length) return;
     const label = cat === "pad" ? "パッド類" : cat === "pants" ? "リハパン" : "テープ止め";
-    html += `<div class="summary-cat-label">${label}</div><div class="summary-items">`;
-    items.forEach(p => {
+    html += "<div class=\"summary-cat-label\">" + (label) + "</div><div class=\"summary-items\">";
+    items.forEach(function(p) {
       const qty = state[currentFloor][p.id].orderQty;
       totalBoxes += qty; totalPieces += qty * p.perBox;
       if (group1.includes(cat)) group1Total += qty;
       if (group2.includes(cat)) group2Total += qty;
       const dot = p.color && colorDot[p.color]
-        ? `<span style="width:10px;height:10px;border-radius:50%;background:${colorDot[p.color]};border:1px solid rgba(0,0,0,0.15);display:inline-block;margin-right:4px;flex-shrink:0;vertical-align:middle"></span>`
+        ? "<span style=\"width:10px;height:10px;border-radius:50%;background:" + (colorDot[p.color]) + ";border:1px solid rgba(0,0,0,0.15);display:inline-block;margin-right:4px;flex-shrink:0;vertical-align:middle\"></span>"
         : '';
-      html += `<div class="summary-item">
-        <div class="summary-item-name">${dot}${p.short || p.name}</div>
-        <div class="summary-item-qty">${qty}箱</div>
-      </div>`;
+      html += "<div class=\"summary-item\">\n        <div class=\"summary-item-name\">" + (dot) + "" + (p.short || p.name) + "</div>\n        <div class=\"summary-item-qty\">" + (qty) + "箱</div>\n      </div>";
     });
     html += "</div>";
   });
 
   // 2グループ合計
   if (group1Total > 0 || group2Total > 0) {
-    html += `<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap">`;
-    if (group1Total > 0) html += `<div style="background:rgba(255,255,255,0.7);border:2px solid #e65100;border-radius:10px;padding:8px 20px;text-align:center"><div style="font-size:16px;font-weight:800;color:#1a1a1a">パッド計</div><div style="font-size:26px;font-weight:800;color:#e65100">${group1Total}箱</div></div>`;
-    if (group2Total > 0) html += `<div style="background:rgba(255,255,255,0.7);border:2px solid #e65100;border-radius:10px;padding:8px 20px;text-align:center"><div style="font-size:16px;font-weight:800;color:#1a1a1a">テープ・リハパン計</div><div style="font-size:26px;font-weight:800;color:#e65100">${group2Total}箱</div></div>`;
-    html += `</div>`;
+    html += "<div style=\"display:flex;gap:10px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap\">";
+    if (group1Total > 0) html += "<div style=\"background:rgba(255,255,255,0.7);border:2px solid #e65100;border-radius:10px;padding:8px 20px;text-align:center\"><div style=\"font-size:16px;font-weight:800;color:#1a1a1a\">パッド計</div><div style=\"font-size:26px;font-weight:800;color:#e65100\">" + (group1Total) + "箱</div></div>";
+    if (group2Total > 0) html += "<div style=\"background:rgba(255,255,255,0.7);border:2px solid #e65100;border-radius:10px;padding:8px 20px;text-align:center\"><div style=\"font-size:16px;font-weight:800;color:#1a1a1a\">テープ・リハパン計</div><div style=\"font-size:26px;font-weight:800;color:#e65100\">" + (group2Total) + "箱</div></div>";
+    html += "</div>";
   }
 
   document.getElementById("summary-body").innerHTML =
@@ -1113,10 +940,14 @@ function onInput(pid, field, val) {
 function switchFloor(floor, btn) {
   currentFloor = floor;
   window.scrollTo({ top: 0, behavior: "smooth" });
-  document.querySelectorAll(".floor-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".floor-tab").forEach(function(t) t.classList.remove("active"));
   btn.classList.add("active");
   var reflectDate = localStorage.getItem('diaper_room_reflect_date_' + floor) || '';
   var bannerEl = document.getElementById("floor-banner");
+  if (reflectDate && !hasRoomDataForFloor(floor)) {
+    localStorage.removeItem('diaper_room_reflect_date_' + floor);
+    reflectDate = '';
+  }
   if (reflectDate) {
     bannerEl.innerHTML = floorLabel(floor) + 'の在庫を入力中 <span style="font-size:10px">(' + reflectDate + ' 反映済み)</span>';
   } else {
@@ -1125,7 +956,7 @@ function switchFloor(floor, btn) {
   syncInputsToState();
   reflectRoomToDaily(true);  // フロア切替時も自動反映
   updateSaveDateLabel();
-  products.forEach(p => updatePrevBadge(p.id));
+  products.forEach(function(p) updatePrevBadge(p.id));
   renderHistory();
   updateWeeklyDisplay();
   if (currentCat === 'room') buildRoomSection();
@@ -1134,7 +965,7 @@ function switchFloor(floor, btn) {
 function switchCat(cat, btn) {
   currentCat = cat;
   window.scrollTo({ top: 0, behavior: "smooth" });
-  document.querySelectorAll(".tab").forEach(t => {
+  document.querySelectorAll(".tab").forEach(function(t) {
     t.classList.remove("active");
     const span = t.querySelector("span");
     if (span) span.remove();
@@ -1159,7 +990,7 @@ function switchCat(cat, btn) {
     return;
   }
 
-  products.forEach(p => {
+  products.forEach(function(p) {
     const card = document.getElementById("card-"+p.id);
     if (card) {
       const s2 = state[currentFloor][p.id];
@@ -1170,7 +1001,7 @@ function switchCat(cat, btn) {
 }
 
 function autoFill() {
-  products.forEach(p => {
+  products.forEach(function(p) {
     state[currentFloor][p.id].orderQty = calcOrder(p);
     const el = document.getElementById("oq-"+p.id);
     if (el) el.value = valOrEmpty(state[currentFloor][p.id].orderQty);
@@ -1180,11 +1011,11 @@ function autoFill() {
 
 function resetStock() {
   if (!confirm(floorLabel(currentFloor) + "の在庫・注文数をリセットします。\n（1日使用量は保持されます）")) return;
-  products.forEach(p => {
+  products.forEach(function(p) {
     const s = state[currentFloor][p.id];
     const du = s.dailyUse; // 使用量は保持
     state[currentFloor][p.id] = { stockBoxes:0, stockBags:0, dailyUse:du, orderQty:0 };
-    ["sb","sg","oq"].forEach(prefix => {
+    ["sb","sg","oq"].forEach(function(prefix) {
       const el = document.getElementById(prefix+"-"+p.id);
       if (el) el.value = 0;
     });
@@ -1270,6 +1101,7 @@ function confirmOrder() {
     }
   };
   document.getElementById('order-confirm-popup').style.display = 'flex';
+
 }
 
 function closeOrderPopupMobile() {
@@ -1281,36 +1113,36 @@ function doConfirmOrder(dateStr) {
   const hist = loadHistory();
   // 全商品の注文箱数（0含む）
   const orders = {};
-  products.forEach(p => {
+  products.forEach(function(p) {
     orders[p.id] = { qty: state[currentFloor][p.id].orderQty || 0 };
   });
   // 同日上書き
-  const existIdx = hist.findIndex(h => h.date === dateStr && h.floor === currentFloor);
+  const existIdx = hist.findIndex(function(h) { return h.date === dateStr && h.floor === currentFloor); }
   if (existIdx >= 0) {
     hist[existIdx] = { date: dateStr, floor: currentFloor, orders };
   } else {
     hist.push({ date: dateStr, floor: currentFloor, orders });
   }
-  const floorEntries = hist.filter(h => h.floor === currentFloor).slice(-MAX_HISTORY);
-  const otherEntries = hist.filter(h => h.floor !== currentFloor);
-  saveHistory([...otherEntries, ...floorEntries].sort((a,b) => a.date < b.date ? -1 : 1));
+  const floorEntries = hist.filter(function(h) h.floor === currentFloor).slice(-MAX_HISTORY);
+  const otherEntries = hist.filter(function(h) h.floor !== currentFloor);
+  saveHistory(otherEntries.concat(floorEntries).sort(function(a,b) { return a.date < b.date ? -1 : 1; }));
   // 来週日曜の在庫予想を保存（同日上書き）
   const sunRecord = { date: dateStr, floor: currentFloor, items: {}, stocks: {} };
-  products.forEach(p => {
+  products.forEach(function(p) {
     sunRecord.items[p.id] = Math.round(calcSundayStock(p));
     sunRecord.stocks[p.id] = { boxes: state[currentFloor][p.id].stockBoxes || 0, bags: state[currentFloor][p.id].stockBags || 0 };
   });
   const sunHistKey = 'diaper_sun_hist_' + currentFloor;
   let sunHist = [];
   try { sunHist = JSON.parse(localStorage.getItem(sunHistKey) || '[]'); } catch(e) {}
-  const sameIdx = sunHist.findIndex(h => h.date === dateStr);
+  const sameIdx = sunHist.findIndex(function(h) { return h.date === dateStr); }
   if (sameIdx >= 0) { sunHist[sameIdx] = sunRecord; } else { sunHist.unshift(sunRecord); if (sunHist.length > 4) sunHist = sunHist.slice(0, 4); }
   localStorage.setItem(sunHistKey, JSON.stringify(sunHist));
   localStorage.setItem('diaper_sun_record_' + currentFloor, JSON.stringify(sunRecord));
   showToast('✅ ' + floorLabel(currentFloor) + 'の注文を保存しました！');
   renderHistory();
-  products.forEach(p => updatePrevBadge(p.id));
-  setTimeout(() => window.scrollTo({ top: scrollY, behavior: 'instant' }), 50);
+  products.forEach(function(p) updatePrevBadge(p.id));
+  setTimeout(function() { window.scrollTo({ top: scrollY, behavior: 'instant' }); }, 50);
 }
 
 function showConfirmMobile(msg, onOk) {
@@ -1345,22 +1177,22 @@ function updatePrevBadge(pid) {
 function renderHistory() {
   const body = document.getElementById('history-body');
   if (!body) return;
-  const hist = loadHistory().filter(h => h.floor === currentFloor).reverse();
+  const hist = loadHistory().filter(function(h) h.floor === currentFloor).reverse();
   if (!hist.length) {
     body.innerHTML = '<div class="history-empty">まだ履歴がありません</div>';
     return;
   }
-  const prods = products.filter(p => !p.special);
+  const prods = products.filter(function(p) !p.special);
   let html = '<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:11px;min-width:100%">';
   html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left;white-space:nowrap">商品</th>';
-  hist.forEach(h => {
+  hist.forEach(function(h) {
     html += '<th style="padding:4px 6px;text-align:center;white-space:nowrap">' + (h.date||'') + '</th>';
   });
   html += '</tr>';
-  prods.forEach(p => {
+  prods.forEach(function(p) {
     html += '<tr style="border-bottom:1px solid #eee">';
     html += '<td style="padding:4px 6px;font-weight:700;white-space:nowrap">' + (p.short||p.name) + '</td>';
-    hist.forEach(h => {
+    hist.forEach(function(h) {
       const o = h.orders ? h.orders[p.id] : null;
       const qty = o ? (typeof o === 'object' ? (o.qty || 0) : o) : 0;
       const color = qty > 0 ? '#e65100' : '#bbb';
@@ -1376,7 +1208,7 @@ function renderHistory() {
 
 function deleteHistory(key) {
   const hist = loadHistory();
-  const newHist = hist.filter(h => (h.date + '_' + h.floor) !== key);
+  const newHist = hist.filter(function(h) (h.date + '_' + h.floor) !== key);
   saveHistory(newHist);
   renderHistory();
 }
@@ -1458,8 +1290,8 @@ const ROOMS = {
   '3F': [301,302,303,305,306,307,308,310,311,312,313,315,316],
 };
 // 4と9のつく部屋を除外
-Object.keys(ROOMS).forEach(f => {
-  ROOMS[f] = ROOMS[f].filter(n => {
+Object.keys(ROOMS).forEach(function(f) {
+  ROOMS[f] = ROOMS[f].filter(function(n) {
     const s = String(n);
     return !s.includes('4') && !s.includes('9');
   });
@@ -1488,12 +1320,12 @@ function setRoomState(floor, roomNo, state) {
 // 全居室の銘柄別1日使用量を集計してstateに反映
 function reflectRoomToDaily(silent) {
   const totals = {};
-  products.forEach(p => { totals[p.id] = 0; });
+  products.forEach(function(p) { totals[p.id] = 0; });
 
   const rooms = ROOMS[currentFloor] || [];
-  rooms.forEach(roomNo => {
+  rooms.forEach(function(roomNo) {
     const rs = getRoomState(currentFloor, roomNo);
-    products.forEach(p => {
+    products.forEach(function(p) {
       const val = rs.products[p.id];
       if (val && val.qty > 0) {
         totals[p.id] += (parseInt(val.qty) || 0);
@@ -1503,7 +1335,7 @@ function reflectRoomToDaily(silent) {
 
   // パッド：1日使用量に反映
   // テープ・パンツ：集計数×3＋1袋 を週必要枚数として反映
-  products.forEach(p => {
+  products.forEach(function(p) {
     if (p.weeklyFixed === null) {
       state[currentFloor][p.id].dailyUse = totals[p.id];
     } else {
@@ -1514,7 +1346,7 @@ function reflectRoomToDaily(silent) {
   });
   if (!silent) syncInputsToState();
   updateWeeklyDisplay();
-  products.forEach(p => updateCard(p.id));
+  products.forEach(function(p) updateCard(p.id));
   if (!silent) showToast('✅ 居室合計を使用量に反映しました！');
   var now = new Date();
   var dateStr = (now.getMonth()+1) + '/' + now.getDate();
@@ -1540,6 +1372,11 @@ function updateRoomReflectLabelMobile() {
   var lbl = document.getElementById('room-reflect-label');
   if (!lbl) return;
   var savedDate = localStorage.getItem('diaper_room_reflect_date_' + currentFloor) || '';
+  // 居室データが実際にない場合は日付を削除
+  if (savedDate && !hasRoomDataForFloor(currentFloor)) {
+    localStorage.removeItem('diaper_room_reflect_date_' + currentFloor);
+    savedDate = '';
+  }
   if (savedDate) {
     lbl.textContent = '✅ 居室管理を反映済み　' + savedDate;
     lbl.style.display = 'block';
@@ -1550,7 +1387,7 @@ function updateRoomReflectLabelMobile() {
 
 // 週必要枚数の表示を更新
 function updateWeeklyDisplay() {
-  products.filter(p => p.weeklyFixed !== null).forEach(p => {
+  products.filter(function(p) p.weeklyFixed !== null).forEach(function(p) {
     const override = state[currentFloor][p.id].weeklyOverride;
     const custom = getWeeklyFixed(p.id);
     let val, isOverride = false;
@@ -1567,11 +1404,11 @@ function updateWeeklyDisplay() {
       disp.style.background = isOverride ? '#fff8f0' : '#f0fdf6';
       disp.style.color = isOverride ? '#c05000' : '#1a4a3a';
       const label = isOverride ? '<div style="font-size:9px;margin-top:2px">居室集計より</div>' : '';
-      disp.innerHTML = `${val}<span style="font-size:10px;font-weight:400">枚</span>${label}`;
+      disp.innerHTML = "" + (val) + "<span style=\"font-size:10px;font-weight:400\">枚</span>" + (label) + "";
     }
     const input = document.getElementById('weekly-input-' + p.id);
     if (input && document.activeElement !== input) {
-      input.placeholder = `空欄=デフォルト(${p.weeklyFixed})`;
+      input.placeholder = "空欄=デフォルト(" + (p.weeklyFixed) + ")";
     }
   });
 }
@@ -1582,63 +1419,33 @@ function buildRoomSection() {
   if (!sec) return;
   const rooms = ROOMS[currentFloor] || [];
 
-  let html = `<div class="room-controls">
-    <button class="btn-room-reflect" onclick="reflectRoomToDaily()">📊 集計して1日使用量に反映</button>
-    <div id="room-reflect-label" style="font-size:11px;color:#2a7a2a;margin-top:6px;display:none"></div>
-  </div>
-  <div class="room-reflect-info">
-    各居室の使用枚数を登録→「反映」ボタンで1日使用量を自動集計します。
-  </div>`;
+  let html = "<div class=\"room-controls\">\n    <button class=\"btn-room-reflect\" onclick=\"reflectRoomToDaily()\">📊 集計して1日使用量に反映</button>\n    <div id=\"room-reflect-label\" style=\"font-size:11px;color:#2a7a2a;margin-top:6px;display:none\"></div>\n  </div>\n  <div class=\"room-reflect-info\">\n    各居室の使用枚数を登録→「反映」ボタンで1日使用量を自動集計します。\n  </div>";
 
-  rooms.forEach(roomNo => {
+  rooms.forEach(function(roomNo) {
     const rs = getRoomState(currentFloor, roomNo);
     // 使用中の銘柄サマリー
-    const usedItems = products.filter(p => rs.products[p.id] && rs.products[p.id].checked && rs.products[p.id].qty > 0);
+    const usedItems = products.filter(function(p) rs.products[p.id] && rs.products[p.id].checked && rs.products[p.id].qty > 0);
     const summaryText = usedItems.length > 0
-      ? usedItems.map(p => p.short + ' ' + rs.products[p.id].qty + '枚').join('・')
+      ? usedItems.map(function(p) p.short + ' ' + rs.products[p.id].qty + '枚').join('・')
       : '未登録';
 
     let productRows = '';
     const catLabels = { pad: 'パッド類', tape: 'テープ止め', pants: 'フィットパンツ' };
     let lastCat = null;
-    products.filter(p => !p.special).forEach(p => {
+    products.filter(function(p) !p.special).forEach(function(p) {
       if (p.cat !== lastCat) {
-        productRows += `<div style="font-size:15px;font-weight:700;color:#2a5a2a;background:#f0f7f0;padding:6px 8px;margin:6px -14px 4px">${catLabels[p.cat]}</div>`;
+        productRows += "<div style=\"font-size:15px;font-weight:700;color:#2a5a2a;background:#f0f7f0;padding:6px 8px;margin:6px -14px 4px\">" + (catLabels[p.cat]) + "</div>";
         lastCat = p.cat;
       }
       const pd = rs.products[p.id] || { checked: false, qty: 0 };
       const qty = pd.qty || 0;
       const dotHtml = p.color
-        ? `<span class="room-product-dot" style="background:${colorDot[p.color]||'#ccc'}"></span>`
+        ? "<span class=\"room-product-dot\" style=\"background:" + (colorDot[p.color]||'#ccc') + "\"></span>"
         : '<span style="width:14px;flex-shrink:0"></span>';
-      productRows += `
-        <div class="room-counter-row" id="crow-${roomNo}-${p.id}">
-          ${dotHtml}
-          <span class="room-product-label">${p.short}</span>
-          <button class="counter-btn counter-btn-minus" onclick="counterChange(${roomNo},${p.id},-1)">－</button>
-          <span class="counter-val${qty === 0 ? ' zero' : ''}" id="rq-${roomNo}-${p.id}">${qty}</span>
-          <button class="counter-btn counter-btn-plus" onclick="counterChange(${roomNo},${p.id},1)">＋</button>
-          <button class="counter-btn counter-btn-zero" id="czero-${roomNo}-${p.id}" onclick="counterChange(${roomNo},${p.id},-(parseInt(document.getElementById('rq-${roomNo}-${p.id}').textContent)||0))" style="${qty===0?'opacity:0.2;pointer-events:none':''}">✕</button>
-          <span class="counter-unit">枚/日</span>
-        </div>`;
+      productRows += "\n        <div class=\"room-counter-row\" id=\"crow-" + (roomNo) + "-" + (p.id) + "\">\n          " + (dotHtml) + "\n          <span class=\"room-product-label\">" + (p.short) + "</span>\n          <button class=\"counter-btn counter-btn-minus\" onclick=\"counterChange(" + (roomNo) + "," + (p.id) + ",-1)\">－</button>\n          <span class=\"counter-val" + (qty === 0 ? ' zero' : '') + "\" id=\"rq-" + (roomNo) + "-" + (p.id) + "\">" + (qty) + "</span>\n          <button class=\"counter-btn counter-btn-plus\" onclick=\"counterChange(" + (roomNo) + "," + (p.id) + ",1)\">＋</button>\n          <button class=\"counter-btn counter-btn-zero\" id=\"czero-" + (roomNo) + "-" + (p.id) + "\" onclick=\"counterChange(" + (roomNo) + "," + (p.id) + ",-(parseInt(document.getElementById('rq-" + (roomNo) + "-" + (p.id) + "').textContent)||0))\" style=\"" + (qty===0?'opacity:0.2;pointer-events:none':'') + "\">✕</button>\n          <span class=\"counter-unit\">枚/日</span>\n        </div>";
     });
 
-    html += `
-    <div class="room-card" id="room-card-${roomNo}">
-      <div class="room-card-header" onclick="toggleRoom(${roomNo})">
-        <div>
-          <div class="room-no">${roomNo}号室</div>
-          <div class="room-summary" id="rsummary-${roomNo}">${summaryText}</div>
-        </div>
-        <div class="room-toggle" id="rtoggle-${roomNo}">▼</div>
-      </div>
-      <div class="room-body" id="rbody-${roomNo}">
-        ${productRows}
-        <div style="text-align:center;padding:10px 0 4px">
-          <button onclick="toggleRoom(${roomNo})" style="padding:6px 20px;border:none;border-radius:20px;background:#d6edd6;color:#2a5a2a;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">▲ 折りたたむ</button>
-        </div>
-      </div>
-    </div>`;
+    html += "\n    <div class=\"room-card\" id=\"room-card-" + (roomNo) + "\">\n      <div class=\"room-card-header\" onclick=\"toggleRoom(" + (roomNo) + ")\">\n        <div>\n          <div class=\"room-no\">" + (roomNo) + "号室</div>\n          <div class=\"room-summary\" id=\"rsummary-" + (roomNo) + "\">" + (summaryText) + "</div>\n        </div>\n        <div class=\"room-toggle\" id=\"rtoggle-" + (roomNo) + "\">▼</div>\n      </div>\n      <div class=\"room-body\" id=\"rbody-" + (roomNo) + "\">\n        " + (productRows) + "\n        <div style=\"text-align:center;padding:10px 0 4px\">\n          <button onclick=\"toggleRoom(" + (roomNo) + ")\" style=\"padding:6px 20px;border:none;border-radius:20px;background:#d6edd6;color:#2a5a2a;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit\">▲ 折りたたむ</button>\n        </div>\n      </div>\n    </div>";
   });
 
   sec.innerHTML = html;
@@ -1690,11 +1497,11 @@ function counterChange(roomNo, pid, delta) {
   setRoomState(currentFloor, roomNo, rs);
 
   // サマリー更新
-  const usedItems = products.filter(p => rs.products[p.id] && rs.products[p.id].qty > 0);
+  const usedItems = products.filter(function(p) rs.products[p.id] && rs.products[p.id].qty > 0);
   const summaryEl = document.getElementById('rsummary-' + roomNo);
   if (summaryEl) {
     summaryEl.textContent = usedItems.length > 0
-      ? usedItems.map(p => p.short + ' ' + rs.products[p.id].qty + '枚').join('・')
+      ? usedItems.map(function(p) p.short + ' ' + rs.products[p.id].qty + '枚').join('・')
       : '未登録';
   }
 
@@ -1717,13 +1524,13 @@ function updateRoomProduct(roomNo, pid) {
   setRoomState(currentFloor, roomNo, rs);
 
   // サマリー更新
-  const usedItems = products.filter(p =>
+  const usedItems = products.filter(function(p)
     rs.products[p.id] && rs.products[p.id].qty > 0
   );
   const summaryEl = document.getElementById('rsummary-' + roomNo);
   if (summaryEl) {
     summaryEl.textContent = usedItems.length > 0
-      ? usedItems.map(p => p.short + ' ' + rs.products[p.id].qty + '枚').join('・')
+      ? usedItems.map(function(p) p.short + ' ' + rs.products[p.id].qty + '枚').join('・')
       : '未登録';
   }
 }
@@ -1791,7 +1598,7 @@ function toggleMode() {
   const banner = document.getElementById('mode-banner');
   const staffLabel = document.getElementById('staff-label');
 
-  adminEls.forEach(el => {
+  adminEls.forEach(function(el) {
     if (isAdminMode) {
       // daily-colはweeklyFixed=trueのものは非表示のまま
       if (el.id && el.id.startsWith('daily-col-') && el.dataset.weekly === 'true') return;
@@ -1822,7 +1629,7 @@ function toggleMode() {
     if (currentCat === 'room') {
       const padTab = document.querySelector('.tab');
       switchCat('pad', padTab);
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(function(t) t.classList.remove('active'));
       padTab.classList.add('active');
     }
   }
@@ -1852,7 +1659,7 @@ function resetWeeklyFixed(pid) {
   const input = document.getElementById('weekly-input-' + pid);
   if (input) input.value = 0;
   updateWeeklyDisplay();
-  const p = products.find(x => x.id === pid);
+  const p = products.find(function(x) x.id === pid);
   if (p) updateCard(pid);
   showToast('0にリセットしました');
 }
@@ -1866,12 +1673,12 @@ function updateWeeklyFixed(pid, val) {
   }
   saveWeeklyFixed(data);
   updateWeeklyDisplay();
-  const p = products.find(x => x.id === pid);
+  const p = products.find(function(x) x.id === pid);
   if (p) updateCard(pid);
 }
 
 function showWeeklyInputs(show) {
-  products.filter(p => p.weeklyFixed !== null).forEach(p => {
+  products.filter(function(p) p.weeklyFixed !== null).forEach(function(p) {
     const input = document.getElementById('weekly-input-' + p.id);
     const disp = document.getElementById('weekly-disp-' + p.id);
     if (!input) return;
@@ -1917,7 +1724,7 @@ function importRoomData(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
       localStorage.setItem('diaper_rooms', JSON.stringify(data));
@@ -1943,7 +1750,7 @@ function exportFloorData(floor) {
   const roomData = {};
   try {
     const all = JSON.parse(localStorage.getItem('diaper_rooms') || '{}');
-    Object.keys(all).forEach(k => {
+    Object.keys(all).forEach(function(k) {
       if (k.startsWith(floor + '_')) roomData[k] = all[k];
     });
   } catch(e) {}
@@ -1960,7 +1767,7 @@ function exportFloorData(floor) {
 
   if (navigator.share) {
     const file = new File([blob], filename, { type: 'application/json' });
-    navigator.share({ files: [file], title: filename }).catch(() => {
+    navigator.share({ files: [file], title: filename }).catchfunction(() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
       URL.revokeObjectURL(url);
@@ -1977,20 +1784,20 @@ function importFloorData(input, targetFloor) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
       const all = {};
       try { Object.assign(all, JSON.parse(localStorage.getItem('diaper_rooms') || '{}')); } catch(e2) {}
 
       // 古い形式：キーが「3F_301」のような居室データのみのJSON
-      const isOldFormat = Object.keys(data).some(k => /^[23]F_\d+$/.test(k));
+      const isOldFormat = Object.keys(data).some(function(k) /^[23]F_\d+$/.test(k));
 
       if (isOldFormat) {
         // 古い形式：そのまま居室データとして読み込む
-        Object.keys(all).forEach(k => { if (k.startsWith(targetFloor + '_')) delete all[k]; });
+        Object.keys(all).forEach(function(k) { if (k.startsWith(targetFloor + '_')) delete all[k]; });
         // targetFloorのキーのみ取り込む
-        Object.keys(data).forEach(k => {
+        Object.keys(data).forEach(function(k) {
           if (k.startsWith(targetFloor + '_')) all[k] = data[k];
         });
         localStorage.setItem('diaper_rooms', JSON.stringify(all));
@@ -2000,7 +1807,7 @@ function importFloorData(input, targetFloor) {
           localStorage.setItem('diaper_daily_' + targetFloor, JSON.stringify(data.daily));
         }
         if (data.rooms) {
-          Object.keys(all).forEach(k => { if (k.startsWith(targetFloor + '_')) delete all[k]; });
+          Object.keys(all).forEach(function(k) { if (k.startsWith(targetFloor + '_')) delete all[k]; });
           Object.assign(all, data.rooms);
           localStorage.setItem('diaper_rooms', JSON.stringify(all));
         }
@@ -2009,7 +1816,7 @@ function importFloorData(input, targetFloor) {
         }
       }
 
-      FLOORS.forEach(f => loadDailyUse(f));
+      FLOORS.forEach(function(f) loadDailyUse(f));
       buildCards();
       syncInputsToState();
       reflectRoomToDaily(true);
@@ -2025,9 +1832,9 @@ function importFloorData(input, targetFloor) {
 // --- エクスポート・インポート ---
 function exportData() {
   const data = { version: 2, floors: {} };
-  FLOORS.forEach(f => {
+  FLOORS.forEach(function(f) {
     data.floors[f] = {};
-    products.forEach(p => {
+    products.forEach(function(p) {
       data.floors[f][p.id] = state[f][p.id].dailyUse;
     });
   });
@@ -2050,12 +1857,12 @@ function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = function(e) {
     const statusEl = document.getElementById('import-status');
     try {
       const data = JSON.parse(e.target.result);
       // 古い居室データ形式（3F_301等のキー）の場合は居室データとして読み込む
-      const isOldRoomFormat = Object.keys(data).some(k => /^[23]F_\d+$/.test(k));
+      const isOldRoomFormat = Object.keys(data).some(function(k) /^[23]F_\d+$/.test(k));
       if (isOldRoomFormat) {
         const all = {};
         try { Object.assign(all, JSON.parse(localStorage.getItem('diaper_rooms') || '{}')); } catch(e2) {}
@@ -2117,11 +1924,11 @@ document.addEventListener('wheel', function(e) {
 }, { passive: true });
 
 // --- 初期化 ---
-FLOORS.forEach(f => loadDailyUse(f));
+FLOORS.forEach(function(f) loadDailyUse(f));
 buildCards();
 syncInputsToState();
 updateSaveDateLabel();
-products.forEach(p => updatePrevBadge(p.id));
+products.forEach(function(p) updatePrevBadge(p.id));
 renderHistory();
 updateWeeklyDisplay();
 reflectRoomToDaily(true);  // 居室管理を自動反映
