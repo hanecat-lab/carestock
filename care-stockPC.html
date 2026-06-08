@@ -129,13 +129,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 }
 .panel-title { font-size: 13px; font-weight: 700; color: #2a4a2a; margin-bottom: 6px; }
 .sum-item {
-  display: flex; align-items: center; padding: 5px 7px;
+  display: flex; align-items: center; padding: 5px 30px 5px 7px;
   background: #f9f9f9; border-radius: 7px; margin-bottom: 3px;
 }
 .sum-dot { width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
 .sum-name { font-size: 20px; font-weight: 800; color: #333; flex: 1; }
-.sum-qty { font-size: 30px; font-weight: 800; color: #e65100; margin-right: 30px; }
-.sum-unit { font-size: 15px; color: #999; margin-left: 2px; }
+.sum-qty { font-size: 30px; font-weight: 800; color: #e65100; }
+.sum-unit { font-size: 15px; color: #999; margin-left: 15px; }
 .grp-lbl { font-size: 10px; font-weight: 700; color: #777; margin: 5px 0 2px; }
 .grp-total { flex:1; text-align: center; font-size: 30px; font-weight: 800; color: #e65100; border: 2px solid #e65100; border-radius: 8px; padding: 4px 6px; }
 #grp-totals { display: flex; gap: 6px; }
@@ -758,8 +758,8 @@ function updateSummary() {
 
   sumEl.innerHTML = html || '<div style="font-size:11px;color:#bbb;padding:6px">注文箱数を入力してください</div>';
   totEl.innerHTML = `
-    <div class="grp-total"><span class="grp-total-lbl">パッド計</span>${padTot}箱</div>
-    <div class="grp-total"><span class="grp-total-lbl">テープ・リハパン計</span>${tapePantsTot}箱</div>`;
+    <div class="grp-total"><span class="grp-total-lbl">パッド計</span>${padTot}<span style="margin-left:8px">箱</span></div>
+    <div class="grp-total"><span class="grp-total-lbl">テープ・リハパン計</span>${tapePantsTot}<span style="margin-left:8px">箱</span></div>`;
   // 最新の注文内容が見えるよう一番下にスクロール
   const scrollEl = document.getElementById('right-panel-scroll');
   if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
