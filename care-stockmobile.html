@@ -834,7 +834,7 @@ function buildCards() {
             <input type="number" inputmode="numeric" min="0" class="bg-daily"
               id="du-${p.id}" value="" placeholder="0" oninput="onInput(${p.id},'dailyUse',this.value)">
           </div>
-          <div class="bottom-col" id="weekly-col-${p.id}" ${(p.weeklyFixed === null || ((p.cat === "tape" || p.cat === "pants") && !isAdmin)) ? "style=\"display:none\"" : ""}>
+          <div class="bottom-col" id="weekly-col-${p.id}" ${(p.weeklyFixed === null || ((p.cat === "tape" || p.cat === "pants") && !isAdminMode)) ? "style=\"display:none\"" : ""}>
             <div class="col-label label-daily">週必要枚数</div>
             <div id="weekly-disp-${p.id}" style="border:2px solid #a0d4b0;border-radius:10px;padding:10px 4px;text-align:center;background:#f0fdf6;font-size:16px;font-weight:800;color:#1a4a3a">
               ${p.weeklyFixed}<span style="font-size:10px;font-weight:400">枚</span>
@@ -907,7 +907,7 @@ function updateWeeklyColVisibility(pid) {
   if (!p) return;
   var col = document.getElementById('weekly-col-' + pid);
   if (!col) return;
-  if ((p.cat === 'tape' || p.cat === 'pants') && !isAdmin) {
+  if ((p.cat === 'tape' || p.cat === 'pants') && !isAdminMode) {
     col.style.display = 'none';
   }
 }
