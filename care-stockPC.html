@@ -52,16 +52,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
   margin: 10px 0 4px;
 }
 .popup-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 20px 100px 60px;
   align-items: center;
-  justify-content: space-between;
-  padding: 5px 8px;
+  gap: 4px;
+  padding: 6px 12px;
   background: #f9f9f9;
   border-radius: 6px;
   margin-bottom: 3px;
 }
 .popup-item-name { font-size: 16px; font-weight: 700; color: #333; }
-.popup-item-qty { font-size: 22px; font-weight: 900; color: #e65100; }
+.popup-item-qty { font-size: 20px; font-weight: 900; color: #e65100; }
 .popup-item-unit { font-size: 12px; color: #999; margin-left: 4px; }
 .popup-totals {
   display: flex;
@@ -921,7 +922,7 @@ function confirmOrder() {
       p = ordered[j];
       qty = state[floor][p.id].orderQty || 0;
       dot = p.color ? '<span style="width:10px;height:10px;border-radius:50%;background:' + (colorMap[p.color]||'#ccc') + ';display:inline-block;margin-right:6px;border:1px solid rgba(0,0,0,0.1)"></span>' : '<span style="width:10px;height:10px;display:inline-block;margin-right:6px"></span>';
-      html += '<div class="popup-item">' + dot + '<span class="popup-item-name">' + (p.short||p.name) + '</span><div><span class="popup-item-qty">' + qty + '</span><span class="popup-item-unit">笱</span></div></div>';
+      html += '<div class="popup-item">' + dot + '<span class="popup-item-name">' + (p.short||p.name) + '</span><span style="text-align:center;white-space:nowrap"><span class="popup-item-qty">' + qty + '</span><span class="popup-item-unit">箱</span></span></div>';
       if (p.cat === 'pad') padTot += qty;
       else tapeTot += qty;
     }
