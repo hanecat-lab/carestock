@@ -66,7 +66,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 .card-name { font-size: 25px; font-weight: 800; color: #1a3a1a; }
 .card-sub { font-size: 11px; color: #5a7a5a; margin-left: 4px; }
 .card-badges { padding: 7px 14px; display: flex; gap: 8px; }
-.badge { font-size: 20px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.badge { font-size: 16px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
 .badge-box { background: #fff8e1; color: #a07000; }
 .badge-bag { background: #f8e8ff; color: #7a00a0; }
 .card-body { padding: 18px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -636,7 +636,7 @@ function buildCards() {
       + '<span class="badge badge-box">📦 1箱=' + Math.round(p.perBox/p.perBag) + '袋(' + p.perBox + '枚)</span>'
       + '<span class="badge badge-bag">🛍 1袋=' + p.perBag + '枚</span></div>'
       + '<div class="card-body">'
-      + '<div style="font-size:18px;font-weight:800;color:#2a6a3a;margin-bottom:14px;padding:6px 16px;background:#fff;border:2.5px solid #4a7c59;border-radius:8px;display:inline-block;letter-spacing:1px;box-shadow:0 2px 6px rgba(74,124,89,0.15)"><span style="font-size:20px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800">1</span>現在の在庫入力</div>'
+      + '<div style="font-size:25px;font-weight:800;color:#2a6a3a;margin-bottom:14px;padding:6px 4px;display:inline-block;letter-spacing:1px"><span style="font-size:20px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800">1</span>現在の在庫入力</div>'
       + '<div class="stock-grid">'
       + '<div><div class="stock-lbl" style="color:#a07000">📦 箱数</div>'
       + '<input type="number" class="stock-in si-box" min="0" value="' + (s.stockBoxes||'') + '" placeholder="0" oninput="onInput(' + p.id + ',\'stockBoxes\',this.value)"></div>'
@@ -650,7 +650,7 @@ function buildCards() {
       + (isAdmin ? getPrevSunHtml(p.id, p) : '')
       + bottomRow
       + '<div style="margin-top:8px">'
-      + '<div style="font-size:25px;font-weight:700;color:#c62828"><span style="font-size:20px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;vertical-align:middle;flex-shrink:0;font-weight:800">2</span>注文箱数 <span class="sug-lbl" id="sug-' + p.id + '">' + (sug>0?'推奨 : '+sug+' 箱':'') + '</span></div>'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><div style="font-size:25px;font-weight:700;color:#c62828"><span style="font-size:20px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;vertical-align:middle;flex-shrink:0;font-weight:800">2</span>注文箱数</div><span class="sug-lbl" id="sug-' + p.id + '" style="font-size:20px;font-weight:800;color:#1565c0;background:#e3f2fd;border:2px solid #1565c0;border-radius:8px;padding:2px 12px;visibility:' + (sug>0?'visible':'hidden') + '">' + (sug>0?'推奨 : '+sug+' 箱':'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;') + '</span></div>'
       + '<input type="number" class="order-in" min="0" value="' + (s.orderQty||'') + '" placeholder="0" oninput="onInput(' + p.id + ',\'orderQty\',this.value)">'
       + '<div style="text-align:right;padding-right:4px;margin-top:2px"><span style="font-size:10px;color:#aaa">来週日曜在庫予想：</span><span id="sun-' + p.id + '" style="font-size:18px!important;color:#aaa;font-weight:700">-</span></div>'
       + '</div></div>';
@@ -672,7 +672,7 @@ function updateCard(pid) {
   if (totEl) totEl.textContent = stock;
 
   const sugEl = document.getElementById('sug-'+pid);
-  if (sugEl) sugEl.textContent = sug > 0 ? '推奨 : '+sug+' 箱' : '';
+  if (sugEl) { sugEl.textContent = sug > 0 ? '推奨 : '+sug+' 箱' : ''; sugEl.style.visibility = sug > 0 ? 'visible' : 'hidden'; }
 
   const wkEl = document.getElementById('wk-'+pid);
   if (wkEl) {
