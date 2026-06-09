@@ -1777,7 +1777,7 @@ function exportFloorData(floor) {
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const date = new Date().toLocaleDateString('ja-JP').replace(/\//g, '-');
-  const filename = getFacilityPrefix() + 'floor-' + floor + '-' + date + '.json';
+  const filename = getFacilityPrefix() + 'オムツ居室枚数-' + floor + '-' + date + '.json';
 
   if (navigator.share) {
     const file = new File([blob], filename, { type: 'application/json' });
@@ -1861,7 +1861,7 @@ function exportData() {
   const now = new Date();
   const ymd = now.getFullYear() + ('0'+(now.getMonth()+1)).slice(-2) + ('0'+now.getDate()).slice(-2);
   a.href = url;
-  a.download = getFacilityPrefix() + 'diaper-backup-' + ymd + '.json';
+  a.download = getFacilityPrefix() + 'オムツ居室枚数-' + ymd + '.json';
   a.click();
   URL.revokeObjectURL(url);
   showToast('📤 書き出しました！');
