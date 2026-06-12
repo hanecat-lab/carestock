@@ -1269,7 +1269,27 @@ function deleteHistory(key) {
   const hist = loadHistory();
   const newHist = hist.filter(function(h) { return (h.date + '_' + h.floor) !== key; });
   saveHistory(newHist);
+  // 対応する日曜在庫予想の記録も削除（ズレ表示への反映を消す）
+  const sep = key.lastIndexOf('_');
+  const delDate = key.slice(0, sep);
+  const delFloor = key.slice(sep + 1);
+  const sunKey = 'diaper_sun_hist_' + delFloor;
+  try {
+    let sunHist = JSON.parse(localStorage.getItem(sunKey) || '[]');
+    sunHist = sunHist.filter(function(r) { return r.date !== delDate; });
+    localStorage.setItem(sunKey, JSON.stringify(sunHist));
+  } catch(e) {}
+  try {
+    const rec = JSON.parse(localStorage.getItem('diaper_sun_record_' + delFloor) || 'null');
+    if (rec && rec.date === delDate) localStorage.removeItem('diaper_sun_record_' + delFloor);
+  } catch(e) {}
   renderHistory();
+  // ズレ表示・前回注文バッジを再計算
+  products.forEach(function(p) { updateCard(p.id); updatePrevBadge(p.id); });
+  const gapPanel = document.getElementById('gap-mobile');
+  if (gapPanel && gapPanel.style.display !== 'none') renderGapMobile();
+  const sunPanel = document.getElementById('sun-hist-mobile');
+  if (sunPanel && sunPanel.style.display !== 'none') renderSunHistMobile();
 }
 function toggleHistory() {
   const body = document.getElementById("history-body");
