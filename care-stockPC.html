@@ -365,6 +365,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
         style="border:2px solid #aaa;background:#f5f5f5;color:#333">📋 注文履歴</button>
       <div style="border-top:1px solid #a5d6a7;margin:6px 0"></div>
       <div class="sb-title">🗂 データバックアップ</div>
+      <button class="sb-tool-btn" onclick="exportStockRecordsPc()" style="border:2px solid #1976d2;background:#f0f7ff;color:#1976d2">📊 在庫記録 書き出し(CSV)</button>
       <button class="sb-tool-btn" onclick="exportAllDataPc()" style="border:2px solid #e65100;background:#fff8f0;color:#e65100">📤 全データ書き出し</button>
       <label class="sb-tool-btn" style="border:2px solid #1976d2;background:#e3f2fd;color:#1976d2;display:block;text-align:center;cursor:pointer">
         📥 全データ読み込み
@@ -427,6 +428,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
       </button>
       <div id="sun-hist-panel" style="display:none;margin-top:6px;font-size:11px;overflow-x:auto"></div>
     </div>
+    <div style="margin-bottom:8px" class="admin-tool">
+      <button onclick="toggleGapPc()" style="width:100%;padding:6px 10px;border:1px solid #ccc;border-radius:8px;background:#f9f9f9;color:#555;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left" id="gap-pc-btn">
+        ▶ 📐 予想と実在庫のズレ
+      </button>
+      <div id="gap-pc-panel" style="display:none;margin-top:6px;font-size:11px;overflow-x:auto"></div>
+    </div>
     <div class="logic-box">
       <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.textContent=this.textContent.startsWith('▶')?'▼ 計算ロジック':'▶ 計算ロジック'"
         style="width:100%;text-align:left;background:none;border:none;cursor:pointer;font-size:11px;font-weight:800;color:#5a7a5a;padding:0;font-family:inherit">▶ 計算ロジック</button>
@@ -439,9 +446,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
         <div class="logic-sec">【来週の日曜の在庫予想】</div>
         <div>パッド類：現在庫 ＋ 注文箱数×1箱枚数 − 1日使用量×7日 − 1袋×1.5（予備）</div>
         <div>テープ・リハパン：現在庫 ＋ 注文箱数×1箱枚数 − 居室集計×4（入浴使用）− 2袋（予備）</div>
-        <div class="logic-sec admin-tool">【木曜届く前の残り】</div>
-        <div class="admin-tool">パッド類：現在庫 − 1日使用量×4日 − 予備1袋</div>
-        <div class="admin-tool">テープ止め・リハパン：現在庫 − 居室集計×2（入浴使用量）− 1袋（予備）</div>
+        <div class="logic-sec admin-tool">【木曜届いた後の在庫】</div>
+        <div class="admin-tool">パッド類：現在庫 − 1日使用量×4日 − 予備1袋 ＋ 注文数×1箱枚数</div>
+        <div class="admin-tool">テープ止め・リハパン：現在庫 − 居室集計 − 予備2袋 ＋ 注文数×1箱枚数</div>
       </div>
     </div>
   </div>
@@ -618,18 +625,19 @@ function calcOrder(p) {
 }
 function calcAfter(p) {
   if (p.special) return null;
+  const oq = (state[floor][p.id].orderQty || 0) * p.perBox;
   if (p.weeklyFixed !== null) {
-    // テープ・リハパン：現在庫 - 居室集計×2 - 1袋
+    // テープ・リハパン：現在庫 - 居室集計 - 予備2袋 + 注文数
     let roomTotal = 0;
     (ROOMS[floor] || []).forEach(function(rn) {
       const rs = getRoomState(floor, rn);
       const v = rs.products[String(p.id)];
       if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
     });
-    return totalStock(p) - roomTotal * 2 - p.perBag;
+    return totalStock(p) - roomTotal - p.perBag * 2 + oq;
   }
-  // パッド類：現在庫 - 1日使用量×4日 - 1袋
-  return totalStock(p) - state[floor][p.id].dailyUse * DAYS_DEL - p.perBag;
+  // パッド類：現在庫 - 1日使用量×4日 - 1袋 + 注文数
+  return totalStock(p) - state[floor][p.id].dailyUse * DAYS_DEL - p.perBag + oq;
 }
 
 // ===== UI =====
@@ -759,14 +767,14 @@ function buildCards() {
       const weeklyInput = '';
       const weeklySection = '<div><div class="info-lbl">' + (isAdmin ? '週必要枚数' : '') + '</div>'
         + (isAdmin ? '<div class="box-weekly" id="wk-wrap-' + p.id + '" style="' + ovStyle + '"><div class="info-val" id="wk-' + p.id + '">' + wn + '枚</div>' + ovLabel + '</div>' + weeklyInput : '') + '</div>';
-      const afTapeHtml = isAdmin ? '<div class="info-lbl" style="color:#bbb;font-size:12px">木曜届く前の残り</div><div class="box-after" id="af-wrap-' + p.id + '"><div class="info-val" id="af-' + p.id + '" style="font-size:12px">-</div></div>' : '';
+      const afTapeHtml = isAdmin ? '<div class="info-lbl" style="color:#bbb;font-size:12px">木曜届いた後の在庫</div><div class="box-after" id="af-wrap-' + p.id + '"><div class="info-val" id="af-' + p.id + '" style="font-size:12px">-</div></div>' : '';
             bottomRow = '<div class="row2">'
         + weeklySection
         + '<div>' + afTapeHtml + '</div></div>'
 ;
     } else {
       const dailyInput = isAdmin ? '<div class="info-lbl">1日使用量</div><input type="number" class="daily-in" value="' + (s.dailyUse||'') + '" placeholder="0" oninput="onInput(' + p.id + ',\'dailyUse\',this.value)">' : '';
-      const afHtml = isAdmin ? '<div class="info-lbl" style="color:#bbb;font-size:12px">木曜届く前の残り</div><div class="box-after" id="af-wrap-' + p.id + '"><div class="info-val" id="af-' + p.id + '" style="font-size:12px">-</div></div>' : '';
+      const afHtml = isAdmin ? '<div class="info-lbl" style="color:#bbb;font-size:12px">木曜届いた後の在庫</div><div class="box-after" id="af-wrap-' + p.id + '"><div class="info-val" id="af-' + p.id + '" style="font-size:12px">-</div></div>' : '';
             bottomRow = '<div class="row2">'
         + '<div>' + dailyInput + '</div>'
         + '<div>' + afHtml + '</div></div>'
@@ -790,13 +798,16 @@ function buildCards() {
       + '<div style="text-align:right;padding-right:4px;margin-top:-2px;margin-bottom:8px">'
       + '<span style="font-size:11px;color:#aaa">合計：</span>'
       + '<span id="tot-' + p.id + '" style="font-size:18px;font-weight:700;color:#777">' + stock + '</span>'
-      + '<span style="font-size:10px;color:#aaa">枚</span></div>'
+      + '<span style="font-size:10px;color:#aaa">枚</span>'
+      + (isAdmin ? '<div id="gap-row-' + p.id + '" style="font-size:12px;color:#aaa;margin-top:2px;display:none">前回予想とのズレ：<span id="gapv-' + p.id + '">-</span></div>' : '')
+      + '</div>'
       + (isAdmin ? getPrevSunHtml(p.id, p) : '')
       + bottomRow
       + '<div style="margin-top:8px">'
       + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><div style="font-size:25px;font-weight:700;color:#c62828"><span style="font-size:20px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;vertical-align:middle;flex-shrink:0;font-weight:800">2</span><span style="font-size:20px;color:' + colorHexText(p.color) + ';font-weight:700;margin-right:0.5em">' + (p.short||p.name) + '</span>注文箱数</div><span class="sug-lbl" id="sug-' + p.id + '" style="font-size:20px;font-weight:800;color:#1565c0;background:#e3f2fd;border:2px solid #1565c0;border-radius:8px;padding:2px 12px;visibility:' + (sug>0?'visible':'hidden') + '">' + (sug>0?'推奨 : '+sug+' 箱':'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;') + '</span></div>'
       + '<div class="pc-spin-wrap ord" style="width:300px"><button class="pc-spin-btn minus" id="oq-m-'+p.id+'">－</button><input type="number" class="order-in" id="oq-'+p.id+'" min="0" value="' + (s.orderQty||'') + '" placeholder="0" oninput="onInput(' + p.id + ',\'orderQty\',this.value)" style="flex:1"><button class="pc-spin-btn plus-ord" id="oq-p-'+p.id+'">＋</button></div>'
       + '<div style="text-align:right;padding-right:4px;margin-top:2px"><span style="font-size:10px;color:#aaa">来週日曜在庫予想：</span><span id="sun-' + p.id + '" style="font-size:18px!important;color:#aaa;font-weight:700">-</span></div>'
+      + '<div id="prevord-' + p.id + '" style="text-align:right;padding-right:4px;font-size:12px;color:#888;margin-top:2px;display:none"></div>'
       + '</div></div>';
   }).join('');
 
@@ -903,6 +914,45 @@ function updateCard(pid) {
     }
     sunEl.style.setProperty('font-size', '18px', 'important');
     sunEl.style.fontWeight = '700';
+  }
+
+  // 前回予想とのズレ（管理者のみ）
+  const gapRow = document.getElementById('gap-row-'+pid);
+  const gapEl = document.getElementById('gapv-'+pid);
+  if (gapRow && gapEl && !p.special) {
+    let lastRec = null;
+    try {
+      const gh = JSON.parse(localStorage.getItem('diaper_sun_hist_' + floor) || '[]');
+      if (gh.length) lastRec = gh[0];
+    } catch(e) {}
+    const fc = lastRec && lastRec.items ? lastRec.items[pid] : undefined;
+    if (fc === undefined || stock === 0) {
+      gapRow.style.display = 'none';
+    } else {
+      const gap = stock - fc;
+      gapRow.style.display = 'block';
+      gapEl.textContent = (gap > 0 ? '+' : '') + gap + '枚（予想' + fc + '枚）';
+      gapEl.style.color = gap === 0 ? '#888' : (gap > 0 ? '#2a7a2a' : '#e53935');
+      gapEl.style.fontWeight = '700';
+    }
+  }
+
+  // 前回の注文（スタッフにも表示）
+  const prevOrdEl = document.getElementById('prevord-'+pid);
+  if (prevOrdEl && !p.special) {
+    let lastQty = null;
+    const ph = loadHistory().filter(function(h) { return h.floor === floor; })
+      .sort(function(a,b) { return (b.week||'').localeCompare(a.week||''); });
+    for (let i = 0; i < ph.length; i++) {
+      const item = (ph[i].items||[]).find(function(it) { return it.id === pid; });
+      if (item !== undefined) { lastQty = item.qty || 0; break; }
+    }
+    if (lastQty !== null && lastQty > 0) {
+      prevOrdEl.innerHTML = '前回の注文：<span style="font-weight:800;color:#c0392b">' + lastQty + '箱</span>';
+      prevOrdEl.style.display = 'block';
+    } else {
+      prevOrdEl.style.display = 'none';
+    }
   }
 
   updateSummary();
@@ -1145,6 +1195,27 @@ function buildRoom() {
       + '<div id="rbody-' + rn + '" style="display:none;padding:2px 0">' + rowsHtml + '</div>'
       + '</div>';
   }).join('');
+
+  // メモスペース（共通＋フロア別）
+  var memoVal = (localStorage.getItem('diaper_room_memo') || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  var floorMemoVal = (localStorage.getItem('diaper_room_memo_' + floor) || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  var fl = floor === '2F' ? '2階' : '3階';
+  document.getElementById('room-content').innerHTML += '<div style="margin:18px 0 8px;padding:12px 14px;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">'
+    + '<div style="font-size:12px;font-weight:700;color:#2a5a2a;margin-bottom:6px">📝 共通メモ（2階・3階共通）</div>'
+    + '<textarea id="room-memo-area-pc" rows="5" placeholder="フリーメモ..." oninput="saveRoomMemoPc()" style="width:100%;font-size:14px;font-family:inherit;border:1px solid #c8e6c9;border-radius:8px;padding:8px 10px;resize:vertical;background:#f9fdf9;color:#333;box-sizing:border-box">' + memoVal + '</textarea>'
+    + '<div style="font-size:12px;font-weight:700;color:#a05a1a;margin:10px 0 6px">📝 ' + fl + 'のメモ</div>'
+    + '<textarea id="room-memo-floor-area-pc" rows="5" placeholder="' + fl + 'だけのメモ..." oninput="saveRoomMemoFloorPc()" style="width:100%;font-size:14px;font-family:inherit;border:1px solid #f0d0a8;border-radius:8px;padding:8px 10px;resize:vertical;background:#fffaf3;color:#333;box-sizing:border-box">' + floorMemoVal + '</textarea>'
+    + '</div>';
+}
+
+function saveRoomMemoPc() {
+  var el = document.getElementById('room-memo-area-pc');
+  if (el) localStorage.setItem('diaper_room_memo', el.value);
+}
+
+function saveRoomMemoFloorPc() {
+  var el = document.getElementById('room-memo-floor-area-pc');
+  if (el) localStorage.setItem('diaper_room_memo_' + floor, el.value);
 }
 
 function toggleRoomPc(rn) {
@@ -1314,6 +1385,13 @@ function importAllDataPc(input) {
         const importDateStr = (nowD.getMonth()+1) + '/' + nowD.getDate();
         localStorage.setItem('diaper_room_reflect_date_' + f, importDateStr);
       });
+      // メモを復元
+      if (data.memo !== undefined) localStorage.setItem('diaper_room_memo', data.memo);
+      if (data.floorMemos) {
+        ['2F','3F'].forEach(function(f) {
+          if (data.floorMemos[f] !== undefined) localStorage.setItem('diaper_room_memo_' + f, data.floorMemos[f]);
+        });
+      }
       reflectRoom(true); buildCards(); updateSummary(); updateRoomReflectLabel(); if (cat === 'room') buildRoom();
       showToast('📥 全データを読み込みました！');
     } catch(err) { showToast('❌ ファイルが正しくありません'); }
@@ -1322,6 +1400,36 @@ function importAllDataPc(input) {
   reader.readAsText(file);
 }
 
+
+function exportStockRecordsPc() {
+  var rows = [['記録日','フロア','商品','在庫(箱)','在庫(袋)','在庫合計(枚)','日曜在庫予想(枚)']];
+  ['2F','3F'].forEach(function(f) {
+    var hist = [];
+    try { hist = JSON.parse(localStorage.getItem('diaper_sun_hist_' + f) || '[]'); } catch(e) {}
+    var sorted = hist.slice().sort(function(a,b) { return a.date < b.date ? -1 : 1; });
+    sorted.forEach(function(rec) {
+      products.forEach(function(p) {
+        var fc = rec.items ? rec.items[p.id] : undefined;
+        var stk = rec.stocks ? rec.stocks[p.id] : null;
+        if (fc === undefined && !stk) return;
+        var boxes = stk ? (stk.boxes || 0) : 0;
+        var bags = stk ? (stk.bags || 0) : 0;
+        var pieces = boxes * p.perBox + bags * p.perBag;
+        if (pieces === 0 && (fc === undefined || fc === 0)) return;
+        rows.push([rec.date, f === '2F' ? '2階' : '3階', (p.short || p.name), boxes, bags, pieces, (fc !== undefined ? fc : '')]);
+      });
+    });
+  });
+  if (rows.length === 1) { showToast('⚠ 在庫記録がありません（注文確定で記録されます）'); return; }
+  var csv = rows.map(function(r) {
+    return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\r\n');
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' });
+  var now = new Date();
+  var ymd = now.getFullYear() + ('0'+(now.getMonth()+1)).slice(-2) + ('0'+now.getDate()).slice(-2);
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '在庫記録-' + ymd + '.csv'; a.click();
+  showToast('📊 在庫記録を書き出しました');
+}
 
 function exportAllDataPc() {
   var data = {};
@@ -1333,6 +1441,12 @@ function exportAllDataPc() {
     // 書き出し日付を記録（既存の日付があればそれを使い、なければ今日）
     data['reflectDate_'+f] = localStorage.getItem('diaper_room_reflect_date_' + f) || todayStr;
   });
+  // メモを追加（共通＋フロア別）
+  data.memo = localStorage.getItem('diaper_room_memo') || '';
+  data.floorMemos = {};
+  ['2F','3F'].forEach(function(f) {
+    data.floorMemos[f] = localStorage.getItem('diaper_room_memo_' + f) || '';
+  });
   var json = JSON.stringify(data, null, 2);
   var blob = new Blob([json], { type: 'application/json' });
   var date = new Date().toLocaleDateString('ja-JP').replace(/\//g, '-');
@@ -1343,6 +1457,7 @@ function exportAllDataPc() {
 function exportFloorDataPc(f) {
   var data = { floor: f };
   try { data.daily = JSON.parse(localStorage.getItem(SAVE_KEY(f)) || '{}'); } catch(e) { data.daily = {}; }
+  data.floorMemo = localStorage.getItem('diaper_room_memo_' + f) || '';
   var roomData = {};
   try {
     var all = JSON.parse(localStorage.getItem('diaper_rooms') || '{}');
@@ -1376,6 +1491,8 @@ function importFloorDataPc(input, targetFloor) {
         Object.assign(all, data.rooms);
         localStorage.setItem('diaper_rooms', JSON.stringify(all));
       }
+      // フロアメモを復元
+      if (data.floorMemo !== undefined) localStorage.setItem('diaper_room_memo_' + targetFloor, data.floorMemo);
       // 反映日付：インポートした日を記録
       var nowD = new Date();
       localStorage.setItem('diaper_room_reflect_date_' + targetFloor, (nowD.getMonth()+1) + '/' + nowD.getDate());
@@ -1398,6 +1515,48 @@ function getPrevSunHtml(pid, p) {
     const disp = val < 0 ? '不足' : ((boxes>0?boxes+'箱':'')+(bags>0?bags+'袋':'')+'('+val+'枚)');
     return '<div class="info-lbl" style="color:#bbb;margin-top:4px;font-size:12px">前回予想（' + r.date + '）： ' + disp + '</div>';
   } catch(e) { return ''; }
+}
+
+function toggleGapPc() {
+  const panel = document.getElementById('gap-pc-panel');
+  const btn = document.getElementById('gap-pc-btn');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = (isOpen ? '▶' : '▼') + ' 📐 予想と実在庫のズレ';
+  if (!isOpen) renderGapPc();
+}
+
+function renderGapPc() {
+  const panel = document.getElementById('gap-pc-panel');
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem('diaper_sun_hist_' + floor) || '[]'); } catch(e) {}
+  if (!hist.length) { panel.innerHTML = '<div style="color:#aaa;padding:4px">予想履歴がありません（注文確定で記録されます）</div>'; return; }
+
+  const rec = hist[0];
+  let html = '<div style="color:#888;padding:2px 4px 6px">予想日：' + rec.date + '　今の在庫入力と比較</div>';
+  html += '<table style="border-collapse:collapse;width:100%;font-size:11px">';
+  html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">予想</th><th style="padding:4px 6px;text-align:right">実在庫</th><th style="padding:4px 6px;text-align:right">ズレ</th></tr>';
+
+  let anyRow = false;
+  products.forEach(function(p) {
+    if (!rec.items || rec.items[p.id] === undefined) return;
+    const fc = rec.items[p.id];
+    const actual = totalStock(p);
+    if (actual === 0 && fc <= 0) return;
+    anyRow = true;
+    const gap = actual - fc;
+    const gapColor = gap === 0 ? '#888' : (gap > 0 ? '#2a7a2a' : '#e53935');
+    html += '<tr style="border-bottom:1px solid #eee">'
+      + '<td style="padding:4px 6px;font-weight:700">' + (p.short || p.name) + '</td>'
+      + '<td style="padding:4px 6px;text-align:right">' + fc + '枚</td>'
+      + '<td style="padding:4px 6px;text-align:right">' + actual + '枚</td>'
+      + '<td style="padding:4px 6px;text-align:right;font-weight:700;color:' + gapColor + '">' + (gap > 0 ? '+' : '') + gap + '枚</td>'
+      + '</tr>';
+  });
+  html += '</table>';
+  if (!anyRow) { panel.innerHTML = '<div style="color:#aaa;padding:4px">比較できるデータがありません（在庫を入力してから開いてください）</div>'; return; }
+  html += '<div style="color:#aaa;padding:4px;font-size:10px">＋：予想より多い／−：予想より少ない</div>';
+  panel.innerHTML = html;
 }
 
 function toggleSunHist() {
@@ -1476,7 +1635,24 @@ function deletePcHistoryByDate(week) {
   const history = loadHistory();
   const newHist = history.filter(function(h) { return !(h.week === week && h.floor === floor); });
   saveHistory(newHist);
+  // 対応する日曜在庫予想の記録も削除（ズレ表示への反映を消す）
+  const sunKey = 'diaper_sun_hist_' + floor;
+  try {
+    let sunHist = JSON.parse(localStorage.getItem(sunKey) || '[]');
+    sunHist = sunHist.filter(function(r) { return r.date !== week; });
+    localStorage.setItem(sunKey, JSON.stringify(sunHist));
+  } catch(e) {}
+  try {
+    const rec = JSON.parse(localStorage.getItem('diaper_sun_record_' + floor) || 'null');
+    if (rec && rec.date === week) localStorage.removeItem('diaper_sun_record_' + floor);
+  } catch(e) {}
   renderHistory();
+  // ズレ表示・前回注文を再計算
+  buildCards();
+  const gapPanel = document.getElementById('gap-pc-panel');
+  if (gapPanel && gapPanel.style.display !== 'none') renderGapPc();
+  const sunPanel = document.getElementById('sun-hist-panel');
+  if (sunPanel && sunPanel.style.display !== 'none') renderSunHist();
   showToast('🗑 ' + week + 'の履歴を削除しました');
 }
 function showToast(msg) {
