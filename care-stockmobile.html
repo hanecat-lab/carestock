@@ -534,6 +534,10 @@
     </label>
   </div>
   <div id="import-status" style="display:none"></div>
+  <div style="margin-top:8px">
+    <button class="btn-export" style="width:100%" onclick="exportStockRecords()">📊 在庫記録 書き出し（CSV）</button>
+    <div style="font-size:10px;color:#aaa;margin-top:4px">注文確定時に記録された在庫と日曜予想をExcelで開ける形式で書き出します</div>
+  </div>
   <div style="border-top:1px solid #a0d4b0;margin:10px 0 8px"></div>
   <div class="backup-title">🏠 フロア別（使用量＋居室）</div>
   <div class="backup-btns">
@@ -1972,6 +1976,43 @@ function importFloorData(input, targetFloor) {
   reader.readAsText(file);
 }
 // --- エクスポート・インポート ---
+function exportStockRecords() {
+  var rows = [['記録日','フロア','商品','在庫(箱)','在庫(袋)','在庫合計(枚)','日曜在庫予想(枚)']];
+  FLOORS.forEach(function(f) {
+    var hist = [];
+    try { hist = JSON.parse(localStorage.getItem('diaper_sun_hist_' + f) || '[]'); } catch(e) {}
+    // 古い順に並べる
+    var sorted = hist.slice().sort(function(a,b) { return a.date < b.date ? -1 : 1; });
+    sorted.forEach(function(rec) {
+      products.forEach(function(p) {
+        var fc = rec.items ? rec.items[p.id] : undefined;
+        var stk = rec.stocks ? rec.stocks[p.id] : null;
+        if (fc === undefined && !stk) return;
+        var boxes = stk ? (stk.boxes || 0) : 0;
+        var bags = stk ? (stk.bags || 0) : 0;
+        var pieces = boxes * p.perBox + bags * p.perBag;
+        if (pieces === 0 && (fc === undefined || fc === 0)) return;
+        rows.push([rec.date, floorLabel(f), (p.short || p.name), boxes, bags, pieces, (fc !== undefined ? fc : '')]);
+      });
+    });
+  });
+  if (rows.length === 1) { showToast('⚠ 在庫記録がありません（注文確定で記録されます）'); return; }
+  var csv = rows.map(function(r) {
+    return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\r\n');
+  // BOM付きでExcelの文字化けを防止
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  var now = new Date();
+  var ymd = now.getFullYear() + ('0'+(now.getMonth()+1)).slice(-2) + ('0'+now.getDate()).slice(-2);
+  a.href = url;
+  a.download = getFacilityPrefix() + '在庫記録-' + ymd + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📊 在庫記録を書き出しました');
+}
+
 function exportData() {
   const data = { version: 2, floors: {} };
   FLOORS.forEach(function(f) {
