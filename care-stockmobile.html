@@ -478,8 +478,8 @@
       <div style="margin-top:6px">【来週の日曜の在庫予想】</div>
       <div>パッド類：現在庫 ＋ 注文箱数×1箱枚数 − 1日使用量×7日 − 1袋×1.5（予備）</div>
       <div>テープ・リハパン：現在庫 ＋ 注文箱数×1箱枚数 − 居室集計×4（入浴使用）− 2袋（予備）</div>
-      <div class="admin-only" style="margin-top:6px">【木曜届く前の残り】</div>
-      <div class="admin-only">木曜届く前の残り ＝ 現在庫 − 1日使用量×4日 − 予備1袋</div>
+      <div class="admin-only" style="margin-top:6px">【木曜届いた後の在庫】</div>
+      <div class="admin-only">木曜届いた後の在庫 ＝ 現在庫 − 居室集計 − 予備2袋 ＋ 注文数×1箱枚数</div>
     </div>
   </div>
 </div>
@@ -496,6 +496,11 @@
     <div class="history-toggle" id="sun-hist-toggle-icon">▼ 開く</div>
   </div>
   <div id="sun-hist-mobile" class="admin-only" style="display:none;margin-top:4px;font-size:11px;overflow-x:auto"></div>
+  <div class="history-header admin-only" onclick="toggleGapMobile()" id="gap-header" style="margin-top:4px;display:none">
+    <div class="history-header-title">📐 予想と実在庫のズレ</div>
+    <div class="history-toggle" id="gap-toggle-icon">▼ 開く</div>
+  </div>
+  <div id="gap-mobile" class="admin-only" style="display:none;margin-top:4px;font-size:11px;overflow-x:auto"></div>
 </div>
 
 <!-- バックアップ -->
@@ -723,7 +728,7 @@ function buildCards() {
 
     // 吸水シートは箱+袋在庫・注文・納品後在庫つきカード
     if (p.special) {
-      card.innerHTML = "\n      <div class=\"card-header\">\n        <div style=\"flex:1\"><div class=\"card-name\">" + (p.short || p.name) + "</div></div>\n      </div>\n      <div class=\"card-badges\">\n        <span class=\"badge-box\">📦 1箱 = " + (p.bagPerBox) + "袋（" + (p.perBox) + "枚）</span>\n        <span class=\"badge-bag\">🛍 1袋 = " + (p.perBag) + "枚</span>\n      </div>\n      <div class=\"card-body\">\n        <div style=\"font-size:13px;font-weight:800;color:#2a6a3a;margin-bottom:6px\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">1</span>現在の在庫</div>\n        <div class=\"stock-row\">\n          <div class=\"stock-col\">\n            <div class=\"col-label label-box\">📦 箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sb-'+" + (p.id) + ",-1,'stockBoxes'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-box\"\n                id=\"sb-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBoxes',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sb-'+" + (p.id) + ",1,'stockBoxes'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-box\" id=\"sbp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n          <div class=\"stock-sep\">+</div>\n          <div class=\"stock-col\">\n            <div class=\"col-label label-bag\">🛍 袋数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sg-'+" + (p.id) + ",-1,'stockBags'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-bag\"\n                id=\"sg-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBags',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sg-'+" + (p.id) + ",1,'stockBags'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-bag\" id=\"sgp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n        <div style=\"text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px\">\n          <span style=\"font-size:12px;color:#888\">合計：</span>\n          <span class=\"total-box\" id=\"tot-" + (p.id) + "\" style=\"font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0\">0</span>\n          <span style=\"font-size:11px;color:#888\">枚</span>\n        </div>\n        <div class=\"bottom-row\">\n          <div class=\"bottom-col admin-only\" id=\"after-col-" + (p.id) + "\" style=\"flex:0.7\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:#bbb\">木曜届く前の残り</div>\n            <div class=\"after-box\" id=\"af-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"afv-" + (p.id) + "\">0<span class=\"total-unit\">枚</span></div>\n              <div class=\"after-del\" id=\"afd-" + (p.id) + "\" style=\"display:none\"></div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" id=\"sun-col-" + (p.id) + "\" style=\"flex:0.7\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:#bbb\">来週の日曜の在庫予想</div>\n            <div class=\"after-box\" id=\"sun-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"sunv-" + (p.id) + "\" style=\"font-size:12px\">-</div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" style=\"flex:1.3\">\n            <div class=\"suggest-label\" id=\"ol-" + (p.id) + "\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>" + (p.short || p.name) + " 注文箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('oq-'+" + (p.id) + ",-1,'orderQty'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n                id=\"oq-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"font-size:26px;padding:12px 4px;border:2.5px solid #e53935;border-radius:8px;background:#fff5f5;font-weight:800;color:#c0392b;flex:1;min-width:0;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none\"\n                oninput=\"onInput(" + (p.id) + ",'orderQty',this.value)\">\n              <button class=\"spin-btn plus plus-ord\" onclick=\"stepInput('oq-'+" + (p.id) + ",1,'orderQty'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-order\" id=\"oqp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n      </div>";
+      card.innerHTML = "\n      <div class=\"card-header\">\n        <div style=\"flex:1\"><div class=\"card-name\">" + (p.short || p.name) + "</div></div>\n      </div>\n      <div class=\"card-badges\">\n        <span class=\"badge-box\">📦 1箱 = " + (p.bagPerBox) + "袋（" + (p.perBox) + "枚）</span>\n        <span class=\"badge-bag\">🛍 1袋 = " + (p.perBag) + "枚</span>\n      </div>\n      <div class=\"card-body\">\n        <div style=\"font-size:13px;font-weight:800;color:#2a6a3a;margin-bottom:6px\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">1</span>現在の在庫</div>\n        <div class=\"stock-row\">\n          <div class=\"stock-col\">\n            <div class=\"col-label label-box\">📦 箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sb-'+" + (p.id) + ",-1,'stockBoxes'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-box\"\n                id=\"sb-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBoxes',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sb-'+" + (p.id) + ",1,'stockBoxes'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-box\" id=\"sbp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n          <div class=\"stock-sep\">+</div>\n          <div class=\"stock-col\">\n            <div class=\"col-label label-bag\">🛍 袋数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sg-'+" + (p.id) + ",-1,'stockBags'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-bag\"\n                id=\"sg-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBags',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sg-'+" + (p.id) + ",1,'stockBags'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-bag\" id=\"sgp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n        <div style=\"text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px\">\n          <span style=\"font-size:12px;color:#888\">合計：</span>\n          <span class=\"total-box\" id=\"tot-" + (p.id) + "\" style=\"font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0\">0</span>\n          <span style=\"font-size:11px;color:#888\">枚</span>\n        </div>\n        <div class=\"bottom-row\">\n          <div class=\"bottom-col admin-only\" id=\"after-col-" + (p.id) + "\" style=\"flex:0.7\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:#bbb\">木曜届いた後の在庫</div>\n            <div class=\"after-box\" id=\"af-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"afv-" + (p.id) + "\">0<span class=\"total-unit\">枚</span></div>\n              <div class=\"after-del\" id=\"afd-" + (p.id) + "\" style=\"display:none\"></div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" id=\"sun-col-" + (p.id) + "\" style=\"flex:0.7\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:#bbb\">来週の日曜の在庫予想</div>\n            <div class=\"after-box\" id=\"sun-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"sunv-" + (p.id) + "\" style=\"font-size:12px\">-</div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" style=\"flex:1.3\">\n            <div class=\"suggest-label\" id=\"ol-" + (p.id) + "\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>" + (p.short || p.name) + " 注文箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('oq-'+" + (p.id) + ",-1,'orderQty'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n                id=\"oq-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"font-size:26px;padding:12px 4px;border:2.5px solid #e53935;border-radius:8px;background:#fff5f5;font-weight:800;color:#c0392b;flex:1;min-width:0;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none\"\n                oninput=\"onInput(" + (p.id) + ",'orderQty',this.value)\">\n              <button class=\"spin-btn plus plus-ord\" onclick=\"stepInput('oq-'+" + (p.id) + ",1,'orderQty'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-order\" id=\"oqp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n      </div>";
       container.appendChild(card);
       return;
     }
@@ -733,7 +738,7 @@ function buildCards() {
     const subHtml = p.abs
       ? "<div class=\"card-sub\">" + (p.name) + "　" + (p.abs) + "</div>" : "";
 
-    card.innerHTML = "\n      <div class=\"card-header\">\n        " + (dotHtml) + "\n        <div style=\"flex:1\">\n          <div class=\"card-name\">" + (p.short || p.name) + "</div>\n          " + (subHtml) + "\n        </div>\n        <div class=\"badge-low\" id=\"low-" + (p.id) + "\" style=\"display:none\">⚠ 不足注意</div>\n      </div>\n      <div class=\"card-badges\">\n        <span class=\"badge-box\">📦 1箱 = " + (Math.round(p.perBox/p.perBag)) + "袋（" + (p.perBox) + "枚）</span>\n        <span class=\"badge-bag\">🛍 1袋 = " + (p.perBag) + "枚</span>\n      </div>\n      <div class=\"card-body\">\n        <div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:6px\">\n          <div style=\"font-size:13px;font-weight:800;color:#2a6a3a\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">1</span>現在の在庫</div>\n          <div id=\"use4-" + (p.id) + "\" class=\"admin-only\" style=\"font-size:10px;color:#888;display:none;text-align:right;line-height:1.9\">\n            <span style=\"color:#aaa;font-size:9px\">※1枚でも使えば1袋カウント</span><br>\n            日〜水消費：<span id=\"use4v-" + (p.id) + "\" style=\"font-weight:700;color:#c07000\"></span><br>\n            7日消費：<span id=\"use7v-" + (p.id) + "\" style=\"font-weight:700;color:#888\"></span>\n          </div>\n        </div>\n        <div class=\"stock-row\">\n          <div class=\"stock-col\">\n            <div class=\"col-label label-box\">📦 箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sb-'+" + (p.id) + ",-1,'stockBoxes'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-box\"\n                id=\"sb-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBoxes',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sb-'+" + (p.id) + ",1,'stockBoxes'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-box\" id=\"sbp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n          <div class=\"stock-sep\">+</div>\n          <div class=\"stock-col\">\n            <div class=\"col-label label-bag\">🛍 袋数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sg-'+" + (p.id) + ",-1,'stockBags'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-bag\"\n                id=\"sg-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBags',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sg-'+" + (p.id) + ",1,'stockBags'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-bag\" id=\"sgp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n        <div style=\"text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px\">\n          <span style=\"font-size:12px;color:#888\">合計：</span>\n          <span class=\"total-box\" id=\"tot-" + (p.id) + "\" style=\"font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0\">0</span>\n          <span style=\"font-size:11px;color:#888\">枚</span>\n        </div>\n        <div class=\"bottom-row\">\n\n          <div class=\"bottom-col admin-only\" id=\"daily-col-" + (p.id) + "\" " + (p.weeklyFixed !== null ? 'style="display:none"' : '') + " data-weekly=\"" + (p.weeklyFixed !== null) + "\">\n            <div class=\"daily-label-row\">\n              <div class=\"daily-saved-dot\" id=\"dot-" + (p.id) + "\"></div>\n              <div class=\"col-label label-daily\" style=\"margin-bottom:0\">1日使用量(枚)</div>\n            </div>\n            <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-daily\"\n              id=\"du-" + (p.id) + "\" value=\"\" placeholder=\"0\" oninput=\"onInput(" + (p.id) + ",'dailyUse',this.value)\">\n          </div>\n          <div class=\"bottom-col\" id=\"weekly-col-" + (p.id) + "\" " + ((p.weeklyFixed === null || ((p.cat === "tape" || p.cat === "pants") && !isAdminMode)) ? "style=\"display:none\"" : "") + ">\n            <div class=\"col-label label-daily\">週必要枚数</div>\n            <div id=\"weekly-disp-" + (p.id) + "\" style=\"border:2px solid #a0d4b0;border-radius:10px;padding:10px 4px;text-align:center;background:#f0fdf6;font-size:16px;font-weight:800;color:#1a4a3a\">\n              " + (p.weeklyFixed) + "<span style=\"font-size:10px;font-weight:400\">枚</span>\n            </div>\n            <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n              id=\"weekly-input-" + (p.id) + "\"\n              style=\"display:none;width:100%;padding:8px 4px;border:2px solid #f57c00;border-radius:10px;font-size:16px;text-align:center;font-weight:800;font-family:inherit;outline:none;background:#fff8f0;margin-top:4px;box-sizing:border-box\"\n              placeholder=\"" + (p.weeklyFixed) + "\"\n              oninput=\"updateWeeklyFixed(" + (p.id) + ", this.value)\">\n          </div>\n          <div class=\"bottom-col admin-only\" id=\"after-col-" + (p.id) + "\" style=\"flex:0.7\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:#bbb\">木曜届く前の残り</div>\n            <div class=\"after-box\" id=\"af-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"afv-" + (p.id) + "\">0<span class=\"total-unit\">枚</span></div>\n              <div class=\"after-del\" id=\"afd-" + (p.id) + "\" style=\"display:none\"></div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" style=\"flex:1.3\">\n            <div class=\"suggest-label\" id=\"ol-" + (p.id) + "\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>" + (p.short || p.name) + " 注文箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('oq-'+" + (p.id) + ",-1,'orderQty'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n                id=\"oq-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"font-size:26px;padding:12px 4px;border:2.5px solid #e53935;border-radius:8px;background:#fff5f5;font-weight:800;color:#c0392b;flex:1;min-width:0;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none\"\n                oninput=\"onInput(" + (p.id) + ",'orderQty',this.value)\">\n              <button class=\"spin-btn plus plus-ord\" onclick=\"stepInput('oq-'+" + (p.id) + ",1,'orderQty'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-order\" id=\"oqp-" + (p.id) + "\" style=\"display:none\"></div>\n            <div style=\"text-align:right;font-size:15px;color:#aaa;margin-top:4px\" id=\"sun-col-" + (p.id) + "\">\n              来週日曜在庫予想：<span id=\"sunv-" + (p.id) + "\">-</span>\n            </div>\n            <div class=\"prev-badge\" id=\"prev-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n      </div>\n    ";
+    card.innerHTML = "\n      <div class=\"card-header\">\n        " + (dotHtml) + "\n        <div style=\"flex:1\">\n          <div class=\"card-name\">" + (p.short || p.name) + "</div>\n          " + (subHtml) + "\n        </div>\n        <div class=\"badge-low\" id=\"low-" + (p.id) + "\" style=\"display:none\">⚠ 不足注意</div>\n      </div>\n      <div class=\"card-badges\">\n        <span class=\"badge-box\">📦 1箱 = " + (Math.round(p.perBox/p.perBag)) + "袋（" + (p.perBox) + "枚）</span>\n        <span class=\"badge-bag\">🛍 1袋 = " + (p.perBag) + "枚</span>\n      </div>\n      <div class=\"card-body\">\n        <div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:6px\">\n          <div style=\"font-size:13px;font-weight:800;color:#2a6a3a\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">1</span>現在の在庫</div>\n          <div id=\"use4-" + (p.id) + "\" class=\"admin-only\" style=\"font-size:10px;color:#888;display:none;text-align:right;line-height:1.9\">\n            <span style=\"color:#aaa;font-size:9px\">※1枚でも使えば1袋カウント</span><br>\n            日〜水消費：<span id=\"use4v-" + (p.id) + "\" style=\"font-weight:700;color:#c07000\"></span><br>\n            7日消費：<span id=\"use7v-" + (p.id) + "\" style=\"font-weight:700;color:#888\"></span>\n          </div>\n        </div>\n        <div class=\"stock-row\">\n          <div class=\"stock-col\">\n            <div class=\"col-label label-box\">📦 箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sb-'+" + (p.id) + ",-1,'stockBoxes'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-box\"\n                id=\"sb-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBoxes',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sb-'+" + (p.id) + ",1,'stockBoxes'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-box\" id=\"sbp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n          <div class=\"stock-sep\">+</div>\n          <div class=\"stock-col\">\n            <div class=\"col-label label-bag\">🛍 袋数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sg-'+" + (p.id) + ",-1,'stockBags'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-bag\"\n                id=\"sg-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBags',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sg-'+" + (p.id) + ",1,'stockBags'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-bag\" id=\"sgp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n        <div style=\"text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px\">\n          <span style=\"font-size:12px;color:#888\">合計：</span>\n          <span class=\"total-box\" id=\"tot-" + (p.id) + "\" style=\"font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0\">0</span>\n          <span style=\"font-size:11px;color:#888\">枚</span>\n        </div>\n        <div class=\"bottom-row\">\n\n          <div class=\"bottom-col admin-only\" id=\"daily-col-" + (p.id) + "\" " + (p.weeklyFixed !== null ? 'style="display:none"' : '') + " data-weekly=\"" + (p.weeklyFixed !== null) + "\">\n            <div class=\"daily-label-row\">\n              <div class=\"daily-saved-dot\" id=\"dot-" + (p.id) + "\"></div>\n              <div class=\"col-label label-daily\" style=\"margin-bottom:0\">1日使用量(枚)</div>\n            </div>\n            <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-daily\"\n              id=\"du-" + (p.id) + "\" value=\"\" placeholder=\"0\" oninput=\"onInput(" + (p.id) + ",'dailyUse',this.value)\">\n          </div>\n          <div class=\"bottom-col\" id=\"weekly-col-" + (p.id) + "\" " + ((p.weeklyFixed === null || ((p.cat === "tape" || p.cat === "pants") && !isAdminMode)) ? "style=\"display:none\"" : "") + ">\n            <div class=\"col-label label-daily\">週必要枚数</div>\n            <div id=\"weekly-disp-" + (p.id) + "\" style=\"border:2px solid #a0d4b0;border-radius:10px;padding:10px 4px;text-align:center;background:#f0fdf6;font-size:16px;font-weight:800;color:#1a4a3a\">\n              " + (p.weeklyFixed) + "<span style=\"font-size:10px;font-weight:400\">枚</span>\n            </div>\n            <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n              id=\"weekly-input-" + (p.id) + "\"\n              style=\"display:none;width:100%;padding:8px 4px;border:2px solid #f57c00;border-radius:10px;font-size:16px;text-align:center;font-weight:800;font-family:inherit;outline:none;background:#fff8f0;margin-top:4px;box-sizing:border-box\"\n              placeholder=\"" + (p.weeklyFixed) + "\"\n              oninput=\"updateWeeklyFixed(" + (p.id) + ", this.value)\">\n          </div>\n          <div class=\"bottom-col admin-only\" id=\"after-col-" + (p.id) + "\" style=\"flex:0.7\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:#bbb\">木曜届いた後の在庫</div>\n            <div class=\"after-box\" id=\"af-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"afv-" + (p.id) + "\">0<span class=\"total-unit\">枚</span></div>\n              <div class=\"after-del\" id=\"afd-" + (p.id) + "\" style=\"display:none\"></div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" style=\"flex:1.3\">\n            <div class=\"suggest-label\" id=\"ol-" + (p.id) + "\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>" + (p.short || p.name) + " 注文箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('oq-'+" + (p.id) + ",-1,'orderQty'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n                id=\"oq-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"font-size:26px;padding:12px 4px;border:2.5px solid #e53935;border-radius:8px;background:#fff5f5;font-weight:800;color:#c0392b;flex:1;min-width:0;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none\"\n                oninput=\"onInput(" + (p.id) + ",'orderQty',this.value)\">\n              <button class=\"spin-btn plus plus-ord\" onclick=\"stepInput('oq-'+" + (p.id) + ",1,'orderQty'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-order\" id=\"oqp-" + (p.id) + "\" style=\"display:none\"></div>\n            <div style=\"text-align:right;font-size:15px;color:#aaa;margin-top:4px\" id=\"sun-col-" + (p.id) + "\">\n              来週日曜在庫予想：<span id=\"sunv-" + (p.id) + "\">-</span>\n            </div>\n            <div class=\"admin-only\" style=\"text-align:right;font-size:12px;color:#aaa;margin-top:2px;display:none\" id=\"gap-row-" + (p.id) + "\">\n              前回予想とのズレ：<span id=\"gapv-" + (p.id) + "\">-</span>\n            </div>\n            <div class=\"prev-badge\" id=\"prev-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n      </div>\n    ";
     container.appendChild(card);
   });
 }
@@ -854,7 +859,7 @@ function updateCard(pid) {
   const afEl = document.getElementById("af-"+pid);
   const afvEl = document.getElementById("afv-"+pid);
   const afdEl = document.getElementById("afd-"+pid);
-  // 木曜届く前の残り
+  // 木曜届いた後の在庫
   let nextSunRem;
   if (p.weeklyFixed !== null) {
     let roomTotal = 0;
@@ -863,9 +868,9 @@ function updateCard(pid) {
       const v = rs.products[String(p.id)];
       if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
     });
-    nextSunRem = Math.max(0, totalStock(p) - roomTotal * 2 - p.perBag);
+    nextSunRem = Math.max(0, totalStock(p) - roomTotal - p.perBag * 2 + s.orderQty * p.perBox);
   } else {
-    nextSunRem = Math.max(0, totalStock(p) - s.dailyUse * DAYS_DELIVERY - p.perBag);
+    nextSunRem = Math.max(0, totalStock(p) - s.dailyUse * DAYS_DELIVERY - p.perBag + s.orderQty * p.perBox);
   }
   const thurLow = hasInput && nextSunRem === 0 && s.dailyUse > 0;
   if (afEl) afEl.className = "after-box" + (thurLow ? " low" : "");
@@ -896,6 +901,27 @@ function updateCard(pid) {
     sunEl.style.color = sunLow ? '#e53935' : '#555';
     const sunBox = document.getElementById('sun-'+pid);
     if (sunBox) sunBox.className = 'after-box' + (sunLow ? ' low' : '');
+  }
+
+  // 前回予想とのズレ（管理者のみ）
+  const gapRow = document.getElementById('gap-row-'+pid);
+  const gapEl = document.getElementById('gapv-'+pid);
+  if (gapRow && gapEl && !p.special) {
+    let lastRec = null;
+    try {
+      const gh = JSON.parse(localStorage.getItem('diaper_sun_hist_' + currentFloor) || '[]');
+      if (gh.length) lastRec = gh[0];
+    } catch(e) {}
+    const fc = lastRec && lastRec.items ? lastRec.items[p.id] : undefined;
+    if (fc === undefined || !hasInput) {
+      gapRow.style.display = 'none';
+    } else {
+      const gap = totalStock(p) - fc;
+      gapRow.style.display = isAdminMode ? 'block' : 'none';
+      gapEl.textContent = (gap > 0 ? '+' : '') + gap + '枚（予想' + fc + '枚）';
+      gapEl.style.color = gap === 0 ? '#888' : (gap > 0 ? '#2a7a2a' : '#e53935');
+      gapEl.style.fontWeight = '700';
+    }
   }
 
 
@@ -1294,6 +1320,53 @@ function deleteSunHistMobile(idx) {
   localStorage.setItem(key, JSON.stringify(hist));
   renderSunHistMobile();
 }
+
+function toggleGapMobile() {
+  var panel = document.getElementById('gap-mobile');
+  var icon = document.getElementById('gap-toggle-icon');
+  var isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  icon.textContent = isOpen ? '▼ 開く' : '▲ 閉じる';
+  if (!isOpen) renderGapMobile();
+}
+
+function renderGapMobile() {
+  var panel = document.getElementById('gap-mobile');
+  var key = 'diaper_sun_hist_' + currentFloor;
+  var hist = [];
+  try { hist = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+  if (!hist.length) { panel.innerHTML = '<div style="color:#aaa;padding:4px">予想履歴がありません（注文確定で記録されます）</div>'; return; }
+
+  var rec = hist[0]; // 直近の予想
+  var html = '<div style="color:#888;padding:2px 4px 6px">予想日：' + rec.date + '（' + floorLabel(currentFloor) + '）　今の在庫入力と比較</div>';
+  html += '<table style="border-collapse:collapse;width:100%;font-size:11px">';
+  html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">予想</th><th style="padding:4px 6px;text-align:right">実在庫</th><th style="padding:4px 6px;text-align:right">ズレ</th></tr>';
+
+  var anyRow = false;
+  products.forEach(function(p) {
+    if (!rec.items || rec.items[p.id] === undefined) return;
+    var forecast = rec.items[p.id];
+    var actual = totalStock(p);
+    if (actual === 0 && forecast <= 0) return; // 未入力品目はスキップ
+    anyRow = true;
+    var gap = actual - forecast;
+    var gapColor = gap === 0 ? '#888' : (gap > 0 ? '#2a7a2a' : '#e53935');
+    var gapDisp = (gap > 0 ? '+' : '') + gap + '枚';
+    html += '<tr style="border-bottom:1px solid #eee">';
+    html += '<td style="padding:4px 6px;font-weight:700">' + (p.short || p.name) + '</td>';
+    html += '<td style="padding:4px 6px;text-align:right">' + forecast + '枚</td>';
+    html += '<td style="padding:4px 6px;text-align:right">' + actual + '枚</td>';
+    html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:' + gapColor + '">' + gapDisp + '</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  if (!anyRow) {
+    panel.innerHTML = '<div style="color:#aaa;padding:4px">比較できるデータがありません（在庫を入力してから開いてください）</div>';
+    return;
+  }
+  html += '<div style="color:#aaa;padding:4px;font-size:10px">＋：予想より多い（使用量を多めに見積もり）／−：予想より少ない（使用量を少なめに見積もり）</div>';
+  panel.innerHTML = html;
+}
 // --- 居室データ ---
 const ROOMS = {
   '2F': [201,202,203,205,206,207,208,210,211,212,213,215,216,217,218],
@@ -1627,7 +1700,7 @@ function toggleMode() {
     if (isAdminMode) {
       // daily-colはweeklyFixed=trueのものは非表示のまま
       if (el.id && el.id.startsWith('daily-col-') && el.dataset.weekly === 'true') return;
-      if (el.id === 'sun-hist-header') return;  // 個別に制御
+      if (el.id === 'sun-hist-header' || el.id === 'gap-header') return;  // 個別に制御
       if (el.classList.contains('save-bar')) el.style.display = 'flex';
       else if (el.tagName === 'BUTTON') el.style.display = 'inline-block';
       else el.style.display = 'block';
@@ -1652,8 +1725,17 @@ function toggleMode() {
     if (sunPanel) sunPanel.style.display = 'none';
     if (sunHeader) sunHeader.style.display = 'flex';
     if (sunIcon) sunIcon.textContent = '▼ 開く';
+    // ズレ記録を閉じた状態で表示
+    var gapPanel = document.getElementById('gap-mobile');
+    var gapHeader = document.getElementById('gap-header');
+    var gapIcon = document.getElementById('gap-toggle-icon');
+    if (gapPanel) gapPanel.style.display = 'none';
+    if (gapHeader) gapHeader.style.display = 'flex';
+    if (gapIcon) gapIcon.textContent = '▼ 開く';
     // 居室管理タブを表示
     document.getElementById('tab-room').style.display = 'inline-block';
+    // カード再計算（ズレ表示など）
+    products.forEach(function(p) { updateCard(p.id); });
   } else {
     btn.textContent = '⚙️ 管理者に切り替え';
     btn.className = 'btn-mode btn-mode-admin';
