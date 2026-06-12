@@ -1555,12 +1555,18 @@ function buildRoomSection() {
     html += "\n    <div class=\"room-card\" id=\"room-card-" + (roomNo) + "\">\n      <div class=\"room-card-header\" onclick=\"toggleRoom(" + (roomNo) + ")\">\n        <div>\n          <div class=\"room-no\">" + (roomNo) + "号室</div>\n          <div class=\"room-summary\" id=\"rsummary-" + (roomNo) + "\">" + (summaryText) + "</div>\n        </div>\n        <div class=\"room-toggle\" id=\"rtoggle-" + (roomNo) + "\">▼</div>\n      </div>\n      <div class=\"room-body\" id=\"rbody-" + (roomNo) + "\">\n        " + (productRows) + "\n        <div style=\"text-align:center;padding:10px 0 4px\">\n          <button onclick=\"toggleRoom(" + (roomNo) + ")\" style=\"padding:6px 20px;border:none;border-radius:20px;background:#d6edd6;color:#2a5a2a;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit\">▲ 折りたたむ</button>\n        </div>\n      </div>\n    </div>";
   });
 
-  // メモスペース
+  // メモスペース（共通＋フロア別）
   var memoVal = localStorage.getItem('diaper_room_memo') || '';
+  var floorMemoVal = localStorage.getItem('diaper_room_memo_' + currentFloor) || '';
+  var esc = function(s) { return s.replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
   html += '<div style="margin:18px 0 8px;padding:12px 14px;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">'
-    + '<div style="font-size:12px;font-weight:700;color:#2a5a2a;margin-bottom:6px">📝 メモ</div>'
+    + '<div style="font-size:12px;font-weight:700;color:#2a5a2a;margin-bottom:6px">📝 共通メモ（2階・3階共通）</div>'
     + '<textarea id="room-memo-area" rows="5" placeholder="フリーメモ..." oninput="saveRoomMemo()" style="width:100%;font-size:16px!important;font-family:inherit;border:1px solid #c8e6c9;border-radius:8px;padding:8px 10px;resize:none;background:#f9fdf9;color:#333;box-sizing:border-box">'
-    + memoVal.replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    + esc(memoVal)
+    + '</textarea>'
+    + '<div style="font-size:12px;font-weight:700;color:#a05a1a;margin:10px 0 6px">📝 ' + floorLabel(currentFloor) + 'のメモ</div>'
+    + '<textarea id="room-memo-floor-area" rows="5" placeholder="' + floorLabel(currentFloor) + 'だけのメモ..." oninput="saveRoomMemoFloor()" style="width:100%;font-size:16px!important;font-family:inherit;border:1px solid #f0d0a8;border-radius:8px;padding:8px 10px;resize:none;background:#fffaf3;color:#333;box-sizing:border-box">'
+    + esc(floorMemoVal)
     + '</textarea>'
     + '</div>';
 
@@ -1572,6 +1578,12 @@ function saveRoomMemo() {
   var el = document.getElementById('room-memo-area');
   if (!el) return;
   localStorage.setItem('diaper_room_memo', el.value);
+}
+
+function saveRoomMemoFloor() {
+  var el = document.getElementById('room-memo-floor-area');
+  if (!el) return;
+  localStorage.setItem('diaper_room_memo_' + currentFloor, el.value);
 }
 
 function toggleRoom(roomNo) {
@@ -1920,6 +1932,9 @@ function exportFloorData(floor) {
   } catch(e) {}
   data.rooms = roomData;
 
+  // フロアメモを追加
+  data.floorMemo = localStorage.getItem('diaper_room_memo_' + floor) || '';
+
   // 書き出し時に日付を記録
   var td = new Date();
   data.reflectDate = localStorage.getItem('diaper_room_reflect_date_' + floor) || ((td.getMonth()+1) + '/' + td.getDate());
@@ -1974,6 +1989,11 @@ function importFloorData(input, targetFloor) {
           Object.assign(all, data.rooms);
           localStorage.setItem('diaper_rooms', JSON.stringify(all));
         }
+      }
+
+      // フロアメモを復元
+      if (data.floorMemo !== undefined) {
+        localStorage.setItem('diaper_room_memo_' + targetFloor, data.floorMemo);
       }
 
       // 反映日付：インポートした日を記録
@@ -2042,6 +2062,12 @@ function exportData() {
   });
   // 居室データを追加
   try { data.rooms = JSON.parse(localStorage.getItem('diaper_rooms') || '{}'); } catch(e) { data.rooms = {}; }
+  // メモを追加（共通＋フロア別）
+  data.memo = localStorage.getItem('diaper_room_memo') || '';
+  data.floorMemos = {};
+  FLOORS.forEach(function(f) {
+    data.floorMemos[f] = localStorage.getItem('diaper_room_memo_' + f) || '';
+  });
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -2105,6 +2131,13 @@ function importData(event) {
       const roomSrc = data.all || data.rooms || null;
       if (roomSrc) {
         localStorage.setItem('diaper_rooms', JSON.stringify(roomSrc));
+      }
+      // メモを復元
+      if (data.memo !== undefined) localStorage.setItem('diaper_room_memo', data.memo);
+      if (data.floorMemos) {
+        FLOORS.forEach(function(f) {
+          if (data.floorMemos[f] !== undefined) localStorage.setItem('diaper_room_memo_' + f, data.floorMemos[f]);
+        });
       }
       syncInputsToState();
       reflectRoomToDaily(true);
