@@ -389,6 +389,10 @@
   }
   .btn-scroll-summary:active { background: #fff3e0; }
 </style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
 <div id="app-wrapper">
@@ -564,6 +568,89 @@
 <div id="toast">💾 保存しました！</div>
 
 <script>
+// ===== Firebase 設定 =====
+// Firebase コンソール(https://console.firebase.google.com)でプロジェクトを作成し、
+// 「プロジェクト設定 → マイアプリ」から取得した値を以下に入力してください。
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAZtYAN3adxxpXeuXLlkOoJauVvsi8tdLc",
+  authDomain: "haneirocaremanegement.firebaseapp.com",
+  databaseURL: "https://haneirocaremanegement-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "haneirocaremanegement",
+  storageBucket: "haneirocaremanegement.firebasestorage.app",
+  messagingSenderId: "996684867144",
+  appId: "1:996684867144:web:1a67c32616e03fe7c45a7d"
+};
+
+// 設定が入力済みかどうかで Firebase の有効/無効を自動判定
+const FB_ENABLED = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+const FB_PATH = 'carestock'; // Firebase Realtime DB のルートパス（変更可）
+
+let _fbDb = null;
+let _fbReady = false;
+
+// Firebase にデータを書き込む（JSON文字列またはオブジェクトを受け取る）
+function fbWrite(key, value) {
+  if (!_fbDb || !_fbReady) return;
+  try {
+    const obj = typeof value === 'string' ? JSON.parse(value) : value;
+    _fbDb.ref(FB_PATH + '/' + key).set(obj);
+  } catch(e) {
+    _fbDb.ref(FB_PATH + '/' + key).set(value);
+  }
+}
+
+// Firebase から全データを読み込んで localStorage に反映し UI を再描画
+function fbInitLoad(db) {
+  _fbDb = db;
+  db.ref(FB_PATH).once('value').then(function(snap) {
+    _fbReady = true;
+    const data = snap.val();
+    if (data) {
+      Object.keys(data).forEach(function(key) {
+        const val = data[key];
+        localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+      });
+      FLOORS.forEach(function(f) { loadDailyUse(f); });
+      buildCards();
+      syncInputsToState();
+      updateSaveDateLabel();
+      products.forEach(function(p) { updatePrevBadge(p.id); });
+      updateWeeklyDisplay();
+      renderHistory();
+      var fnEl = document.getElementById('facility-name');
+      if (fnEl) fnEl.value = localStorage.getItem('facility_name') || '';
+      reflectRoomToDaily(true);
+      updateReflectDateLabel();
+      updateRoomReflectLabelMobile();
+      showToast('☁️ クラウドからデータを同期しました');
+    } else {
+      _fbReady = true;
+    }
+    // 注文履歴をリアルタイム監視（他の端末からの更新を自動反映）
+    db.ref(FB_PATH + '/diaper_history').on('value', function(snap2) {
+      if (!snap2.exists()) return;
+      const val = snap2.val();
+      const newJson = typeof val === 'string' ? val : JSON.stringify(val);
+      if (localStorage.getItem('diaper_history') !== newJson) {
+        localStorage.setItem('diaper_history', newJson);
+        renderHistory();
+        products.forEach(function(p) { updatePrevBadge(p.id); });
+      }
+    });
+  }).catch(function(e) {
+    _fbReady = true;
+    console.warn('Firebase 読み込みエラー:', e);
+  });
+}
+
+if (FB_ENABLED) {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  firebase.auth().signInAnonymously()
+    .then(function() { fbInitLoad(firebase.database()); })
+    .catch(function(e) { console.warn('Firebase 認証エラー:', e); });
+}
+// ===== Firebase 設定ここまで =====
+
 const DAYS_DELIVERY = 4;
 const DAYS_WEEK_NORMAL = 7;
 const DAYS_WEEK_HOLIDAY = 14;
@@ -614,10 +701,14 @@ function saveDateKey(floor) { return "diaper_saved_at_" + floor; }
 function saveDailyUse() {
   const data = {};
   products.forEach(function(p) { data[p.id] = state[currentFloor][p.id].dailyUse; });
-  localStorage.setItem(saveKey(currentFloor), JSON.stringify(data));
+  const dailyJson = JSON.stringify(data);
+  localStorage.setItem(saveKey(currentFloor), dailyJson);
+  fbWrite(saveKey(currentFloor), dailyJson);
   // 保存日時を記録
   const now = new Date();
-  localStorage.setItem(saveDateKey(currentFloor), now.toISOString());
+  const nowIso = now.toISOString();
+  localStorage.setItem(saveDateKey(currentFloor), nowIso);
+  fbWrite(saveDateKey(currentFloor), nowIso);
   showToast("💾 " + floorLabel(currentFloor) + "の使用量を保存しました！");
   updateSaveDateLabel();
   products.forEach(function(p) { updateDailyBadge(p.id); });
@@ -1085,7 +1176,9 @@ function loadHistory() {
 }
 
 function saveHistory(hist) {
-  localStorage.setItem(historyKey(), JSON.stringify(hist));
+  const json = JSON.stringify(hist);
+  localStorage.setItem(historyKey(), json);
+  fbWrite(historyKey(), json);
 }
 
 function getLastOrder(floor, pid) {
@@ -1184,8 +1277,12 @@ function doConfirmOrder(dateStr) {
   try { sunHist = JSON.parse(localStorage.getItem(sunHistKey) || '[]'); } catch(e) {}
   const sameIdx = sunHist.findIndex(function(h) { return h.date === dateStr; })
   if (sameIdx >= 0) { sunHist[sameIdx] = sunRecord; } else { sunHist.unshift(sunRecord); if (sunHist.length > 4) sunHist = sunHist.slice(0, 4); }
-  localStorage.setItem(sunHistKey, JSON.stringify(sunHist));
-  localStorage.setItem('diaper_sun_record_' + currentFloor, JSON.stringify(sunRecord));
+  const sunHistJson = JSON.stringify(sunHist);
+  localStorage.setItem(sunHistKey, sunHistJson);
+  fbWrite(sunHistKey, sunHistJson);
+  const sunRecordJson = JSON.stringify(sunRecord);
+  localStorage.setItem('diaper_sun_record_' + currentFloor, sunRecordJson);
+  fbWrite('diaper_sun_record_' + currentFloor, sunRecordJson);
   // グラフ用の長期ログ（1年分）を保存（同日上書き）
   const glKey = 'diaper_graph_log_' + currentFloor;
   let gLog = [];
@@ -1198,7 +1295,9 @@ function doConfirmOrder(dateStr) {
   if (gIdx >= 0) { gLog[gIdx] = gEntry; } else { gLog.push(gEntry); }
   gLog.sort(function(a,b) { return a.date < b.date ? -1 : 1; });
   if (gLog.length > 60) gLog = gLog.slice(-60);
-  localStorage.setItem(glKey, JSON.stringify(gLog));
+  const glJson = JSON.stringify(gLog);
+  localStorage.setItem(glKey, glJson);
+  fbWrite(glKey, glJson);
   showToast('✅ ' + floorLabel(currentFloor) + 'の注文を保存しました！');
   renderHistory();
   products.forEach(function(p) { updatePrevBadge(p.id); });
@@ -1631,7 +1730,9 @@ function loadRoomData() {
   catch(e) { return {}; }
 }
 function saveRoomData(data) {
-  localStorage.setItem(ROOM_KEY, JSON.stringify(data));
+  const json = JSON.stringify(data);
+  localStorage.setItem(ROOM_KEY, json);
+  fbWrite(ROOM_KEY, json);
 }
 
 function getRoomState(floor, roomNo) {
@@ -1678,6 +1779,7 @@ function reflectRoomToDaily(silent) {
   var now = new Date();
   var dateStr = (now.getMonth()+1) + '/' + now.getDate();
   localStorage.setItem('diaper_room_reflect_date_' + currentFloor, dateStr);
+  fbWrite('diaper_room_reflect_date_' + currentFloor, dateStr);
   updateRoomReflectLabelMobile();
   updateReflectDateLabel();
 }
@@ -1799,12 +1901,14 @@ function saveRoomMemo() {
   var el = document.getElementById('room-memo-area');
   if (!el) return;
   localStorage.setItem('diaper_room_memo', el.value);
+  fbWrite('diaper_room_memo', el.value);
 }
 
 function saveRoomMemoFloor() {
   var el = document.getElementById('room-memo-floor-area');
   if (!el) return;
   localStorage.setItem('diaper_room_memo_' + currentFloor, el.value);
+  fbWrite('diaper_room_memo_' + currentFloor, el.value);
 }
 
 function toggleRoom(roomNo) {
@@ -2025,7 +2129,9 @@ function loadWeeklyFixed() {
   catch(e) { return {}; }
 }
 function saveWeeklyFixed(data) {
-  localStorage.setItem(WEEKLY_FIXED_KEY, JSON.stringify(data));
+  const json = JSON.stringify(data);
+  localStorage.setItem(WEEKLY_FIXED_KEY, json);
+  fbWrite(WEEKLY_FIXED_KEY, json);
 }
 function getWeeklyFixed(pid) {
   const data = loadWeeklyFixed();

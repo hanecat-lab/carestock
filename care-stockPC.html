@@ -300,6 +300,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 .weekly-in::-webkit-inner-spin-button,
 .weekly-in::-webkit-outer-spin-button { -webkit-appearance: none; }
 </style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
 <div id="order-confirm-popup" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
@@ -457,6 +461,78 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 <div id="toast"></div>
 
 <script>
+// ===== Firebase 設定 =====
+// Firebase コンソール(https://console.firebase.google.com)でプロジェクトを作成し、
+// 「プロジェクト設定 → マイアプリ」から取得した値を以下に入力してください。
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAZtYAN3adxxpXeuXLlkOoJauVvsi8tdLc",
+  authDomain: "haneirocaremanegement.firebaseapp.com",
+  databaseURL: "https://haneirocaremanegement-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "haneirocaremanegement",
+  storageBucket: "haneirocaremanegement.firebasestorage.app",
+  messagingSenderId: "996684867144",
+  appId: "1:996684867144:web:1a67c32616e03fe7c45a7d"
+};
+
+const FB_ENABLED = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+const FB_PATH = 'carestock';
+
+let _fbDb = null;
+let _fbReady = false;
+
+function fbWrite(key, value) {
+  if (!_fbDb || !_fbReady) return;
+  try {
+    const obj = typeof value === 'string' ? JSON.parse(value) : value;
+    _fbDb.ref(FB_PATH + '/' + key).set(obj);
+  } catch(e) {
+    _fbDb.ref(FB_PATH + '/' + key).set(value);
+  }
+}
+
+function fbInitLoad(db) {
+  _fbDb = db;
+  db.ref(FB_PATH).once('value').then(function(snap) {
+    _fbReady = true;
+    const data = snap.val();
+    if (data) {
+      Object.keys(data).forEach(function(key) {
+        const val = data[key];
+        localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+      });
+      loadDaily();
+      reflectRoom(true);
+      buildCards();
+      updateSummary();
+      showToast('☁️ クラウドからデータを同期しました');
+    } else {
+      _fbReady = true;
+    }
+    // 注文履歴をリアルタイム監視（他の端末からの更新を自動反映）
+    db.ref(FB_PATH + '/diaper_history').on('value', function(snap2) {
+      if (!snap2.exists()) return;
+      const val = snap2.val();
+      const newJson = typeof val === 'string' ? val : JSON.stringify(val);
+      if (localStorage.getItem('diaper_history') !== newJson) {
+        localStorage.setItem('diaper_history', newJson);
+        const sec = document.getElementById('history-sec');
+        if (sec && sec.style.display !== 'none') renderHistory();
+      }
+    });
+  }).catch(function(e) {
+    _fbReady = true;
+    console.warn('Firebase 読み込みエラー:', e);
+  });
+}
+
+if (FB_ENABLED) {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  firebase.auth().signInAnonymously()
+    .then(function() { fbInitLoad(firebase.database()); })
+    .catch(function(e) { console.warn('Firebase 認証エラー:', e); });
+}
+// ===== Firebase 設定ここまで =====
+
 // ===== 共有データ =====
 const ROOM_KEY = 'diaper_rooms';
 const HISTORY_KEY = 'diaper_history';
@@ -500,7 +576,9 @@ function loadRoomData() {
 }
 
 function saveRoomData(data) {
-  localStorage.setItem(ROOM_KEY, JSON.stringify(data));
+  const json = JSON.stringify(data);
+  localStorage.setItem(ROOM_KEY, json);
+  fbWrite(ROOM_KEY, json);
 }
 
 function getRoomState(floor, roomNo) {
@@ -520,7 +598,9 @@ function loadHistory() {
   } catch(e) { return []; }
 }
 function saveHistory(hist) {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+  const json = JSON.stringify(hist);
+  localStorage.setItem(HISTORY_KEY, json);
+  fbWrite(HISTORY_KEY, json);
 }
 
 
@@ -530,7 +610,9 @@ function loadWeeklyFixed() {
 }
 
 function saveWeeklyFixed(data) {
-  localStorage.setItem(WEEKLY_FIXED_KEY, JSON.stringify(data));
+  const json = JSON.stringify(data);
+  localStorage.setItem(WEEKLY_FIXED_KEY, json);
+  fbWrite(WEEKLY_FIXED_KEY, json);
 }
 
 function getWeeklyFixed(pid) {
@@ -1000,7 +1082,9 @@ function updateSummary() {
 function saveDaily() {
   const d = {};
   products.forEach(function(p) { d[p.id] = state[floor][p.id].dailyUse; });
-  localStorage.setItem(SAVE_KEY(floor), JSON.stringify(d));
+  const json = JSON.stringify(d);
+  localStorage.setItem(SAVE_KEY(floor), json);
+  fbWrite(SAVE_KEY(floor), json);
   showToast('💾 1日使用量を保存しました');
 }
 
@@ -1090,8 +1174,12 @@ function doConfirmOrder() {
     sunHist.unshift(sunRecord);
     if (sunHist.length > 4) sunHist = sunHist.slice(0, 4);
   }
-  localStorage.setItem(sunHistKey, JSON.stringify(sunHist));
-  localStorage.setItem('diaper_sun_record_' + floor, JSON.stringify(sunRecord));
+  const sunHistJson = JSON.stringify(sunHist);
+  localStorage.setItem(sunHistKey, sunHistJson);
+  fbWrite(sunHistKey, sunHistJson);
+  const sunRecordJson = JSON.stringify(sunRecord);
+  localStorage.setItem('diaper_sun_record_' + floor, sunRecordJson);
+  fbWrite('diaper_sun_record_' + floor, sunRecordJson);
   showToast('✅ 注文を確定しました！');
 }
 
@@ -1210,12 +1298,16 @@ function buildRoom() {
 
 function saveRoomMemoPc() {
   var el = document.getElementById('room-memo-area-pc');
-  if (el) localStorage.setItem('diaper_room_memo', el.value);
+  if (!el) return;
+  localStorage.setItem('diaper_room_memo', el.value);
+  fbWrite('diaper_room_memo', el.value);
 }
 
 function saveRoomMemoFloorPc() {
   var el = document.getElementById('room-memo-floor-area-pc');
-  if (el) localStorage.setItem('diaper_room_memo_' + floor, el.value);
+  if (!el) return;
+  localStorage.setItem('diaper_room_memo_' + floor, el.value);
+  fbWrite('diaper_room_memo_' + floor, el.value);
 }
 
 function toggleRoomPc(rn) {
@@ -1281,6 +1373,7 @@ function reflectRoom(silent) {
     var now = new Date();
     var dateStr = (now.getMonth()+1) + '/' + now.getDate();
     localStorage.setItem('diaper_room_reflect_date_' + floor, dateStr);
+    fbWrite('diaper_room_reflect_date_' + floor, dateStr);
     updateRoomReflectLabel();
   }
   // データがある場合のみ反映済みラベルを表示
