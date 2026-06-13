@@ -608,9 +608,25 @@ function setRoomState(floor, roomNo, state) {
   saveRoomData(data);
 }
 
+// モバイル版形式（date/orders）のエントリも読めるよう不足フィールドを補完
+function normalizeHistEntry(h) {
+  if (!h.week && h.date) {
+    h.week = h.date.replace(/\/0(\d)/g, '/$1'); // "2026/06/03" → "2026/6/3"
+  }
+  if (!h.items && h.orders) {
+    h.items = Object.keys(h.orders).map(function(pid) {
+      const o = h.orders[pid];
+      const q = (o && typeof o === 'object') ? (o.qty || 0) : (o || 0);
+      const p = products.find(function(pp) { return pp.id === parseInt(pid); });
+      return { id: parseInt(pid), name: p ? (p.short || p.name) : '', qty: q };
+    });
+  }
+  return h;
+}
+
 function loadHistory() {
   try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]').map(normalizeHistEntry);
   } catch(e) { return []; }
 }
 function saveHistory(hist) {
@@ -1158,19 +1174,25 @@ function closeOrderPopup() {
 }
 
 function doConfirmOrder() {
-  const today = new Date().toLocaleDateString('ja-JP');
+  const d0 = new Date();
+  const today = d0.toLocaleDateString('ja-JP');
+  // モバイル版と履歴を共有するため、両形式（week/items と date/orders）のフィールドを持たせる
+  const dateStr = d0.getFullYear() + '/' + ('0'+(d0.getMonth()+1)).slice(-2) + '/' + ('0'+d0.getDate()).slice(-2);
   const items = products.filter(function(p) { return !p.special; }).map(function(p) { return {
     id: p.id,
     name: p.short||p.name,
     qty: state[floor][p.id].orderQty || 0
   }; });
+  const orders = {};
+  products.forEach(function(p) { orders[p.id] = { qty: state[floor][p.id].orderQty || 0 }; });
+  const entry = { week: today, date: dateStr, floor: floor, items: items, orders: orders };
   const history = loadHistory();
   // 同日上書き
   const existIdx = history.findIndex(function(h) { return h.week === today && h.floor === floor; });
   if (existIdx >= 0) {
-    history[existIdx] = { week: today, floor: floor, items: items };
+    history[existIdx] = entry;
   } else {
-    history.unshift({ week: today, floor: floor, items: items });
+    history.unshift(entry);
     if (history.length > 52) history.pop();
   }
   saveHistory(history);
