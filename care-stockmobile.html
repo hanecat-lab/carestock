@@ -1184,9 +1184,21 @@ const MAX_HISTORY = 12;
 
 function historyKey() { return HISTORY_KEY; }
 
+// PC版形式（week/items）のエントリも読めるよう不足フィールドを補完
+function normalizeHistEntry(h) {
+  if (!h.date && h.week) {
+    h.date = h.week.replace(/\/(\d)(?=\/|$)/g, '/0$1'); // "2026/6/3" → "2026/06/03"
+  }
+  if (!h.orders && h.items) {
+    h.orders = {};
+    h.items.forEach(function(it) { h.orders[it.id] = { qty: it.qty || 0 }; });
+  }
+  return h;
+}
+
 function loadHistory() {
   try {
-    return JSON.parse(localStorage.getItem(historyKey()) || "[]");
+    return JSON.parse(localStorage.getItem(historyKey()) || "[]").map(normalizeHistEntry);
   } catch(e) { return []; }
 }
 
@@ -1267,16 +1279,22 @@ function doConfirmOrder(dateStr) {
   const scrollY = window.scrollY;
   const hist = loadHistory();
   // 全商品の注文箱数（0含む）
+  // PC版と履歴を共有するため、両形式（date/orders と week/items）のフィールドを持たせる
   const orders = {};
+  const items = [];
   products.forEach(function(p) {
-    orders[p.id] = { qty: state[currentFloor][p.id].orderQty || 0 };
+    const q = state[currentFloor][p.id].orderQty || 0;
+    orders[p.id] = { qty: q };
+    items.push({ id: p.id, name: p.short || p.name, qty: q });
   });
+  const wk = dateStr.replace(/\/0(\d)/g, '/$1'); // PC版の日付形式（ゼロ埋めなし）
+  const entry = { date: dateStr, week: wk, floor: currentFloor, orders: orders, items: items };
   // 同日上書き
   const existIdx = hist.findIndex(function(h) { return h.date === dateStr && h.floor === currentFloor; })
   if (existIdx >= 0) {
-    hist[existIdx] = { date: dateStr, floor: currentFloor, orders: orders };
+    hist[existIdx] = entry;
   } else {
-    hist.push({ date: dateStr, floor: currentFloor, orders: orders });
+    hist.push(entry);
   }
   const floorEntries = hist.filter(function(h) { return h.floor === currentFloor; }).slice(-MAX_HISTORY);
   const otherEntries = hist.filter(function(h) { return h.floor !== currentFloor; });
