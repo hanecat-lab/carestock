@@ -438,6 +438,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
       </button>
       <div id="gap-pc-panel" style="display:none;margin-top:6px;font-size:11px;overflow-x:auto"></div>
     </div>
+    <div style="margin-bottom:8px" class="admin-tool">
+      <button onclick="toggleGraphPc()" style="width:100%;padding:6px 10px;border:1px solid #ccc;border-radius:8px;background:#f9f9f9;color:#555;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left" id="graph-pc-btn">
+        ▶ 📈 在庫・注文の推移（1年）
+      </button>
+      <div id="graph-pc-panel" style="display:none;margin-top:6px"></div>
+    </div>
     <div class="logic-box">
       <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.textContent=this.textContent.startsWith('▶')?'▼ 計算ロジック':'▶ 計算ロジック'"
         style="width:100%;text-align:left;background:none;border:none;cursor:pointer;font-size:11px;font-weight:800;color:#5a7a5a;padding:0;font-family:inherit">▶ 計算ロジック</button>
@@ -1690,6 +1696,162 @@ function renderGapPc() {
   html += '<div style="color:#aaa;padding:4px;font-size:10px">＋：予想より多い／−：予想より少ない</div>';
   panel.innerHTML = html;
 }
+
+// ===== 在庫・注文の推移グラフ（PC版）=====
+var graphPidPc = null;
+
+function toggleGraphPc() {
+  const panel = document.getElementById('graph-pc-panel');
+  const btn = document.getElementById('graph-pc-btn');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = (isOpen ? '▶' : '▼') + ' 📈 在庫・注文の推移（1年）';
+  if (!isOpen) {
+    if (graphPidPc === null) graphPidPc = products.filter(function(p) { return !p.special; })[0].id;
+    renderGraphPc();
+  }
+}
+
+function changeGraphProductPc(sel) {
+  graphPidPc = parseInt(sel.value);
+  renderGraphPc();
+}
+
+function collectGraphDataPc(pid) {
+  var map = {};
+  function ensure(d) { if (!map[d]) map[d] = { s: null, o: null }; return map[d]; }
+  var p = products.find(function(x) { return x.id === pid; });
+  try {
+    var gl = JSON.parse(localStorage.getItem('diaper_graph_log_' + floor) || '[]');
+    gl.forEach(function(g) {
+      if (g.data && g.data[pid]) { var e = ensure(g.date); e.s = g.data[pid].s; e.o = g.data[pid].o; }
+    });
+  } catch(e) {}
+  loadHistory().forEach(function(h) {
+    if (h.floor !== floor) return;
+    var qty = null;
+    if (h.orders && h.orders[pid] !== undefined) {
+      var o = h.orders[pid]; qty = (typeof o === 'object') ? (o.qty || 0) : o;
+    } else if (h.items) {
+      var it = h.items.find(function(i) { return i.id === pid; });
+      if (it) qty = it.qty || 0;
+    }
+    if (qty !== null) { var e = ensure(h.date || h.week); if (e.o === null) e.o = qty; }
+  });
+  try {
+    var sh = JSON.parse(localStorage.getItem('diaper_sun_hist_' + floor) || '[]');
+    sh.forEach(function(r) {
+      if (!r.stocks || !r.stocks[pid]) return;
+      var st = r.stocks[pid];
+      var e = ensure(r.date);
+      if (e.s === null) e.s = (st.boxes || 0) * p.perBox + (st.bags || 0) * p.perBag;
+    });
+  } catch(e) {}
+  var cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear() - 1);
+  var out = [];
+  Object.keys(map).sort().forEach(function(d) {
+    var parts = d.split('/');
+    if (parts.length === 3) {
+      var dt = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+      if (dt < cutoff) return;
+    }
+    out.push({ date: d, s: map[d].s, o: map[d].o });
+  });
+  return out;
+}
+
+function renderGraphPc() {
+  var panel = document.getElementById('graph-pc-panel');
+  var normalProds = products.filter(function(p) { return !p.special; });
+  if (graphPidPc === null) graphPidPc = normalProds[0].id;
+  var p = products.find(function(x) { return x.id === graphPidPc; });
+  var data = collectGraphDataPc(graphPidPc);
+
+  var selHtml = '<select onchange="changeGraphProductPc(this)" style="width:100%;font-size:13px;padding:6px;border:1px solid #c8e6c9;border-radius:8px;font-family:inherit;background:#fff;margin-bottom:6px">';
+  normalProds.forEach(function(np) {
+    selHtml += '<option value="' + np.id + '"' + (np.id === graphPidPc ? ' selected' : '') + '>' + (np.short || np.name) + '</option>';
+  });
+  selHtml += '</select>';
+
+  if (data.length < 2) {
+    panel.innerHTML = selHtml + '<div style="color:#aaa;font-size:11px;padding:8px;text-align:center">グラフ表示には2回以上の注文確定の記録が必要です（現在 ' + data.length + ' 件）</div>';
+    return;
+  }
+
+  var W = 480, H = 200, padL = 36, padR = 34, padT = 18, padB = 28;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  var maxS = 1, maxO = 1;
+  data.forEach(function(d) {
+    if (d.s !== null) { d.sBag = Math.round(d.s / p.perBag * 10) / 10; if (d.sBag > maxS) maxS = d.sBag; } else { d.sBag = null; }
+    if (d.o !== null && d.o > maxO) maxO = d.o;
+  });
+  maxS = Math.ceil(maxS); if (maxS % 2 !== 0) maxS += 1;
+  function px(i) { return padL + plotW * (data.length === 1 ? 0.5 : i / (data.length - 1)); }
+  function pyS(v) { return padT + plotH * (1 - v / maxS); }
+  function pyO(v) { return padT + plotH * (1 - v / maxO); }
+
+  var sPts = [], oPts = [], dots = '';
+  data.forEach(function(d, i) {
+    if (d.sBag !== null) {
+      sPts.push(px(i).toFixed(1) + ',' + pyS(d.sBag).toFixed(1));
+      var dotCol = d.sBag <= Math.round(p.perBox / p.perBag) ? '#e53935' : '#2a7a2a';
+      dots += '<circle cx="' + px(i).toFixed(1) + '" cy="' + pyS(d.sBag).toFixed(1) + '" r="3" fill="' + dotCol + '"/>';
+    }
+    if (d.o !== null) {
+      oPts.push(px(i).toFixed(1) + ',' + pyO(d.o).toFixed(1));
+      dots += '<circle cx="' + px(i).toFixed(1) + '" cy="' + pyO(d.o).toFixed(1) + '" r="3" fill="#e65100"/>';
+    }
+  });
+
+  var bagsPerBox = Math.round(p.perBox / p.perBag);
+  var sStep = maxS <= 24 ? 2 : Math.ceil(maxS / 24) * 2;
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;background:#fff;border-radius:10px;border:1px solid #e0e0e0">'
+    + '<line x1="' + padL + '" y1="' + (padT+plotH) + '" x2="' + (padL+plotW) + '" y2="' + (padT+plotH) + '" stroke="#ccc"/>'
+    + '<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (padT+plotH) + '" stroke="#a5d6a7"/>'
+    + '<line x1="' + (padL+plotW) + '" y1="' + padT + '" x2="' + (padL+plotW) + '" y2="' + (padT+plotH) + '" stroke="#ffcc80"/>'
+    + '<text x="' + (padL-3) + '" y="' + (padT+plotH) + '" font-size="9" fill="#999" text-anchor="end">0</text>';
+  for (var sv = sStep; sv <= maxS; sv += sStep) {
+    if (sv % bagsPerBox === 0) continue;
+    var sy = pyS(sv);
+    svg += '<line x1="' + padL + '" y1="' + sy.toFixed(1) + '" x2="' + (padL+3) + '" y2="' + sy.toFixed(1) + '" stroke="#2a7a2a"/>'
+      + '<text x="' + (padL-3) + '" y="' + (sy+3).toFixed(1) + '" font-size="9" fill="#2a7a2a" text-anchor="end">' + sv + '</text>';
+  }
+  for (var bv = bagsPerBox; bv <= maxS; bv += bagsPerBox) {
+    var by = pyS(bv);
+    svg += '<line x1="' + padL + '" y1="' + by.toFixed(1) + '" x2="' + (padL+plotW) + '" y2="' + by.toFixed(1) + '" stroke="#e53935" stroke-width="1" stroke-dasharray="3,3" opacity="0.35"/>'
+      + '<text x="' + (padL-3) + '" y="' + (by+3).toFixed(1) + '" font-size="9" font-weight="700" fill="#e53935" text-anchor="end">' + bv + '</text>';
+  }
+  svg += '<text x="' + (padL-3) + '" y="' + (padT-2) + '" font-size="9" fill="#2a7a2a" text-anchor="end">袋</text>';
+  var oStep = maxO <= 12 ? 1 : Math.ceil(maxO / 12);
+  for (var ov = oStep; ov <= maxO; ov += oStep) {
+    var oy = pyO(ov);
+    svg += '<line x1="' + (padL+plotW-3) + '" y1="' + oy.toFixed(1) + '" x2="' + (padL+plotW) + '" y2="' + oy.toFixed(1) + '" stroke="#e65100"/>'
+      + '<text x="' + (padL+plotW+3) + '" y="' + (oy+3).toFixed(1) + '" font-size="9" fill="#e65100">' + ov + '</text>';
+  }
+  svg += '<text x="' + (padL+plotW+3) + '" y="' + (padT+plotH) + '" font-size="9" fill="#e65100">箱</text>';
+  var lastLabelTime = null;
+  data.forEach(function(d, i) {
+    var parts = d.date.split('/');
+    if (parts.length !== 3) return;
+    var dt = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2])).getTime();
+    if (lastLabelTime !== null && dt - lastLabelTime < 14 * 86400000) return;
+    lastLabelTime = dt;
+    var mx = px(i);
+    svg += '<line x1="' + mx.toFixed(1) + '" y1="' + (padT+plotH) + '" x2="' + mx.toFixed(1) + '" y2="' + (padT+plotH+3) + '" stroke="#999"/>'
+      + '<text x="' + mx.toFixed(1) + '" y="' + (H-8) + '" font-size="9" fill="#999" text-anchor="middle">' + parseInt(parts[1]) + '/' + parseInt(parts[2]) + '</text>';
+  });
+  svg += (sPts.length > 1 ? '<polyline points="' + sPts.join(' ') + '" fill="none" stroke="#2a7a2a" stroke-width="2"/>' : '')
+    + (oPts.length > 1 ? '<polyline points="' + oPts.join(' ') + '" fill="none" stroke="#e65100" stroke-width="2" stroke-dasharray="4,3"/>' : '')
+    + dots + '</svg>';
+
+  panel.innerHTML = selHtml + svg
+    + '<div style="display:flex;gap:14px;justify-content:center;font-size:11px;color:#555;margin-top:4px;padding-bottom:4px">'
+    + '<span><span style="display:inline-block;width:14px;height:3px;background:#2a7a2a;vertical-align:middle;margin-right:3px"></span>在庫（袋）</span>'
+    + '<span><span style="display:inline-block;width:14px;height:3px;background:#e65100;vertical-align:middle;margin-right:3px;background-image:linear-gradient(90deg,#e65100 60%,#fff 60%)"></span>注文（箱）</span>'
+    + '<span style="color:#999">記録 ' + data.length + ' 件</span>'
+    + '</div>';
+}
+// ===== グラフここまで =====
 
 function toggleSunHist() {
   const panel = document.getElementById('sun-hist-panel');
