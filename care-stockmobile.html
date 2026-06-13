@@ -624,7 +624,25 @@ function fbInitLoad(db) {
       updateRoomReflectLabelMobile();
       showToast('☁️ クラウドからデータを同期しました');
     } else {
+      // Firebase が空 → localStorage の既存データをアップロードして共有開始
       _fbReady = true;
+      var lsKeys = [
+        'diaper_history', 'diaper_rooms', 'diaper_weekly_fixed',
+        'diaper_daily_2F', 'diaper_daily_3F',
+        'diaper_saved_at_2F', 'diaper_saved_at_3F',
+        'diaper_sun_hist_2F', 'diaper_sun_hist_3F',
+        'diaper_sun_record_2F', 'diaper_sun_record_3F',
+        'diaper_graph_log_2F', 'diaper_graph_log_3F',
+        'diaper_room_memo', 'diaper_room_memo_2F', 'diaper_room_memo_3F',
+        'diaper_room_reflect_date_2F', 'diaper_room_reflect_date_3F',
+        'facility_name'
+      ];
+      var uploaded = false;
+      lsKeys.forEach(function(key) {
+        var val = localStorage.getItem(key);
+        if (val) { fbWrite(key, val); uploaded = true; }
+      });
+      if (uploaded) showToast('☁️ ローカルデータをクラウドにアップロードしました');
     }
     // 注文履歴をリアルタイム監視（他の端末からの更新を自動反映）
     db.ref(FB_PATH + '/diaper_history').on('value', function(snap2) {
