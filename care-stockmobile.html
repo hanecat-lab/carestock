@@ -583,20 +583,17 @@ const FIREBASE_CONFIG = {
 
 // 設定が入力済みかどうかで Firebase の有効/無効を自動判定
 const FB_ENABLED = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
-const FB_PATH = 'carestock'; // Firebase Realtime DB のルートパス（変更可）
+// v2: 数字キーが配列化されるのを防ぐため JSON 文字列のまま保存する方式に変更
+const FB_PATH = 'carestock_v2'; // Firebase Realtime DB のルートパス（変更可）
 
 let _fbDb = null;
 let _fbReady = false;
 
-// Firebase にデータを書き込む（JSON文字列またはオブジェクトを受け取る）
+// Firebase にデータを書き込む（JSON文字列のまま保存し、構造の変換を防ぐ）
 function fbWrite(key, value) {
   if (!_fbDb || !_fbReady) return;
-  try {
-    const obj = typeof value === 'string' ? JSON.parse(value) : value;
-    _fbDb.ref(FB_PATH + '/' + key).set(obj);
-  } catch(e) {
-    _fbDb.ref(FB_PATH + '/' + key).set(value);
-  }
+  const str = typeof value === 'string' ? value : JSON.stringify(value);
+  _fbDb.ref(FB_PATH + '/' + key).set(str);
 }
 
 // Firebase から全データを読み込んで localStorage に反映し UI を再描画
