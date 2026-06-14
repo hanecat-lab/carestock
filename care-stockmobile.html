@@ -34,16 +34,23 @@
     box-shadow: 0 0 30px rgba(0,0,0,0.15);
     overscroll-behavior-y: none;
   }
-  /* タブレット：幅を広げてカードを2列に */
+  /* タブレット：横幅を全幅に拡大、入力欄を大きく */
   @media (min-width: 700px) {
     #app-wrapper { max-width: 100%; }
     #header { padding: 14px 24px 10px; }
-    #cards { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; padding: 12px 20px; }
+    #cards { padding: 12px 20px; }
     .card { margin-bottom: 16px; }
     #summary { padding: 12px 20px; }
     #history-section { padding: 0 20px; }
     #backup-section { padding: 0 20px; }
-    .btn-scroll-summary { left: 20px; right: 20px; width: auto; }
+
+    /* ＋－ボタンと入力欄の縦幅を 1.4 倍（44px → 62px）*/
+    .spin-btn { width: 62px !important; height: 62px !important; font-size: 30px !important; }
+    .spin-wrap input { height: 62px !important; box-sizing: border-box !important; font-size: 22px !important; }
+
+    /* 注文箱数 input のみ横幅 500px・中央寄せ */
+    input[id^="oq-"] { width: 500px !important; max-width: 60vw !important; flex: none !important; font-size: 32px !important; }
+    .spin-wrap:has(input[id^="oq-"]) { justify-content: center; }
   }
 
   #header {
