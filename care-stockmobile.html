@@ -689,6 +689,8 @@ function fbInitLoad(db) {
         'diaper_graph_log_2F', 'diaper_graph_log_3F',
         'diaper_room_memo', 'diaper_room_memo_2F', 'diaper_room_memo_3F',
         'diaper_room_reflect_date_2F', 'diaper_room_reflect_date_3F',
+        'diaper_room_change_memo_2F', 'diaper_room_change_memo_3F',
+        'diaper_room_change_date_2F', 'diaper_room_change_date_3F',
         'facility_name'
       ];
       var uploaded = false;
@@ -1873,6 +1875,45 @@ function setRoomState(floor, roomNo, state) {
   const data = loadRoomData();
   data[floor + '_' + roomNo] = state;
   saveRoomData(data);
+  // 居室データ変更時に変更日を自動更新
+  var now = new Date();
+  var yyyy = now.getFullYear();
+  var mm = ('0'+(now.getMonth()+1)).slice(-2);
+  var dd = ('0'+now.getDate()).slice(-2);
+  var isoDate = yyyy + '-' + mm + '-' + dd;
+  var legacyDate = (now.getMonth()+1) + '/' + now.getDate();
+  localStorage.setItem('diaper_room_change_date_' + floor, isoDate);
+  fbWrite('diaper_room_change_date_' + floor, isoDate);
+  localStorage.setItem('diaper_room_reflect_date_' + floor, legacyDate);
+  fbWrite('diaper_room_reflect_date_' + floor, legacyDate);
+  var dateEl = document.getElementById('room-change-date');
+  if (dateEl && dateEl.value !== isoDate) dateEl.value = isoDate;
+  updateRoomReflectLabelMobile();
+  updateReflectDateLabel();
+}
+
+function saveRoomChangeMemo() {
+  var el = document.getElementById('room-change-memo');
+  if (!el) return;
+  localStorage.setItem('diaper_room_change_memo_' + currentFloor, el.value);
+  fbWrite('diaper_room_change_memo_' + currentFloor, el.value);
+}
+
+function saveRoomChangeDate() {
+  var el = document.getElementById('room-change-date');
+  if (!el) return;
+  var isoDate = el.value; // YYYY-MM-DD
+  localStorage.setItem('diaper_room_change_date_' + currentFloor, isoDate);
+  fbWrite('diaper_room_change_date_' + currentFloor, isoDate);
+  // 既存の反映日ラベルも更新（M/D形式）
+  if (isoDate) {
+    var parts = isoDate.split('-');
+    var legacyDate = parseInt(parts[1]) + '/' + parseInt(parts[2]);
+    localStorage.setItem('diaper_room_reflect_date_' + currentFloor, legacyDate);
+    fbWrite('diaper_room_reflect_date_' + currentFloor, legacyDate);
+  }
+  updateRoomReflectLabelMobile();
+  updateReflectDateLabel();
 }
 
 // 全居室の銘柄別1日使用量を集計してstateに反映
@@ -1979,7 +2020,23 @@ function buildRoomSection() {
   if (!sec) return;
   const rooms = ROOMS[currentFloor] || [];
 
-  let html = "<div class=\"room-controls\">\n    <button class=\"btn-room-reflect\" onclick=\"reflectRoomToDaily()\">📊 集計して1日使用量に反映</button>\n    <div id=\"room-reflect-label\" style=\"font-size:11px;color:#2a7a2a;margin-top:6px;display:none\"></div>\n  </div>\n  <div class=\"room-reflect-info\">\n    各居室の使用枚数を登録→「反映」ボタンで1日使用量を自動集計します。\n  </div>";
+  var changeMemo = localStorage.getItem('diaper_room_change_memo_' + currentFloor) || '';
+  var changeDate = localStorage.getItem('diaper_room_change_date_' + currentFloor) || '';
+  var esc2 = function(s) { return s.replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+
+  let html = '<div style="margin:0 0 10px;padding:10px 12px;background:#fff8e1;border-radius:10px;border:1.5px solid #ffe082">'
+    + '<div style="font-size:11px;font-weight:700;color:#7a5a00;margin-bottom:6px">📝 変更内容メモ（自動保存）</div>'
+    + '<input type="text" id="room-change-memo" value="' + esc2(changeMemo) + '" placeholder="例：山田さん→テープMに変更" oninput="saveRoomChangeMemo()" style="width:100%;font-size:15px;font-family:inherit;border:1px solid #f0c040;border-radius:8px;padding:8px 10px;background:#fffdf0;box-sizing:border-box;color:#333">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'
+    + '<span style="font-size:11px;color:#7a5a00;white-space:nowrap;font-weight:700">変更日：</span>'
+    + '<input type="date" id="room-change-date" value="' + changeDate + '" onchange="saveRoomChangeDate()" style="font-size:13px;font-family:inherit;border:1px solid #f0c040;border-radius:6px;padding:4px 8px;background:#fffdf0;color:#333">'
+    + '</div>'
+    + '</div>'
+    + '<div class="room-controls">'
+    + '  <button class="btn-room-reflect" onclick="reflectRoomToDaily()">📊 集計して1日使用量に反映</button>'
+    + '  <div id="room-reflect-label" style="font-size:11px;color:#2a7a2a;margin-top:6px;display:none"></div>'
+    + '</div>'
+    + '<div class="room-reflect-info">各居室の使用枚数を登録→「反映」ボタンで1日使用量を自動集計します。</div>';
 
   rooms.forEach(function(roomNo) {
     const rs = getRoomState(currentFloor, roomNo);
