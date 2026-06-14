@@ -54,6 +54,25 @@
 
     /* 箱数・袋数 input の横幅も 0.7 倍に（max-width で制限）*/
     input[id^="sb-"], input[id^="sg-"] { max-width: 120px !important; }
+
+    /* 注文確認ポップアップ（タブレット拡大）*/
+    #order-confirm-popup > div { max-width: 720px !important; padding: 28px !important; }
+    #order-confirm-popup > div > div:first-child { font-size: 32px !important; margin-bottom: 18px !important; padding-bottom: 12px !important; }
+    #popup-content-mobile { gap: 10px 20px !important; }
+    #popup-content-mobile div { padding: 12px 16px !important; margin-bottom: 6px !important; }
+    #popup-content-mobile span { font-size: 35px !important; }
+    #popup-pad-tot-mobile, #popup-tape-tot-mobile { font-size: 35px !important; }
+    #order-confirm-popup > div > div:nth-child(3) span:first-child,
+    #order-confirm-popup > div > div:nth-child(3) span:last-child { font-size: 22px !important; }
+    #order-confirm-popup button { font-size: 26px !important; padding: 18px !important; }
+
+    /* サマリー（タブレット拡大）*/
+    .summary-title { font-size: 28px !important; }
+    .summary-cat-label { font-size: 26px !important; }
+    .summary-item { padding: 12px 20px !important; }
+    .summary-item-name { font-size: 28px !important; }
+    .summary-item-qty { font-size: 35px !important; }
+    .summary-item-pieces { font-size: 20px !important; }
   }
 
   #header {
