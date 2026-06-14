@@ -731,6 +731,7 @@ function fbInitLoad(db) {
         reflectRoomToDaily(true);
         updateReflectDateLabel();
         updateRoomReflectLabelMobile();
+        showToast('☁️ クラウドから同期しました');
       });
     });
   }).catch(function(e) {
