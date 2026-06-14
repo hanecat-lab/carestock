@@ -711,8 +711,8 @@ function fbInitLoad(db) {
     });
 
     // バックグラウンドから復帰したとき（日付をまたいだ場合も含む）に再同期
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState !== 'visible' || !_fbReady) return;
+    function syncFromFirebase() {
+      if (!_fbReady) return;
       db.ref(FB_PATH).once('value').then(function(snap3) {
         var d = snap3.val();
         if (!d) return;
@@ -733,6 +733,14 @@ function fbInitLoad(db) {
         updateRoomReflectLabelMobile();
         showToast('☁️ クラウドから同期しました');
       });
+    }
+    // visibilitychange：タブ切替・ホームボタンからの復帰
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') syncFromFirebase();
+    });
+    // pageshow：iOS bfcache からの復元・ページ再表示時のフォールバック
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) syncFromFirebase();
     });
   }).catch(function(e) {
     _fbReady = true;
