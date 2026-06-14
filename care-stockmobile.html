@@ -2020,11 +2020,7 @@ function buildRoomSection() {
     + '<span style="font-size:11px;color:#7a5a00;white-space:nowrap;font-weight:700">変更日：</span>'
     + '<input type="date" id="room-change-date" value="' + changeDate + '" onchange="saveRoomChangeDate()" style="font-size:13px;font-family:inherit;border:1px solid #f0c040;border-radius:6px;padding:4px 8px;background:#fffdf0;color:#333">'
     + '</div>'
-    + '<div class="room-controls">'
-    + '  <button class="btn-room-reflect" onclick="reflectRoomToDaily()">📊 集計して1日使用量に反映</button>'
-    + '  <div id="room-reflect-label" style="font-size:11px;color:#2a7a2a;margin-top:6px;display:none"></div>'
-    + '</div>'
-    + '<div class="room-reflect-info">各居室の使用枚数を登録→「反映」ボタンで1日使用量を自動集計します。</div>';
+    + '<div id="room-reflect-label" style="display:none"></div>';
 
   rooms.forEach(function(roomNo) {
     const rs = getRoomState(currentFloor, roomNo);
