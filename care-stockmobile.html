@@ -44,13 +44,16 @@
     #history-section { padding: 0 20px; }
     #backup-section { padding: 0 20px; }
 
-    /* ＋－ボタンと入力欄の縦幅を 1.4 倍（44px → 62px）*/
-    .spin-btn { width: 62px !important; height: 62px !important; font-size: 30px !important; }
-    .spin-wrap input { height: 62px !important; box-sizing: border-box !important; font-size: 22px !important; }
+    /* ＋－ボタンと入力欄の縦幅を 1.3 倍（44px → 57px）*/
+    .spin-btn { width: 57px !important; height: 57px !important; font-size: 28px !important; }
+    .spin-wrap input { height: 57px !important; box-sizing: border-box !important; font-size: 20px !important; }
 
-    /* 注文箱数 input のみ横幅 500px・中央寄せ */
-    input[id^="oq-"] { width: 500px !important; max-width: 60vw !important; flex: none !important; font-size: 32px !important; }
+    /* 注文箱数 input のみ横幅 350px（500×0.7）・中央寄せ */
+    input[id^="oq-"] { width: 350px !important; max-width: 42vw !important; flex: none !important; font-size: 30px !important; }
     .spin-wrap:has(input[id^="oq-"]) { justify-content: center; }
+
+    /* 箱数・袋数 input の横幅も 0.7 倍に（max-width で制限）*/
+    input[id^="sb-"], input[id^="sg-"] { max-width: 120px !important; }
   }
 
   #header {
