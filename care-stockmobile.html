@@ -1543,6 +1543,10 @@ function toggleHistory() {
     body.style.display = "block";
     icon.textContent = "▲ 閉じる";
     renderHistory();
+    requestAnimationFrame(function() {
+      var header = document.getElementById('history-section');
+      if (header) header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   } else {
     body.style.display = "none";
     if (sunPanel) sunPanel.style.display = "none";
