@@ -52,8 +52,15 @@
     input[id^="oq-"] { width: 350px !important; max-width: 42vw !important; flex: none !important; font-size: 45px !important; }
     .spin-wrap:has(input[id^="oq-"]) { justify-content: center; }
 
-    /* 箱数・袋数 input の横幅も 0.7 倍に（max-width で制限）*/
-    input[id^="sb-"], input[id^="sg-"] { max-width: 120px !important; }
+    /* 箱数・袋数 input の横幅も 0.7 倍に、数字を40pxに */
+    input[id^="sb-"], input[id^="sg-"] { max-width: 120px !important; font-size: 40px !important; }
+
+    /* カード内文字サイズ拡大 */
+    .card-name { font-size: 30px !important; }
+    .col-label { font-size: 26px !important; }
+    .card-body > div:first-child > div:first-child { font-size: 30px !important; }
+    .suggest-label { font-size: 30px !important; }
+    .suggest-num { font-size: 30px !important; }
 
     /* 注文確認ポップアップ（タブレット拡大）*/
     #order-confirm-popup > div { max-width: 720px !important; padding: 28px !important; }
