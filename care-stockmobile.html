@@ -34,6 +34,17 @@
     box-shadow: 0 0 30px rgba(0,0,0,0.15);
     overscroll-behavior-y: none;
   }
+  /* タブレット：幅を広げてカードを2列に */
+  @media (min-width: 700px) {
+    #app-wrapper { max-width: 100%; }
+    #header { padding: 14px 24px 10px; }
+    #cards { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; padding: 12px 20px; }
+    .card { margin-bottom: 16px; }
+    #summary { padding: 12px 20px; }
+    #history-section { padding: 0 20px; }
+    #backup-section { padding: 0 20px; }
+    .btn-scroll-summary { left: 20px; right: 20px; width: auto; }
+  }
 
   #header {
     background: #d6edd6;
