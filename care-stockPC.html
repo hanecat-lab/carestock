@@ -541,6 +541,25 @@ function fbInitLoad(db) {
         if (sec && sec.style.display !== 'none') renderHistory();
       }
     });
+
+    // バックグラウンドから復帰したとき（日付をまたいだ場合も含む）に再同期
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState !== 'visible' || !_fbReady) return;
+      db.ref(FB_PATH).once('value').then(function(snap3) {
+        var d = snap3.val();
+        if (!d) return;
+        Object.keys(d).forEach(function(key) {
+          var val = d[key];
+          localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+        });
+        loadDaily();
+        reflectRoom(true);
+        buildCards();
+        updateSummary();
+        const sec = document.getElementById('history-sec');
+        if (sec && sec.style.display !== 'none') renderHistory();
+      });
+    });
   }).catch(function(e) {
     _fbReady = true;
     console.warn('Firebase 読み込みエラー:', e);

@@ -657,6 +657,29 @@ function fbInitLoad(db) {
         products.forEach(function(p) { updatePrevBadge(p.id); });
       }
     });
+
+    // バックグラウンドから復帰したとき（日付をまたいだ場合も含む）に再同期
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState !== 'visible' || !_fbReady) return;
+      db.ref(FB_PATH).once('value').then(function(snap3) {
+        var d = snap3.val();
+        if (!d) return;
+        Object.keys(d).forEach(function(key) {
+          var val = d[key];
+          localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+        });
+        FLOORS.forEach(function(f) { loadDailyUse(f); });
+        buildCards();
+        syncInputsToState();
+        updateSaveDateLabel();
+        products.forEach(function(p) { updatePrevBadge(p.id); });
+        updateWeeklyDisplay();
+        renderHistory();
+        reflectRoomToDaily(true);
+        updateReflectDateLabel();
+        updateRoomReflectLabelMobile();
+      });
+    });
   }).catch(function(e) {
     _fbReady = true;
     console.warn('Firebase 読み込みエラー:', e);
