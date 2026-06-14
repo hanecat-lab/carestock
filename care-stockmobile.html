@@ -659,6 +659,7 @@ function fbInitLoad(db) {
         const val = data[key];
         localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
       });
+      restoreLocalFloor();
       FLOORS.forEach(function(f) { loadDailyUse(f); });
       buildCards();
       syncInputsToState();
@@ -715,6 +716,7 @@ function fbInitLoad(db) {
           var val = d[key];
           localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
         });
+        restoreLocalFloor();
         FLOORS.forEach(function(f) { loadDailyUse(f); });
         buildCards();
         syncInputsToState();
@@ -1170,6 +1172,7 @@ function onInput(pid, field, val) {
 
 function switchFloor(floor, btn) {
   currentFloor = floor;
+  localStorage.setItem('diaper_local_floor', floor);
   window.scrollTo({ top: 0, behavior: "smooth" });
   document.querySelectorAll(".floor-tab").forEach(function(t) { t.classList.remove("active"); });
   btn.classList.add("active");
@@ -2624,7 +2627,18 @@ document.addEventListener('wheel', function(e) {
   }
 }, { passive: true });
 
+// このデバイスのフロア選択を復元（Firebaseに同期しないローカル設定）
+function restoreLocalFloor() {
+  var saved = localStorage.getItem('diaper_local_floor');
+  if (!saved || FLOORS.indexOf(saved) === -1) return;
+  currentFloor = saved;
+  document.querySelectorAll('.floor-tab').forEach(function(t) { t.classList.remove('active'); });
+  var btn = document.querySelector('.floor-tab[onclick*="\'' + saved + '\'"]');
+  if (btn) btn.classList.add('active');
+}
+
 // --- 初期化 ---
+restoreLocalFloor();
 FLOORS.forEach(function(f) { loadDailyUse(f); });
 buildCards();
 syncInputsToState();
