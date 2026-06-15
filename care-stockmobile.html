@@ -62,6 +62,9 @@
     .suggest-label { font-size: 30px !important; }
     .suggest-num { font-size: 30px !important; }
 
+    /* 目安ボタン：縦1.5倍・横1.3倍・文字1.2倍 */
+    div[id^="suggest-btn-"] button { font-size: 20px !important; padding: 5px 1.4em !important; }
+
     /* 注文確認ポップアップ（タブレット拡大）*/
     #order-confirm-popup > div { max-width: 720px !important; padding: 28px !important; }
     #order-confirm-popup > div > div:first-child { font-size: 32px !important; margin-bottom: 18px !important; padding-bottom: 12px !important; }
@@ -1055,7 +1058,7 @@ function updateCard(pid) {
     var sugBtnEl = document.getElementById('suggest-btn-' + pid);
     if (sugBtnEl) {
       sugBtnEl.innerHTML = suggested > 0
-        ? '<button onclick="document.getElementById(\'oq-' + pid + '\').value=' + suggested + ';onInput(' + pid + ',\'orderQty\',' + suggested + ');showToast(\'入力しました。\')" style="cursor:pointer;border:2px solid #e65100;background:#fff3e0;color:#e65100;border-radius:8px;padding:2px 0.8em;font-family:inherit;font-weight:800;font-size:14px;line-height:1.4;text-align:center">目安の<span style="font-size:1.4em;font-weight:900">' + suggested + '箱</span>を入力</button>'
+        ? '<button onclick="document.getElementById(\'oq-' + pid + '\').value=' + suggested + ';onInput(' + pid + ',\'orderQty\',' + suggested + ');showToast(\'入力しました。\')" style="cursor:pointer;border:2px solid #e65100;background:#fff3e0;color:#e65100;border-radius:8px;padding:3px 1.05em;font-family:inherit;font-weight:800;font-size:17px;line-height:1.4;text-align:center">目安の<span style="font-size:1.4em;font-weight:900">' + suggested + '箱</span>を入力</button>'
         : '<div style="text-align:center;font-size:18px;color:#2a7a2a;font-weight:700;padding:4px 0">✅ 十分あります</div>';
     }
   }
