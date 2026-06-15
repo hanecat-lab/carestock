@@ -1052,8 +1052,8 @@ function updateCard(pid) {
   }
 
   const olEl = document.getElementById("ol-"+pid);
-  if (olEl) {
-    if (isMismatch) olEl.style.color="#b07800"; else olEl.style.color="#1a4a3a";
+    if (olEl) {
+    olEl.style.color="#1a4a3a";
     olEl.innerHTML = '<span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>' + (p.short || p.name) + " 注文箱数";
     var sugBtnEl = document.getElementById('suggest-btn-' + pid);
     if (sugBtnEl) {
