@@ -1341,7 +1341,7 @@ function confirmOrder() {
     for (var k = 0; k < ordered.length; k++) {
       var op = ordered[k];
       var qty = state[currentFloor][op.id].orderQty || 0;
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:#f9f9f9;border-radius:6px;margin-bottom:3px"><span style="font-size:14px;font-weight:700">' + (op.short||op.name) + '</span><span style="white-space:nowrap"><span style="font-size:18px;font-weight:900;color:#e65100">' + qty + '</span><span style="font-size:12px;color:#999;margin-left:4px">笱</span></span></div>';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:#f9f9f9;border-radius:6px;margin-bottom:3px"><span style="font-size:14px;font-weight:700">' + (op.short||op.name) + '</span><span style="white-space:nowrap"><span style="font-size:18px;font-weight:900;color:#e65100">' + qty + '</span><span style="font-size:12px;color:#999;margin-left:4px">箱</span></span></div>';
       if (op.cat === 'pad') padTot += qty;
       else tapeTot += qty;
     }
