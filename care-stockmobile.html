@@ -216,7 +216,7 @@
   .after-del { font-size: 9px; color: #999; margin-top: 1px; }
 
   .suggest-label { font-size: 20px; font-weight: 800; margin-bottom: 4px; text-align: center; color: #c0392b; white-space: nowrap; }
-  .suggest-num { font-size: 14px; font-weight: 700; color: #e65100; }
+  .suggest-num { font-size: 14px; font-weight: 700; color: #e65100; background: #fff3e0; border-radius: 8px; padding: 2px 8px; }
 
   /* 保存ボタンエリア */
   .save-bar {
@@ -1051,7 +1051,7 @@ function updateCard(pid) {
   const olEl = document.getElementById("ol-"+pid);
   if (olEl) {
     if (isMismatch) olEl.style.color="#b07800"; else olEl.style.color="#1a4a3a";
-    olEl.innerHTML = '<span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>' + (p.short || p.name) + " 注文箱数" + (suggested > 0 ? '<span class="suggest-num">（推奨' + suggested + '）</span>' : '<span class="suggest-num" style="color:#2a7a2a;font-weight:400">（在庫余裕あり）</span>');
+    olEl.innerHTML = '<span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>' + (p.short || p.name) + " 注文箱数" + (suggested > 0 ? '<span class="suggest-num" onclick="document.getElementById(\'oq-' + pid + '\').value=' + suggested + ';onInput(' + pid + ',\'orderQty\',' + suggested + ')" style="cursor:pointer;margin-left:6px">💡 目安 ' + suggested + '箱</span>' : '<span class="suggest-num" style="color:#2a7a2a;font-weight:400;margin-left:6px">✅ 十分あります</span>');
   }
 
   const oqEl = document.getElementById("oq-"+pid);
