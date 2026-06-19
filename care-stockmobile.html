@@ -2230,6 +2230,9 @@ function toggleHoliday() {
 let isAdminMode = false;
 
 function toggleMode() {
+  if (!isAdminMode) {
+    if (!confirm('管理者モードに切り替えますか？')) return;
+  }
   isAdminMode = !isAdminMode;
   const adminEls = document.querySelectorAll('.admin-only');
   const btn = document.getElementById('mode-btn');
