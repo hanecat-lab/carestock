@@ -720,6 +720,7 @@ function fbInitLoad(db) {
     // バックグラウンドから復帰したとき（日付をまたいだ場合も含む）に再同期
     function syncFromFirebase() {
       if (!_fbReady) return;
+      checkAndResetIfNewDay();
       db.ref(FB_PATH).once('value').then(function(snap3) {
         var d = snap3.val();
         if (!d) return;
@@ -2753,9 +2754,30 @@ function restoreLocalFloor() {
   if (btn) btn.classList.add('active');
 }
 
+// --- 日付変更時の自動リセット ---
+function getTodayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+}
+function checkAndResetIfNewDay() {
+  var today = getTodayStr();
+  var savedDate = localStorage.getItem('diaper_stock_date') || '';
+  if (savedDate && savedDate !== today) {
+    FLOORS.forEach(function(f) {
+      products.forEach(function(p) {
+        var s = state[f][p.id];
+        state[f][p.id] = { stockBoxes:0, stockBags:0, dailyUse:s.dailyUse, orderQty:0, weeklyOverride:s.weeklyOverride };
+      });
+    });
+    showToast('📅 日付が変わったため在庫・注文数をリセットしました');
+  }
+  localStorage.setItem('diaper_stock_date', today);
+}
+
 // --- 初期化 ---
 restoreLocalFloor();
 FLOORS.forEach(function(f) { loadDailyUse(f); });
+checkAndResetIfNewDay();
 buildCards();
 syncInputsToState();
 renderThuCheck();
