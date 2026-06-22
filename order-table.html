@@ -5,7 +5,7 @@
 <title>注文管理表</title>
 <style>
 @page {
-  size: A4 landscape;
+  size: 297mm 210mm;
   margin: 7mm;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -153,10 +153,24 @@ tbody tr td { border-top: 0.8px solid #666; }
     min-height: 210mm;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   }
+  .print-note {
+    background: #fff3cd;
+    border: 1px solid #f0ad4e;
+    border-radius: 4px;
+    padding: 8px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: #333;
+    width: 297mm;
+  }
+}
+@media print {
+  .print-note { display: none; }
 }
 </style>
 </head>
 <body>
+<div class="print-note">⚠️ 印刷時は必ず <strong>横向き（ランドスケープ）</strong> を選択してください。</div>
 <div id="root"></div>
 <script>
 var PRODUCTS = [
