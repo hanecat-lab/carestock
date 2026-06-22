@@ -39,9 +39,20 @@ th, td {
   border: 0.5px solid #888;
   vertical-align: top;
 }
-.col-product  { width: 38mm; }
-.col-week-l   { width: 10.2mm; }
-.col-week-r   { width: 10.2mm; }
+.col-cat      { width: 10mm; }
+.col-product  { width: 30mm; }
+.col-week-l   { width: 10.1mm; }
+.col-week-r   { width: 10.1mm; }
+.cat-td {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 7px;
+  font-weight: 700;
+  padding: 2px 1px;
+  border-color: #555;
+}
 .week-sep  { border-left: 1.5px solid #000 !important; }
 .order-sep { border-left: 0.8px solid #555 !important; }
 .week-th {
@@ -165,22 +176,21 @@ var PRODUCTS = [
 
 var SECTIONS = [
   { cat: 'pad',   label: '尿取りパッド' },
-  { cat: 'pants', label: 'フィットパンツ（リハパン）' },
+  { cat: 'pants', label: 'リハパン' },
   { cat: 'tape',  label: 'テープ止め' },
-  { cat: 'sheet', label: '吸水シート' },
+  { cat: 'sheet', label: '吸水' },
 ];
 
 var WEEKS = 12;
 
-function stockCell(isFirst) {
-  var cls = 'data-cell week-sep' + (isFirst ? '' : '');
-  return '<td class="' + cls + '">'
+function stockCell() {
+  return '<td class="data-cell week-sep">'
     + '<div class="cell-row">'
     +   '<span class="check-o"></span>'
     +   '<span class="bl bl-s"></span><span class="lbl">箱</span>'
     + '</div>'
     + '<div class="cell-row">'
-    +   '<span style="width:8px;display:inline-block"></span>'
+    +   '<span style="width:10px;display:inline-block"></span>'
     +   '<span class="bl bl-s"></span><span class="lbl">袋</span>'
     + '</div>'
     + '</td>';
@@ -195,20 +205,25 @@ function orderCell() {
 }
 
 function buildPage(floorLabel) {
+  // カテゴリごとの商品数を集計
+  var catCount = {};
+  PRODUCTS.forEach(function(p) { catCount[p.cat] = (catCount[p.cat] || 0) + 1; });
+
   var html = '<div class="page">';
   html += '<div class="page-title">尿取りパッド注文表（' + floorLabel + '）</div>';
   html += '<table>';
 
   // colgroup
-  html += '<colgroup><col class="col-product">';
+  html += '<colgroup><col class="col-cat"><col class="col-product">';
   for (var i = 0; i < WEEKS; i++) {
     html += '<col class="col-week-l"><col class="col-week-r">';
   }
   html += '</colgroup>';
 
-  // thead row1: week numbers
+  // thead row1
   html += '<thead><tr>';
-  html += '<th rowspan="2" style="background:#f0f0f0;font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px">商品</th>';
+  html += '<th rowspan="2" style="font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px"></th>';
+  html += '<th rowspan="2" style="font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px">商品</th>';
   for (var w = 1; w <= WEEKS; w++) {
     html += '<th class="week-th week-sep" colspan="2">'
           + '<span class="week-date-blank"></span>'
@@ -227,26 +242,27 @@ function buildPage(floorLabel) {
   html += '<tbody>';
   var lastCat = null;
   PRODUCTS.forEach(function(p) {
+    html += '<tr>';
     if (p.cat !== lastCat) {
       var sec = SECTIONS.filter(function(s) { return s.cat === p.cat; })[0];
-      html += '<tr><td class="section-td" colspan="' + (WEEKS * 2 + 1) + '">' + sec.label + '</td></tr>';
+      html += '<td class="cat-td" rowspan="' + catCount[p.cat] + '">' + sec.label + '</td>';
       lastCat = p.cat;
     }
-    html += '<tr>';
     html += '<td class="product-col">'
           + '<div class="product-label">' + p.label + '</div>'
           + '<div class="product-name">' + p.name + '</div>'
           + '<div class="product-spec">' + p.spec + '</div>'
           + '</td>';
     for (var j = 0; j < WEEKS; j++) {
-      html += stockCell(j === 0);
+      html += stockCell();
       html += orderCell();
     }
     html += '</tr>';
   });
   // サイン行
   html += '<tr style="height:14mm">';
-  html += '<td style="vertical-align:middle;text-align:center;font-size:7px;font-weight:700;background:#fff">サイン</td>';
+  html += '<td></td>';
+  html += '<td style="vertical-align:middle;text-align:center;font-size:7px;font-weight:700">サイン</td>';
   for (var s = 0; s < WEEKS; s++) {
     html += '<td class="week-sep" colspan="2" style="vertical-align:bottom;padding:1px 2px">'
           + '<span style="display:inline-block;border-bottom:0.7px solid #000;width:17mm;height:7px"></span>'
