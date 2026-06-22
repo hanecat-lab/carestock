@@ -1122,7 +1122,7 @@ function updateCard(pid) {
     if (sunBox) sunBox.className = 'after-box' + (sunLow ? ' low' : '');
   }
 
-  // 前回予想とのズレ（管理者のみ）
+  // 前回在庫とのズレ（管理者のみ）
   const gapRow = document.getElementById('gap-row-'+pid);
   const gapEl = document.getElementById('gapv-'+pid);
   if (gapRow && gapEl && !p.special) {
@@ -1131,13 +1131,15 @@ function updateCard(pid) {
       const gh = JSON.parse(localStorage.getItem('diaper_sun_hist_' + currentFloor) || '[]');
       if (gh.length) lastRec = gh[0];
     } catch(e) {}
-    const fc = lastRec && lastRec.items ? lastRec.items[p.id] : undefined;
-    if (fc === undefined || !hasInput) {
+    const prevBoxes = lastRec && lastRec.stocks && lastRec.stocks[p.id] ? lastRec.stocks[p.id].boxes || 0 : undefined;
+    if (prevBoxes === undefined || !hasInput) {
       gapRow.style.display = 'none';
     } else {
-      const gap = totalStock(p) - fc;
+      const prevBags = lastRec.stocks[p.id].bags || 0;
+      const prevStock = prevBoxes * p.perBox + prevBags * p.perBag;
+      const gap = totalStock(p) - prevStock;
       gapRow.style.display = isAdminMode ? 'block' : 'none';
-      gapEl.textContent = (gap > 0 ? '+' : '') + gap + '枚（予想' + fc + '枚）';
+      gapEl.textContent = (gap > 0 ? '+' : '') + gap + '枚（前回' + prevStock + '枚）';
       gapEl.style.color = gap === 0 ? '#888' : (gap > 0 ? '#2a7a2a' : '#e53935');
       gapEl.style.fontWeight = '700';
     }
@@ -1868,24 +1870,25 @@ function renderGapMobile() {
   try { hist = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
   if (!hist.length) { panel.innerHTML = '<div style="color:#aaa;padding:4px">予想履歴がありません（注文確定で記録されます）</div>'; return; }
 
-  var rec = hist[0]; // 直近の予想
-  var html = '<div style="color:#888;padding:2px 4px 6px">予想日：' + rec.date + '（' + floorLabel(currentFloor) + '）　今の在庫入力と比較</div>';
+  var rec = hist[0]; // 直近の注文記録
+  var html = '<div style="color:#888;padding:2px 4px 6px">前回注文日：' + rec.date + '（' + floorLabel(currentFloor) + '）　今の在庫と比較</div>';
   html += '<table style="border-collapse:collapse;width:100%;font-size:11px">';
-  html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">予想</th><th style="padding:4px 6px;text-align:right">実在庫</th><th style="padding:4px 6px;text-align:right">ズレ</th></tr>';
+  html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">前回在庫</th><th style="padding:4px 6px;text-align:right">今回在庫</th><th style="padding:4px 6px;text-align:right">ズレ</th></tr>';
 
   var anyRow = false;
   products.forEach(function(p) {
-    if (!rec.items || rec.items[p.id] === undefined) return;
-    var forecast = rec.items[p.id];
+    var prevBoxes = rec.stocks && rec.stocks[p.id] ? rec.stocks[p.id].boxes || 0 : 0;
+    var prevBags  = rec.stocks && rec.stocks[p.id] ? rec.stocks[p.id].bags  || 0 : 0;
+    var prevStock = prevBoxes * p.perBox + prevBags * p.perBag;
     var actual = totalStock(p);
-    if (actual === 0 && forecast <= 0) return; // 未入力品目はスキップ
+    if (actual === 0 && prevStock === 0) return;
     anyRow = true;
-    var gap = actual - forecast;
+    var gap = actual - prevStock;
     var gapColor = gap === 0 ? '#888' : (gap > 0 ? '#2a7a2a' : '#e53935');
     var gapDisp = (gap > 0 ? '+' : '') + gap + '枚';
     html += '<tr style="border-bottom:1px solid #eee">';
     html += '<td style="padding:4px 6px;font-weight:700">' + (p.short || p.name) + '</td>';
-    html += '<td style="padding:4px 6px;text-align:right">' + forecast + '枚</td>';
+    html += '<td style="padding:4px 6px;text-align:right">' + prevStock + '枚</td>';
     html += '<td style="padding:4px 6px;text-align:right">' + actual + '枚</td>';
     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:' + gapColor + '">' + gapDisp + '</td>';
     html += '</tr>';
@@ -1895,7 +1898,7 @@ function renderGapMobile() {
     panel.innerHTML = '<div style="color:#aaa;padding:4px">比較できるデータがありません（在庫を入力してから開いてください）</div>';
     return;
   }
-  html += '<div style="color:#aaa;padding:4px;font-size:10px">＋：予想より多い（使用量を多めに見積もり）／−：予想より少ない（使用量を少なめに見積もり）</div>';
+  html += '<div style="color:#aaa;padding:4px;font-size:10px">＋：前回より増加／−：前回より減少</div>';
   panel.innerHTML = html;
 }
 // --- 居室データ ---
