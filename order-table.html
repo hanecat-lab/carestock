@@ -39,8 +39,10 @@ th, td {
   border: 0.5px solid #bbb;
   vertical-align: top;
 }
-.col-product { width: 38mm; }
-.col-week    { width: 20.4mm; }
+.col-product  { width: 38mm; }
+.col-week-l   { width: 10.2mm; }
+.col-week-r   { width: 10.2mm; }
+.week-sep { border-left: 1.2px solid #888 !important; }
 .week-th {
   text-align: center;
   font-size: 6.5px;
@@ -60,6 +62,14 @@ th, td {
   width: 16mm;
   height: 7px;
   margin-top: 1px;
+}
+.sub-th {
+  background: #e8e8e8;
+  font-size: 5.5px;
+  font-weight: 700;
+  text-align: center;
+  padding: 1px 0;
+  color: #444;
 }
 .product-col {
   background: #fafafa;
@@ -91,7 +101,7 @@ th, td {
   border-color: #aaa;
 }
 .data-cell {
-  padding: 1.5px 1.5px;
+  padding: 1.5px 1px;
 }
 .cell-row {
   display: flex;
@@ -114,8 +124,8 @@ th, td {
   border-bottom: 0.5px solid #444;
   height: 7px;
 }
-.bl-s { width: 9px; }
-.bl-m { width: 15px; }
+.bl-xs { width: 12px; }
+.bl-s  { width: 9px; }
 .lbl { color: #666; font-size: 5.5px; }
 
 @media screen {
@@ -160,16 +170,24 @@ var SECTIONS = [
 
 var WEEKS = 12;
 
-function dataCell() {
-  return '<td class="data-cell">'
+function stockCell(isFirst) {
+  var cls = 'data-cell week-sep' + (isFirst ? '' : '');
+  return '<td class="' + cls + '">'
     + '<div class="cell-row">'
     +   '<span class="check-o"></span>'
     +   '<span class="bl bl-s"></span><span class="lbl">箱</span>'
-    +   '<span class="bl bl-s"></span><span class="lbl">袋</span>'
     + '</div>'
     + '<div class="cell-row">'
-    +   '<span class="lbl">注</span>'
-    +   '<span class="bl bl-m"></span><span class="lbl">箱</span>'
+    +   '<span style="width:8px;display:inline-block"></span>'
+    +   '<span class="bl bl-s"></span><span class="lbl">袋</span>'
+    + '</div>'
+    + '</td>';
+}
+
+function orderCell() {
+  return '<td class="data-cell" style="vertical-align:middle">'
+    + '<div class="cell-row">'
+    +   '<span class="bl bl-xs"></span><span class="lbl">箱</span>'
     + '</div>'
     + '</td>';
 }
@@ -181,17 +199,26 @@ function buildPage(floorLabel) {
 
   // colgroup
   html += '<colgroup><col class="col-product">';
-  for (var i = 0; i < WEEKS; i++) html += '<col class="col-week">';
+  for (var i = 0; i < WEEKS; i++) {
+    html += '<col class="col-week-l"><col class="col-week-r">';
+  }
   html += '</colgroup>';
 
-  // thead
+  // thead row1: week numbers
   html += '<thead><tr>';
-  html += '<th style="background:#f0f0f0;font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px">商品</th>';
+  html += '<th rowspan="2" style="background:#f0f0f0;font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px">商品</th>';
   for (var w = 1; w <= WEEKS; w++) {
-    html += '<th class="week-th">'
+    html += '<th class="week-th week-sep" colspan="2">'
           + '<span class="week-num">' + w + 'W</span>'
           + '<span class="week-date-blank"></span>'
           + '</th>';
+  }
+  html += '</tr>';
+  // thead row2: 在庫 / 注文 labels
+  html += '<tr>';
+  for (var w = 1; w <= WEEKS; w++) {
+    html += '<th class="sub-th week-sep">在庫</th>'
+          + '<th class="sub-th">注文</th>';
   }
   html += '</tr></thead>';
 
@@ -201,7 +228,7 @@ function buildPage(floorLabel) {
   PRODUCTS.forEach(function(p) {
     if (p.cat !== lastCat) {
       var sec = SECTIONS.filter(function(s) { return s.cat === p.cat; })[0];
-      html += '<tr><td class="section-td" colspan="' + (WEEKS + 1) + '">' + sec.label + '</td></tr>';
+      html += '<tr><td class="section-td" colspan="' + (WEEKS * 2 + 1) + '">' + sec.label + '</td></tr>';
       lastCat = p.cat;
     }
     html += '<tr>';
@@ -210,7 +237,10 @@ function buildPage(floorLabel) {
           + '<div class="product-name">' + p.name + '</div>'
           + '<div class="product-spec">' + p.spec + '</div>'
           + '</td>';
-    for (var j = 0; j < WEEKS; j++) html += dataCell();
+    for (var j = 0; j < WEEKS; j++) {
+      html += stockCell(j === 0);
+      html += orderCell();
+    }
     html += '</tr>';
   });
   html += '</tbody></table></div>';
