@@ -244,6 +244,15 @@ function buildPage(floorLabel) {
     }
     html += '</tr>';
   });
+  // サイン行
+  html += '<tr style="height:10mm">';
+  html += '<td style="vertical-align:middle;text-align:center;font-size:7px;font-weight:700;background:#f5f5f5">サイン</td>';
+  for (var s = 0; s < WEEKS; s++) {
+    html += '<td class="week-sep" colspan="2" style="vertical-align:bottom;padding:1px 2px">'
+          + '<span style="display:inline-block;border-bottom:0.7px solid #000;width:17mm;height:7px"></span>'
+          + '</td>';
+  }
+  html += '</tr>';
   html += '</tbody></table>';
   html += '<div style="margin-top:4mm;display:flex;gap:12mm;align-items:flex-end;font-size:7px">'
         + '<div>確認者：<span style="display:inline-block;border-bottom:0.7px solid #000;width:35mm;height:8px"></span></div>'
