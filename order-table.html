@@ -43,6 +43,7 @@ th, td {
 .col-product  { width: 30mm; }
 .col-week-l   { width: 10.1mm; }
 .col-week-r   { width: 10.1mm; }
+.cat-start td, .cat-start th { border-top: 2px solid #000 !important; }
 .cat-td {
   writing-mode: vertical-rl;
   text-orientation: mixed;
@@ -242,7 +243,7 @@ function buildPage(floorLabel) {
   html += '<tbody>';
   var lastCat = null;
   PRODUCTS.forEach(function(p) {
-    html += '<tr>';
+    html += '<tr' + (p.cat !== lastCat ? ' class="cat-start"' : '') + '>';
     if (p.cat !== lastCat) {
       var sec = SECTIONS.filter(function(s) { return s.cat === p.cat; })[0];
       html += '<td class="cat-td" rowspan="' + catCount[p.cat] + '">' + sec.label + '</td>';
