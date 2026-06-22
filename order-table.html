@@ -244,7 +244,13 @@ function buildPage(floorLabel) {
     }
     html += '</tr>';
   });
-  html += '</tbody></table></div>';
+  html += '</tbody></table>';
+  html += '<div style="margin-top:4mm;display:flex;gap:12mm;align-items:flex-end;font-size:7px">'
+        + '<div>確認者：<span style="display:inline-block;border-bottom:0.7px solid #000;width:35mm;height:8px"></span></div>'
+        + '<div>担当者：<span style="display:inline-block;border-bottom:0.7px solid #000;width:35mm;height:8px"></span></div>'
+        + '<div>日付：<span style="display:inline-block;border-bottom:0.7px solid #000;width:25mm;height:8px"></span></div>'
+        + '</div>';
+  html += '</div>';
   return html;
 }
 
