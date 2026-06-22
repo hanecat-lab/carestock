@@ -1141,7 +1141,7 @@ function updateCard(pid) {
       try {
         const allH = loadHistory();
         const prevE = allH.find(function(h) { return h.date === lastRec.date && h.floor === currentFloor; });
-        if (prevE && prevE.orders && prevE.orders[p.id]) prevOrderBoxes = prevE.orders[p.id].qty || prevE.orders[p.id] || 0;
+        if (prevE && prevE.orders && prevE.orders[p.id] != null) prevOrderBoxes = parseInt(prevE.orders[p.id].qty != null ? prevE.orders[p.id].qty : prevE.orders[p.id]) || 0;
       } catch(e2) {}
       const actualUsed = prevStock + prevOrderBoxes * p.perBox - totalStock(p);
       const predictedUsed = weeklyNeed(p);
@@ -1897,7 +1897,8 @@ function renderGapMobile() {
     var prevBoxes = rec.stocks && rec.stocks[p.id] ? rec.stocks[p.id].boxes || 0 : 0;
     var prevBags  = rec.stocks && rec.stocks[p.id] ? rec.stocks[p.id].bags  || 0 : 0;
     var prevStock = prevBoxes * p.perBox + prevBags * p.perBag;
-    var prevOrderBoxes = prevOrders[p.id] ? (prevOrders[p.id].qty || prevOrders[p.id] || 0) : 0;
+    var prevOrderEntry = prevOrders[p.id];
+    var prevOrderBoxes = prevOrderEntry != null ? (parseInt(prevOrderEntry.qty != null ? prevOrderEntry.qty : prevOrderEntry) || 0) : 0;
     var currentStk = totalStock(p);
     var predictedUsed = weeklyNeed(p);
     var actualUsed = prevStock + prevOrderBoxes * p.perBox - currentStk;
