@@ -11,7 +11,7 @@
 
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>care-stockmobile v58</title>
+<title>care-stockmobile v59</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html {
@@ -1895,7 +1895,18 @@ function renderGapMobile() {
     anyRow = true;
     var gap = actual - predicted;
     var gapColor = gap === 0 ? '#888' : (gap > 0 ? '#1565c0' : '#e65100');
-    var gapDisp = (gap > 0 ? '+' : '') + gap + '枚';
+    var absGap = Math.abs(gap);
+    var gapBoxes = Math.floor(absGap / p.perBox);
+    var gapRem = absGap % p.perBox;
+    var gapBags = p.perBag > 0 ? Math.floor(gapRem / p.perBag) : 0;
+    var gapRemPieces = p.perBag > 0 ? gapRem % p.perBag : gapRem;
+    var sign = gap > 0 ? '+' : '-';
+    var gapDisp = gap === 0 ? '±0' : sign;
+    if (gap !== 0) {
+      if (gapBoxes > 0) gapDisp += gapBoxes + '箱';
+      if (gapBags > 0) gapDisp += gapBags + '袋';
+      if (gapRemPieces > 0 || (gapBoxes === 0 && gapBags === 0)) gapDisp += gapRemPieces + '枚';
+    }
     html += '<tr style="border-top:1px solid #e0e0e0">';
     html += '<td style="padding:4px 6px;font-weight:700">' + (p.short || p.name) + '</td>';
     html += '<td style="padding:4px 6px;text-align:right">' + predicted + '枚</td>';
