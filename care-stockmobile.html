@@ -11,7 +11,7 @@
 
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>care-stockmobile v55</title>
+<title>care-stockmobile v58</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html {
@@ -1873,45 +1873,39 @@ function renderGraphMobile() {
 
 function renderGapMobile() {
   var panel = document.getElementById('gap-mobile');
-  // 直近の注文履歴を取得
-  var allHist = [];
-  try { allHist = loadHistory(); } catch(e) {}
-  var prevEntry = null;
-  for (var i = allHist.length - 1; i >= 0; i--) {
-    if (allHist[i].floor === currentFloor) { prevEntry = allHist[i]; break; }
+  var hist = [];
+  try { hist = JSON.parse(localStorage.getItem('diaper_sun_hist_' + currentFloor) || '[]'); } catch(e) {}
+  if (hist.length < 2) {
+    panel.innerHTML = '<div style="color:#aaa;padding:4px">記録が足りません（2回注文確定後に表示されます）</div>';
+    return;
   }
-  if (!prevEntry) { panel.innerHTML = '<div style="color:#aaa;padding:4px">記録がありません（注文確定で記録されます）</div>'; return; }
-
-  var prevOrders = prevEntry.orders || {};
-  var html = '<div style="color:#888;padding:2px 4px 6px">前回注文日：' + prevEntry.date + '（' + floorLabel(currentFloor) + '）</div>';
+  var thisWeek = hist[0];
+  var lastWeek = hist[1];
+  var html = '<div style="color:#888;padding:2px 4px 6px">予想日：' + lastWeek.date + '　実績日：' + thisWeek.date + '（' + floorLabel(currentFloor) + '）</div>';
   html += '<table style="border-collapse:collapse;width:100%;font-size:11px">';
-  html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">先週の注文</th><th style="padding:4px 6px;text-align:right">週の必要量</th><th style="padding:4px 6px;text-align:right">差</th></tr>';
-
+  html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">先週の予想</th><th style="padding:4px 6px;text-align:right">今週の実際</th><th style="padding:4px 6px;text-align:right">差</th></tr>';
   var anyRow = false;
   products.forEach(function(p) {
     if (p.special) return;
-    var orderEntry = prevOrders[p.id];
-    var orderedBoxes = orderEntry != null ? (parseInt(orderEntry.qty != null ? orderEntry.qty : orderEntry) || 0) : 0;
-    var orderedPieces = orderedBoxes * p.perBox;
-    var neededPieces = weeklyNeed(p);
-    if (orderedBoxes === 0 && neededPieces === 0) return;
+    var predicted = lastWeek.items && lastWeek.items[p.id] != null ? (parseInt(lastWeek.items[p.id]) || 0) : null;
+    var actualRaw = thisWeek.stocks && thisWeek.stocks[p.id];
+    if (predicted == null && !actualRaw) return;
+    var actual = actualRaw ? ((parseInt(actualRaw.boxes)||0)*p.perBox + (parseInt(actualRaw.bags)||0)*(p.perBag||1)) : 0;
+    predicted = predicted || 0;
     anyRow = true;
-    var gap = orderedPieces - neededPieces;
-    var gapColor = gap === 0 ? '#888' : (gap > 0 ? '#e65100' : '#1565c0');
+    var gap = actual - predicted;
+    var gapColor = gap === 0 ? '#888' : (gap > 0 ? '#1565c0' : '#e65100');
     var gapDisp = (gap > 0 ? '+' : '') + gap + '枚';
-    html += '<tr style="border-bottom:1px solid #eee">';
+    html += '<tr style="border-top:1px solid #e0e0e0">';
     html += '<td style="padding:4px 6px;font-weight:700">' + (p.short || p.name) + '</td>';
-    html += '<td style="padding:4px 6px;text-align:right">' + orderedBoxes + '箱（' + orderedPieces + '枚）</td>';
-    html += '<td style="padding:4px 6px;text-align:right">' + neededPieces + '枚</td>';
+    html += '<td style="padding:4px 6px;text-align:right">' + predicted + '枚</td>';
+    html += '<td style="padding:4px 6px;text-align:right">' + actual + '枚</td>';
     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:' + gapColor + '">' + gapDisp + '</td>';
     html += '</tr>';
   });
   html += '</table>';
-  if (!anyRow) {
-    panel.innerHTML = '<div style="color:#aaa;padding:4px">注文データがありません</div>';
-    return;
-  }
-  html += '<div style="color:#aaa;padding:4px;font-size:10px">＋：必要量より多く注文／−：必要量より少なく注文</div>';
+  if (!anyRow) { panel.innerHTML = '<div style="color:#aaa;padding:4px">表示できるデータがありません</div>'; return; }
+  html += '<div style="color:#aaa;padding:4px;font-size:10px">＋：予想より在庫が多かった／−：予想より在庫が少なかった</div>';
   panel.innerHTML = html;
 }
 // --- 居室データ ---
