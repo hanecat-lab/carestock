@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>注文管理表</title>
+<style>
+@page {
+  size: A4 landscape;
+  margin: 7mm;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Noto Sans CJK JP', 'Noto Sans JP', 'IPAPGothic', sans-serif;
+  font-size: 7px;
+  color: #111;
+  background: #fff;
+  line-height: 1.3;
+}
+.page {
+  page-break-after: always;
+}
+.page:last-child {
+  page-break-after: auto;
+}
+.page-title {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  border-bottom: 1.5px solid #333;
+  padding-bottom: 2mm;
+  margin-bottom: 2mm;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+}
+th, td {
+  border: 0.5px solid #bbb;
+  vertical-align: top;
+}
+.col-product { width: 38mm; }
+.col-week    { width: 20.4mm; }
+.week-th {
+  text-align: center;
+  font-size: 6.5px;
+  font-weight: 700;
+  background: #f0f0f0;
+  padding: 1px;
+}
+.week-num {
+  display: block;
+  font-size: 7.5px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+}
+.week-date-blank {
+  display: inline-block;
+  border-bottom: 0.7px solid #555;
+  width: 16mm;
+  height: 7px;
+  margin-top: 1px;
+}
+.product-col {
+  background: #fafafa;
+  vertical-align: middle;
+  padding: 2px 3px;
+}
+.product-label {
+  font-size: 8.5px;
+  font-weight: 900;
+  color: #1a5a8a;
+}
+.product-name {
+  font-size: 6px;
+  color: #333;
+  margin-top: 0.5px;
+}
+.product-spec {
+  font-size: 5.5px;
+  color: #999;
+  margin-top: 0.5px;
+}
+.section-td {
+  background: #dce8f0;
+  font-weight: 700;
+  font-size: 7.5px;
+  text-align: center;
+  padding: 2px;
+  color: #1a3a5a;
+  border-color: #aaa;
+}
+.data-cell {
+  padding: 1.5px 1.5px;
+}
+.cell-row {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 6.5px;
+}
+.cell-row + .cell-row {
+  margin-top: 2px;
+}
+.check-o {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 0.7px solid #777;
+}
+.bl {
+  display: inline-block;
+  border-bottom: 0.5px solid #444;
+  height: 7px;
+}
+.bl-s { width: 9px; }
+.bl-m { width: 15px; }
+.lbl { color: #666; font-size: 5.5px; }
+
+@media screen {
+  body { background: #e0e0e0; padding: 10px; }
+  .page {
+    background: #fff;
+    margin-bottom: 20px;
+    padding: 7mm;
+    width: 297mm;
+    min-height: 210mm;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var PRODUCTS = [
+  { label: '白小',   name: '尿取りパッド（2回）',  spec: '1箱144枚・1袋48枚',  cat: 'pad' },
+  { label: '白大',   name: '尿取りパッド（4回）',  spec: '1箱224枚・1袋28枚',  cat: 'pad' },
+  { label: 'グレー', name: '長時間安心パッド',     spec: '1箱144枚・1袋36枚',  cat: 'pad' },
+  { label: '緑',     name: '夜パッド ふつう',      spec: '1箱120枚・1袋30枚',  cat: 'pad' },
+  { label: '青',     name: '夜パッド 多い',        spec: '1箱90枚・1袋30枚',   cat: 'pad' },
+  { label: '特多',   name: '夜パッド 特多',        spec: '1箱80枚・1袋20枚',   cat: 'pad' },
+  { label: '10回',   name: '夜パッド 10回',        spec: '1箱64枚・1袋16枚',   cat: 'pad' },
+  { label: '12回',   name: '夜パッド 12回',        spec: '1箱56枚・1袋14枚',   cat: 'pad' },
+  { label: 'M〜L',   name: 'フィットパンツ M〜L',  spec: '1箱66枚・1袋22枚',   cat: 'pants' },
+  { label: 'L〜LL',  name: 'フィットパンツ L〜LL', spec: '1箱60枚・1袋20枚',   cat: 'pants' },
+  { label: 'S',      name: 'テープ止め S',         spec: '1箱66枚・1袋22枚',   cat: 'tape' },
+  { label: 'M',      name: 'テープ止め M',         spec: '1箱80枚・1袋20枚',   cat: 'tape' },
+  { label: 'L',      name: 'テープ止め L',         spec: '1箱80枚・1袋20枚',   cat: 'tape' },
+  { label: '吸水',   name: '吸水シート',           spec: '1箱576枚・1袋72枚',  cat: 'sheet' },
+];
+
+var SECTIONS = [
+  { cat: 'pad',   label: '尿取りパッド' },
+  { cat: 'pants', label: 'フィットパンツ（リハパン）' },
+  { cat: 'tape',  label: 'テープ止め' },
+  { cat: 'sheet', label: '吸水シート' },
+];
+
+var WEEKS = 12;
+
+function dataCell() {
+  return '<td class="data-cell">'
+    + '<div class="cell-row">'
+    +   '<span class="check-o"></span>'
+    +   '<span class="bl bl-s"></span><span class="lbl">箱</span>'
+    +   '<span class="bl bl-s"></span><span class="lbl">袋</span>'
+    + '</div>'
+    + '<div class="cell-row">'
+    +   '<span class="lbl">注</span>'
+    +   '<span class="bl bl-m"></span><span class="lbl">箱</span>'
+    + '</div>'
+    + '</td>';
+}
+
+function buildPage(floorLabel) {
+  var html = '<div class="page">';
+  html += '<div class="page-title">尿取りパッド注文表（' + floorLabel + '）</div>';
+  html += '<table>';
+
+  // colgroup
+  html += '<colgroup><col class="col-product">';
+  for (var i = 0; i < WEEKS; i++) html += '<col class="col-week">';
+  html += '</colgroup>';
+
+  // thead
+  html += '<thead><tr>';
+  html += '<th style="background:#f0f0f0;font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px">商品</th>';
+  for (var w = 1; w <= WEEKS; w++) {
+    html += '<th class="week-th">'
+          + '<span class="week-num">' + w + 'W</span>'
+          + '<span class="week-date-blank"></span>'
+          + '</th>';
+  }
+  html += '</tr></thead>';
+
+  // tbody
+  html += '<tbody>';
+  var lastCat = null;
+  PRODUCTS.forEach(function(p) {
+    if (p.cat !== lastCat) {
+      var sec = SECTIONS.filter(function(s) { return s.cat === p.cat; })[0];
+      html += '<tr><td class="section-td" colspan="' + (WEEKS + 1) + '">' + sec.label + '</td></tr>';
+      lastCat = p.cat;
+    }
+    html += '<tr>';
+    html += '<td class="product-col">'
+          + '<div class="product-label">' + p.label + '</div>'
+          + '<div class="product-name">' + p.name + '</div>'
+          + '<div class="product-spec">' + p.spec + '</div>'
+          + '</td>';
+    for (var j = 0; j < WEEKS; j++) html += dataCell();
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('root').innerHTML =
+    buildPage('2階') + buildPage('3階');
+});
+</script>
+</body>
+</html>
