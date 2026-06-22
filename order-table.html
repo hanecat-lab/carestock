@@ -60,7 +60,7 @@ th, td {
 .week-date-blank {
   display: inline-block;
   border-bottom: 0.7px solid #000;
-  width: 16mm;
+  width: 18mm;
   height: 7px;
   margin-top: 1px;
 }
@@ -211,7 +211,6 @@ function buildPage(floorLabel) {
   html += '<th rowspan="2" style="background:#f0f0f0;font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px">商品</th>';
   for (var w = 1; w <= WEEKS; w++) {
     html += '<th class="week-th week-sep" colspan="2">'
-          + '<span class="week-num">' + w + 'W</span>'
           + '<span class="week-date-blank"></span>'
           + '</th>';
   }
