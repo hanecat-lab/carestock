@@ -200,24 +200,14 @@ var SECTIONS = [
 var WEEKS = 12;
 
 function stockCell() {
-  return '<td class="data-cell week-sep">'
-    + '<div class="cell-row">'
-    +   '<span style="width:10px;display:inline-block"></span>'
-    +   '<span class="bl bl-s"></span><span class="lbl">箱</span>'
-    + '</div>'
-    + '<div class="cell-row">'
-    +   '<span style="width:10px;display:inline-block"></span>'
-    +   '<span class="bl bl-s"></span><span class="lbl">袋</span>'
-    + '</div>'
+  return '<td class="week-sep" style="padding:0;font-size:6.5px">'
+    + '<div style="padding:8px 4px 7px;text-align:right;border-bottom:0.5px solid #bbb">箱</div>'
+    + '<div style="padding:7px 4px 8px;text-align:right">袋</div>'
     + '</td>';
 }
 
 function orderCell() {
-  return '<td class="data-cell order-sep" style="vertical-align:middle">'
-    + '<div class="cell-row">'
-    +   '<span class="bl bl-xs"></span><span class="lbl">箱</span>'
-    + '</div>'
-    + '</td>';
+  return '<td class="order-sep" style="vertical-align:middle;padding:4px 3px;font-size:6.5px;text-align:left">箱</td>';
 }
 
 function buildPage(floorLabel) {
