@@ -42,7 +42,8 @@ th, td {
 .col-product  { width: 38mm; }
 .col-week-l   { width: 10.2mm; }
 .col-week-r   { width: 10.2mm; }
-.week-sep { border-left: 1.2px solid #888 !important; }
+.week-sep  { border-left: 1.2px solid #888 !important; }
+.order-sep { border-left: 0.8px solid #aaa !important; }
 .week-th {
   text-align: center;
   font-size: 6.5px;
@@ -185,7 +186,7 @@ function stockCell(isFirst) {
 }
 
 function orderCell() {
-  return '<td class="data-cell" style="vertical-align:middle">'
+  return '<td class="data-cell order-sep" style="vertical-align:middle">'
     + '<div class="cell-row">'
     +   '<span class="bl bl-xs"></span><span class="lbl">箱</span>'
     + '</div>'
@@ -218,7 +219,7 @@ function buildPage(floorLabel) {
   html += '<tr>';
   for (var w = 1; w <= WEEKS; w++) {
     html += '<th class="sub-th week-sep">在庫</th>'
-          + '<th class="sub-th">注文</th>';
+          + '<th class="sub-th order-sep">注文</th>';
   }
   html += '</tr></thead>';
 
