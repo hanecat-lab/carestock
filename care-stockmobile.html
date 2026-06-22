@@ -1122,7 +1122,7 @@ function updateCard(pid) {
     if (sunBox) sunBox.className = 'after-box' + (sunLow ? ' low' : '');
   }
 
-  // 前回在庫とのズレ（管理者のみ）
+  // 使用量ズレ（管理者のみ）
   const gapRow = document.getElementById('gap-row-'+pid);
   const gapEl = document.getElementById('gapv-'+pid);
   if (gapRow && gapEl && !p.special) {
@@ -1137,10 +1137,18 @@ function updateCard(pid) {
     } else {
       const prevBags = lastRec.stocks[p.id].bags || 0;
       const prevStock = prevBoxes * p.perBox + prevBags * p.perBag;
-      const gap = totalStock(p) - prevStock;
+      let prevOrderBoxes = 0;
+      try {
+        const allH = loadHistory();
+        const prevE = allH.find(function(h) { return h.date === lastRec.date && h.floor === currentFloor; });
+        if (prevE && prevE.orders && prevE.orders[p.id]) prevOrderBoxes = prevE.orders[p.id].qty || prevE.orders[p.id] || 0;
+      } catch(e2) {}
+      const actualUsed = prevStock + prevOrderBoxes * p.perBox - totalStock(p);
+      const predictedUsed = weeklyNeed(p);
+      const gap = actualUsed - predictedUsed;
       gapRow.style.display = isAdminMode ? 'block' : 'none';
-      gapEl.textContent = (gap > 0 ? '+' : '') + gap + '枚（前回' + prevStock + '枚）';
-      gapEl.style.color = gap === 0 ? '#888' : (gap > 0 ? '#2a7a2a' : '#e53935');
+      gapEl.textContent = (gap > 0 ? '+' : '') + gap + '枚（予想' + predictedUsed + '枚 実際' + actualUsed + '枚）';
+      gapEl.style.color = gap === 0 ? '#888' : (gap > 0 ? '#e53935' : '#2a7a2a');
       gapEl.style.fontWeight = '700';
     }
   }
@@ -1868,28 +1876,40 @@ function renderGapMobile() {
   var key = 'diaper_sun_hist_' + currentFloor;
   var hist = [];
   try { hist = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
-  if (!hist.length) { panel.innerHTML = '<div style="color:#aaa;padding:4px">予想履歴がありません（注文確定で記録されます）</div>'; return; }
+  if (!hist.length) { panel.innerHTML = '<div style="color:#aaa;padding:4px">記録がありません（注文確定で記録されます）</div>'; return; }
 
-  var rec = hist[0]; // 直近の注文記録
-  var html = '<div style="color:#888;padding:2px 4px 6px">前回注文日：' + rec.date + '（' + floorLabel(currentFloor) + '）　今の在庫と比較</div>';
+  var rec = hist[0];
+  // 前回注文時の注文箱数を履歴から取得
+  var prevOrders = {};
+  try {
+    var allHist = loadHistory();
+    var prevEntry = allHist.find(function(h) { return h.date === rec.date && h.floor === currentFloor; });
+    if (prevEntry && prevEntry.orders) prevOrders = prevEntry.orders;
+  } catch(e) {}
+
+  var html = '<div style="color:#888;padding:2px 4px 6px">前回注文日：' + rec.date + '（' + floorLabel(currentFloor) + '）</div>';
   html += '<table style="border-collapse:collapse;width:100%;font-size:11px">';
-  html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">前回在庫</th><th style="padding:4px 6px;text-align:right">今回在庫</th><th style="padding:4px 6px;text-align:right">ズレ</th></tr>';
+  html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">予想使用量</th><th style="padding:4px 6px;text-align:right">実際の使用量</th><th style="padding:4px 6px;text-align:right">差</th></tr>';
 
   var anyRow = false;
   products.forEach(function(p) {
+    if (p.special) return;
     var prevBoxes = rec.stocks && rec.stocks[p.id] ? rec.stocks[p.id].boxes || 0 : 0;
     var prevBags  = rec.stocks && rec.stocks[p.id] ? rec.stocks[p.id].bags  || 0 : 0;
     var prevStock = prevBoxes * p.perBox + prevBags * p.perBag;
-    var actual = totalStock(p);
-    if (actual === 0 && prevStock === 0) return;
+    var prevOrderBoxes = prevOrders[p.id] ? (prevOrders[p.id].qty || prevOrders[p.id] || 0) : 0;
+    var currentStk = totalStock(p);
+    var predictedUsed = weeklyNeed(p);
+    var actualUsed = prevStock + prevOrderBoxes * p.perBox - currentStk;
+    if (prevStock === 0 && currentStk === 0) return;
     anyRow = true;
-    var gap = actual - prevStock;
-    var gapColor = gap === 0 ? '#888' : (gap > 0 ? '#2a7a2a' : '#e53935');
+    var gap = actualUsed - predictedUsed;
+    var gapColor = gap === 0 ? '#888' : (gap > 0 ? '#e53935' : '#2a7a2a');
     var gapDisp = (gap > 0 ? '+' : '') + gap + '枚';
     html += '<tr style="border-bottom:1px solid #eee">';
     html += '<td style="padding:4px 6px;font-weight:700">' + (p.short || p.name) + '</td>';
-    html += '<td style="padding:4px 6px;text-align:right">' + prevStock + '枚</td>';
-    html += '<td style="padding:4px 6px;text-align:right">' + actual + '枚</td>';
+    html += '<td style="padding:4px 6px;text-align:right">' + predictedUsed + '枚</td>';
+    html += '<td style="padding:4px 6px;text-align:right">' + actualUsed + '枚</td>';
     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:' + gapColor + '">' + gapDisp + '</td>';
     html += '</tr>';
   });
@@ -1898,7 +1918,7 @@ function renderGapMobile() {
     panel.innerHTML = '<div style="color:#aaa;padding:4px">比較できるデータがありません（在庫を入力してから開いてください）</div>';
     return;
   }
-  html += '<div style="color:#aaa;padding:4px;font-size:10px">＋：前回より増加／−：前回より減少</div>';
+  html += '<div style="color:#aaa;padding:4px;font-size:10px">＋：予想より多く使用／−：予想より少なかった</div>';
   panel.innerHTML = html;
 }
 // --- 居室データ ---
