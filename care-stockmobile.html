@@ -1150,6 +1150,10 @@ function updateCard(pid) {
   const cardEl = document.getElementById("card-"+pid);
   if (cardEl) cardEl.className = "card" + (p.cat === currentCat ? " visible" : "") + (isLow ? " low" : "");
 
+  // ギャップパネルが開いていれば実在庫列を即時更新
+  var gapPanel = document.getElementById('gap-mobile');
+  if (gapPanel && gapPanel.style.display !== 'none') renderGapMobile();
+
   updateSummary();
 }
 
