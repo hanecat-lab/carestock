@@ -256,7 +256,7 @@ function buildPage(floorLabel) {
     }
     html += '<td class="product-col">'
           + '<div class="product-label">' + p.label + '</div>'
-          + '<div class="product-name">' + p.name + '</div>'
+          + (p.name !== p.label ? '<div class="product-name">' + p.name + '</div>' : '')
           + '</td>';
     for (var j = 0; j < WEEKS; j++) {
       html += stockCell();
