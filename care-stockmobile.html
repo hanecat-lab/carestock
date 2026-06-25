@@ -504,6 +504,8 @@
         <span style="font-size:12px;color:#999;margin-left:4px">箱</span>
       </div>
     </div>
+    <div style="color:#e53935;font-size:18px;text-align:center;margin:8px 0 2px;flex-shrink:0">用紙に記入して下さい。</div>
+    <div id="popup-delivery-date" style="color:#e53935;font-size:18px;text-align:center;margin-bottom:8px;flex-shrink:0"></div>
     <div style="display:flex;gap:10px;flex-shrink:0">
       <button onclick="closeOrderPopupMobile()" style="flex:1;padding:12px;background:#f5f5f5;color:#888;border:2px solid #ddd;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">戻る</button>
       <button id="popup-ok-btn-mobile" style="flex:1;padding:12px;background:#fff;color:#2e7d32;border:2px solid #2e7d32;border-radius:10px;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit">✅ 確定して保存</button>
@@ -1389,6 +1391,11 @@ function confirmOrder() {
       doConfirmOrder(dateStr);
     }
   };
+  var daysUntilThu = ((4 - today.getDay() + 7) % 7) || 7;
+  var thu = new Date(today);
+  thu.setDate(today.getDate() + daysUntilThu);
+  document.getElementById('popup-delivery-date').textContent =
+    '配送希望日：' + (thu.getMonth()+1) + '/' + thu.getDate() + '（木）';
   document.getElementById('order-confirm-popup').style.display = 'flex';
 
 }
