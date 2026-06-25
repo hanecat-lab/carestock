@@ -467,6 +467,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-ser
 <div id="toast"></div>
 
 <script>
+var _APP_V = '0'; // AUTO_VERSION
+(function(){
+  var p = new URLSearchParams(location.search);
+  if (p.get('v') !== _APP_V) { p.set('v', _APP_V); location.replace(location.pathname + '?' + p.toString()); }
+})();
 // ===== Firebase 設定 =====
 // Firebase コンソール(https://console.firebase.google.com)でプロジェクトを作成し、
 // 「プロジェクト設定 → マイアプリ」から取得した値を以下に入力してください。

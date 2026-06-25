@@ -1,0 +1,28 @@
+name: Auto Version Stamp
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'care-stockmobile.html'
+      - 'care-stockPC.html'
+
+jobs:
+  stamp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Stamp version
+        run: |
+          VER=$(date +%s)
+          sed -i "s/var _APP_V = '[^']*'/var _APP_V = '$VER'/" care-stockmobile.html care-stockPC.html
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add care-stockmobile.html care-stockPC.html
+          git diff --staged --quiet || git commit -m "chore: auto-stamp version $VER [skip ci]"
+          git push
