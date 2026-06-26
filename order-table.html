@@ -217,8 +217,8 @@ function buildPage(floorLabel) {
   PRODUCTS.forEach(function(p) { catCount[p.cat] = (catCount[p.cat] || 0) + 1; });
 
   var html = '<div class="page">';
+  html += '<div style="font-size:10px;font-weight:700;color:#000;margin-bottom:1px">袋数は数字を〇で囲んで記入</div>';
   html += '<div class="page-title">尿取りパッド注文表（' + floorLabel + '）</div>';
-  html += '<div style="font-size:10px;font-weight:700;color:#000;margin-bottom:2px">袋数は数字を〇で囲んで記入</div>';
   html += '<table>';
 
   // colgroup
@@ -234,7 +234,7 @@ function buildPage(floorLabel) {
   html += '<th rowspan="2" style="font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px">商品</th>';
   for (var w = 1; w <= WEEKS; w++) {
     html += '<th class="week-th week-sep" colspan="2">'
-          + '<span style="font-size:9px;color:#888;letter-spacing:1px">〇/〇</span>'
+          + '<span style="font-size:13px;color:#888">/</span>'
           + '</th>';
   }
   html += '</tr>';
