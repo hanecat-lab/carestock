@@ -79,12 +79,22 @@ tbody tr td { border-top: 0.8px solid #666; }
 }
 .sub-th {
   background: #fff;
-  font-size: 5.5px;
   font-weight: 700;
-  text-align: center;
-  padding: 1px 0;
   color: #000;
   border-top: 0.5px solid #555;
+  height: 20px;
+  padding: 0;
+  vertical-align: bottom;
+  overflow: visible;
+  white-space: nowrap;
+  position: relative;
+}
+.sub-th span {
+  display: inline-block;
+  font-size: 6px;
+  transform: rotate(-45deg);
+  transform-origin: bottom left;
+  padding-left: 3px;
 }
 .product-col {
   background: #fff;
@@ -239,8 +249,8 @@ function buildPage(floorLabel) {
   // thead row2: 在庫 / 注文 labels
   html += '<tr>';
   for (var w = 1; w <= WEEKS; w++) {
-    html += '<th class="sub-th week-sep">在庫</th>'
-          + '<th class="sub-th order-sep">注文</th>';
+    html += '<th class="sub-th week-sep"><span>在庫</span></th>'
+          + '<th class="sub-th order-sep"><span>注文</span></th>';
   }
   html += '</tr></thead>';
 
