@@ -79,11 +79,11 @@ tbody tr td { border-top: 0.8px solid #666; }
 }
 .sub-th {
   background: #fff;
-  font-size: 4px;
+  font-size: 12px;
   font-weight: 700;
   text-align: center;
   padding: 1px 0;
-  color: #888;
+  color: #000;
   border-top: 0.5px solid #555;
 }
 .product-col {
@@ -92,7 +92,7 @@ tbody tr td { border-top: 0.8px solid #666; }
   padding: 9px 3px;
 }
 .product-label {
-  font-size: 8.5px;
+  font-size: 15px;
   font-weight: 900;
   color: #000;
 }
@@ -201,14 +201,12 @@ var WEEKS = 8;
 
 function stockCell() {
   return '<td class="week-sep" style="padding:5px 4px 4px;vertical-align:top;position:relative">'
-    + '<div style="font-size:8px;font-weight:700;color:#777;text-align:right;line-height:1">箱</div>'
     + '<div style="height:24px"></div>'
-    + '<div style="text-align:right;font-size:5px;color:#aaa">袋</div>'
     + '</td>';
 }
 
 function orderCell() {
-  return '<td class="order-sep" style="vertical-align:middle;padding:10px 3px;font-size:6.5px;text-align:right">箱</td>';
+  return '<td class="order-sep" style="vertical-align:middle;padding:10px 3px"></td>';
 }
 
 function buildPage(floorLabel) {
