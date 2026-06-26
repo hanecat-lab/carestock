@@ -230,12 +230,13 @@ function buildPage(floorLabel) {
   // thead row1
   html += '<thead><tr>';
   html += '<th rowspan="2" style="font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px"></th>';
-  html += '<th rowspan="2" style="font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px">商品'
-        + '<div style="font-size:4.5px;font-weight:400;color:#888;margin-top:3px;line-height:1.4">袋数は数字を〇で囲んで記入</div>'
+  html += '<th rowspan="2" style="font-size:7px;font-weight:700;text-align:center;vertical-align:bottom;padding:2px">'
+        + '<div style="font-size:10px;font-weight:700;color:#000;text-align:left;margin-bottom:4px">袋数は数字を〇で囲んで記入</div>'
+        + '<div>商品</div>'
         + '</th>';
   for (var w = 1; w <= WEEKS; w++) {
     html += '<th class="week-th week-sep" colspan="2">'
-          + '<span class="week-date-blank"></span>'
+          + '<span style="font-size:6.5px;color:#bbb;letter-spacing:1px">〇/〇</span>'
           + '</th>';
   }
   html += '</tr>';
