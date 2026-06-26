@@ -209,7 +209,7 @@ function orderCell() {
   return '<td class="order-sep" style="vertical-align:middle;padding:10px 3px"></td>';
 }
 
-function buildPage(floorLabel) {
+function buildPage() {
   // カテゴリごとの商品数を集計
   var catCount = {};
   PRODUCTS.forEach(function(p) { catCount[p.cat] = (catCount[p.cat] || 0) + 1; });
@@ -217,7 +217,7 @@ function buildPage(floorLabel) {
   var html = '<div class="page">';
   html += '<div class="page-title" style="display:flex;align-items:baseline">'
         + '<span style="font-size:10px;font-weight:700;flex:1;text-align:left">在庫の箱数は「正」の字で、袋数は数字を〇で囲んで記入</span>'
-        + '<span>尿取りパッド注文表（' + floorLabel + '）</span>'
+        + '<span>尿取りパッド注文表</span>'
         + '<span style="flex:1"></span>'
         + '</div>';
   html += '<table>';
@@ -284,7 +284,7 @@ function buildPage(floorLabel) {
 
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('root').innerHTML =
-    buildPage('2階') + buildPage('3階');
+    buildPage();
 });
 </script>
 </body>
