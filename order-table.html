@@ -234,19 +234,12 @@ function buildPage() {
 
   // thead row1
   html += '<thead><tr>';
-  html += '<th rowspan="2" style="font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px"></th>';
-  html += '<th rowspan="2" style="font-size:12px;font-weight:700;text-align:center;vertical-align:middle;padding:2px">商品</th>';
+  html += '<th style="font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px"></th>';
+  html += '<th style="font-size:12px;font-weight:700;text-align:center;vertical-align:middle;padding:2px">商品</th>';
   for (var w = 1; w <= WEEKS; w++) {
     html += '<th class="week-th week-sep" colspan="2">'
           + '<span style="font-size:16px;color:#888">/</span>'
           + '</th>';
-  }
-  html += '</tr>';
-  // thead row2: 在庫 / 注文 labels
-  html += '<tr>';
-  for (var w = 1; w <= WEEKS; w++) {
-    html += '<th class="sub-th week-sep">在庫</th>'
-          + '<th class="sub-th order-sep">注文</th>';
   }
   html += '</tr></thead>';
 
@@ -271,7 +264,7 @@ function buildPage() {
     html += '</tr>';
   });
   // サイン行
-  html += '<tr style="height:7mm">';
+  html += '<tr style="height:14mm">';
   html += '<td></td>';
   html += '<td style="vertical-align:middle;text-align:center;font-size:7px;font-weight:700">サイン</td>';
   for (var s = 0; s < WEEKS; s++) {
