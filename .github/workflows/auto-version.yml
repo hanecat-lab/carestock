@@ -6,6 +6,9 @@ on:
       - 'care-stockmobile.html'
       - 'care-stockPC.html'
 
+permissions:
+  contents: write
+
 jobs:
   stamp:
     runs-on: ubuntu-latest
