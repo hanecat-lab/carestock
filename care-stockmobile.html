@@ -535,14 +535,21 @@
     <div style="display:none;margin-top:6px">
       <div>【パッド類】</div>
       <div>現在庫 ＝ 箱数×1箱枚数 ＋ 袋数×1袋枚数</div>
-      <div>推奨注文 ＝ ⌈（7日分 − 木曜到着時残庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
+      <div>推奨注文 ＝ ⌈（週消費量 ＋ 1.5袋 ＋ 1箱 − 現在庫）÷ 1箱枚数⌉</div>
+      <div style="color:#888;font-size:9px;margin-left:1em">※ 来週日曜に必ず1箱以上残るよう逆算</div>
       <div style="margin-top:6px">【テープ止め・リハパン】</div>
-      <div>推奨注文 ＝ ⌈（入浴日使用枚数 ＋ 1袋 − 現在庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
+      <div>推奨注文 ＝ ⌈（週必要枚数 ＋ 1袋 − 現在庫）÷ 1箱枚数⌉ ＋ 予備1箱</div>
+      <div style="margin-top:6px">【吸水シート】</div>
+      <div>在庫 ≤ 7袋 → 5箱推奨　／　在庫 ＞ 7袋 → 0箱</div>
       <div style="margin-top:6px">【来週の日曜の在庫予想】</div>
-      <div>パッド類：現在庫 ＋ 注文箱数×1箱枚数 − 1日使用量×7日 − 1袋×1.5（予備）</div>
-      <div>テープ・リハパン：現在庫 ＋ 注文箱数×1箱枚数 − 居室集計×4（入浴使用）− 2袋（予備）</div>
+      <div>パッド類：現在庫 ＋ 注文×1箱枚数 − 週消費量 − 1.5袋</div>
+      <div>テープ・リハパン：現在庫 ＋ 注文×1箱枚数 − 居室集計×4 − 2袋</div>
+      <div style="margin-top:6px">【不足警告の条件】</div>
+      <div>パッド類：来週日曜予想 ≤ 2日分の使用量</div>
+      <div>テープ・リハパン：来週日曜予想 ＜ 0枚</div>
       <div class="admin-only" style="margin-top:6px">【木曜届いた後の在庫】</div>
-      <div class="admin-only">木曜届いた後の在庫 ＝ 現在庫 − 居室集計 − 予備2袋 ＋ 注文数×1箱枚数</div>
+      <div class="admin-only">パッド類：現在庫 − 1日使用量×4日 − 予備1袋 ＋ 注文数×1箱枚数</div>
+      <div class="admin-only">テープ止め・リハパン：現在庫 − 居室集計 − 予備2袋 ＋ 注文数×1箱枚数</div>
     </div>
   </div>
 </div>
