@@ -894,11 +894,15 @@ function calcOrder(p) {
     return stock <= p.perBag * 7 ? 5 : 0;  // 在庫7袋以下なら推奨5箱
   }
   if (p.weeklyFixed === null && s.dailyUse === 0) return 0;
-  const atDel = p.weeklyFixed !== null
-    ? totalStock(p)  // テープ/パンツは到着時消費なし（週1回注文）
-    : Math.max(0, totalStock(p) - s.dailyUse * DAYS_DELIVERY);
-  const needed = weeklyNeed(p) + p.perBag - atDel;  // +1袋追加
-  return needed <= 0 ? 0 : Math.ceil(needed / p.perBox) + 1; // 予備1箱追加
+  if (p.weeklyFixed === null) {
+    // パッド類：来週日曜予想 ≥ 1箱 を直接保証
+    const needed = p.perBox + weeklyNeed(p) + p.perBag * 1.5 - totalStock(p);
+    return needed <= 0 ? 0 : Math.ceil(needed / p.perBox);
+  }
+  // テープ・リハパン
+  const atDel = totalStock(p);
+  const needed = weeklyNeed(p) + p.perBag - atDel;
+  return needed <= 0 ? 0 : Math.ceil(needed / p.perBox) + 1;
 }
 function calcAtDelivery(p) {
   if (p.weeklyFixed !== null) {

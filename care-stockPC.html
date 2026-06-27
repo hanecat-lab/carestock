@@ -763,8 +763,14 @@ function calcSundayStock(p) {
 function calcOrder(p) {
   if (p.special) { return totalStock(p) <= p.perBag * 7 ? 5 : 0; }
   if (p.weeklyFixed === null && state[floor][p.id].dailyUse === 0) return 0;
-  const atDel = p.weeklyFixed !== null ? totalStock(p) : Math.max(0, totalStock(p) - state[floor][p.id].dailyUse * DAYS_DEL);
-  const needed = weeklyNeed(p) + p.perBag - atDel;  // +1袋追加
+  if (p.weeklyFixed === null) {
+    // パッド類：来週日曜予想 ≥ 1箱 を直接保証
+    const needed = p.perBox + weeklyNeed(p) + p.perBag * 1.5 - totalStock(p);
+    return needed <= 0 ? 0 : Math.ceil(needed / p.perBox);
+  }
+  // テープ・リハパン
+  const atDel = totalStock(p);
+  const needed = weeklyNeed(p) + p.perBag - atDel;
   return needed <= 0 ? 0 : Math.ceil(needed / p.perBox) + 1;
 }
 function calcAfter(p) {
