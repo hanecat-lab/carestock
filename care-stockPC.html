@@ -519,7 +519,6 @@ function fbInitLoad(db) {
       reflectRoom(true);
       buildCards();
       updateSummary();
-      showToast('☁️ クラウドからデータを同期しました');
     } else {
       // Firebase が空 → localStorage の既存データをアップロードして共有開始
       _fbReady = true;
