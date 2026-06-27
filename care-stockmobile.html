@@ -896,7 +896,7 @@ function calcOrder(p) {
   if (p.weeklyFixed === null && s.dailyUse === 0) return 0;
   const atDel = p.weeklyFixed !== null
     ? totalStock(p)  // テープ/パンツは到着時消費なし（週1回注文）
-    : totalStock(p) - s.dailyUse * DAYS_DELIVERY;
+    : Math.max(0, totalStock(p) - s.dailyUse * DAYS_DELIVERY);
   const needed = weeklyNeed(p) + p.perBag - atDel;  // +1袋追加
   return needed <= 0 ? 0 : Math.ceil(needed / p.perBox) + 1; // 予備1箱追加
 }
@@ -1008,7 +1008,7 @@ function updateCard(pid) {
   const atDel = calcAtDelivery(p);
   const afterWeek = calcAfterWeek(p);
   const hasInput = totalStock(p) > 0 || s.stockBoxes > 0 || s.stockBags > 0;
-  const isLow = p.special ? false : hasInput && (p.weeklyFixed !== null ? afterWeek < 0 : (s.dailyUse > 0 && afterWeek < s.dailyUse * 2));
+  const isLow = p.special ? false : hasInput && (p.weeklyFixed !== null ? afterWeek < 0 : (s.dailyUse > 0 && afterWeek <= s.dailyUse * 2));
   const isMismatch = s.orderQty > 0 && s.orderQty !== suggested && suggested > 0;
 
   const totEl = document.getElementById("tot-"+pid);
