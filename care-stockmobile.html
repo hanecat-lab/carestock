@@ -543,13 +543,13 @@
       <div>在庫 ≤ 7袋 → 5箱推奨　／　在庫 ＞ 7袋 → 0箱</div>
       <div style="margin-top:6px">【来週の日曜の在庫予想】</div>
       <div>パッド類：現在庫 ＋ 注文×1箱枚数 − 週消費量 − 1.5袋</div>
-      <div>テープ・リハパン：現在庫 ＋ 注文×1箱枚数 − 居室集計×4 − 2袋</div>
+      <div>テープ・リハパン：現在庫 ＋ 注文×1箱枚数 − 居室集計×2（週2回入浴）− 2袋</div>
       <div style="margin-top:6px">【不足警告の条件】</div>
-      <div>パッド類：来週日曜予想 ≤ 2日分の使用量</div>
-      <div>テープ・リハパン：来週日曜予想 ＜ 0枚</div>
+      <div>パッド類：納品後1週間消費した後の残庫 ≤ 2日分の使用量</div>
+      <div>テープ・リハパン：納品後1週間消費した後の残庫 ＜ 0枚</div>
       <div class="admin-only" style="margin-top:6px">【木曜届いた後の在庫】</div>
       <div class="admin-only">パッド類：現在庫 − 1日使用量×4日 − 予備1袋 ＋ 注文数×1箱枚数</div>
-      <div class="admin-only">テープ止め・リハパン：現在庫 − 居室集計 − 予備2袋 ＋ 注文数×1箱枚数</div>
+      <div class="admin-only">テープ止め・リハパン：現在庫 − 居室集計×2（納品前の入浴2回）− 予備2袋 ＋ 注文数×1箱枚数</div>
     </div>
   </div>
 </div>
@@ -893,6 +893,21 @@ function weeklyNeed(p) {
   }
   return state[currentFloor][p.id].dailyUse * getDaysWeek();
 }
+// 入浴運用の定数（週2回・いずれも木曜納品前に実施）
+const BATHS_PER_WEEK = 2;        // 1週間の入浴回数
+const BATHS_BEFORE_DELIVERY = 2; // 日曜注文〜木曜納品の間の入浴回数
+
+// フロアの居室集計（1入浴日あたりの使用枚数合計）
+function roomTotalFor(floor, p) {
+  let total = 0;
+  (ROOMS[floor] || []).forEach(function(rn) {
+    const rs = getRoomState(floor, rn);
+    const v = rs.products[String(p.id)];
+    if (v && v.qty > 0) total += parseInt(v.qty) || 0;
+  });
+  return total;
+}
+
 function calcOrder(p) {
   const s = state[currentFloor][p.id];
   if (p.special) {
@@ -912,14 +927,8 @@ function calcOrder(p) {
 }
 function calcAtDelivery(p) {
   if (p.weeklyFixed !== null) {
-    // テープ・リハパン：現在庫 - 居室集計×2 - 1袋×0.5
-    let roomTotal = 0;
-    (ROOMS[currentFloor] || []).forEach(function(rn) {
-      const rs = getRoomState(currentFloor, rn);
-      const v = rs.products[String(p.id)];
-      if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
-    });
-    return Math.max(0, totalStock(p) - roomTotal * 2 - p.perBag * 0.5);
+    // テープ・リハパン：現在庫 - 居室集計×納品前入浴回数 - 1袋×0.5
+    return Math.max(0, totalStock(p) - roomTotalFor(currentFloor, p) * BATHS_BEFORE_DELIVERY - p.perBag * 0.5);
   }
   // パッド類：現在庫 - 1日使用量×4日 - 1袋
   return Math.max(0, totalStock(p) - state[currentFloor][p.id].dailyUse * DAYS_DELIVERY - p.perBag);
@@ -931,19 +940,14 @@ function calcSundayStock(p) {
   if (p.weeklyFixed === null) {
     return totalStock(p) + ordered - s.dailyUse * 7 - p.perBag * 1.5;
   } else {
-    let roomTotal = 0;
-    (ROOMS[currentFloor] || []).forEach(function(rn) {
-      const rs = getRoomState(currentFloor, rn);
-      const v = rs.products[String(p.id)];
-      if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
-    });
-    return totalStock(p) + ordered - roomTotal * 4 - p.perBag * 2;
+    return totalStock(p) + ordered - roomTotalFor(currentFloor, p) * BATHS_PER_WEEK - p.perBag * 2;
   }
 }
 
 function calcAfterWeek(p) {
+  // 負数を返せるようにする（isLow の不足判定 afterWeek < 0 を機能させるため clamp しない）
   const s = state[currentFloor][p.id];
-  return Math.max(0, calcAtDelivery(p) + s.orderQty * p.perBox - weeklyNeed(p));
+  return calcAtDelivery(p) + s.orderQty * p.perBox - weeklyNeed(p);
 }
 
 // --- カード構築 ---
@@ -1098,13 +1102,7 @@ function updateCard(pid) {
   // 木曜届いた後の在庫
   let nextSunRem;
   if (p.weeklyFixed !== null) {
-    let roomTotal = 0;
-    (ROOMS[currentFloor] || []).forEach(function(rn) {
-      const rs = getRoomState(currentFloor, rn);
-      const v = rs.products[String(p.id)];
-      if (v && v.qty > 0) roomTotal += parseInt(v.qty) || 0;
-    });
-    nextSunRem = Math.max(0, totalStock(p) - roomTotal - p.perBag * 2 + s.orderQty * p.perBox);
+    nextSunRem = Math.max(0, totalStock(p) - roomTotalFor(currentFloor, p) * BATHS_BEFORE_DELIVERY - p.perBag * 2 + s.orderQty * p.perBox);
   } else {
     nextSunRem = Math.max(0, totalStock(p) - s.dailyUse * DAYS_DELIVERY - p.perBag + s.orderQty * p.perBox);
   }
@@ -1285,7 +1283,7 @@ function switchCat(cat, btn) {
     const card = document.getElementById("card-"+p.id);
     if (card) {
       const s2 = state[currentFloor][p.id];
-      const isLow = p.weeklyFixed !== null ? calcAfterWeek(p) < 0 : (s2.dailyUse > 0 && calcAfterWeek(p) < s2.dailyUse * 2);
+      const isLow = p.weeklyFixed !== null ? calcAfterWeek(p) < 0 : (s2.dailyUse > 0 && calcAfterWeek(p) <= s2.dailyUse * 2);
       card.className = "card" + (p.cat === cat ? " visible" : "") + (isLow ? " low" : "");
     }
   });
@@ -1481,12 +1479,7 @@ function doConfirmOrder(dateStr) {
     const s = state[currentFloor][p.id];
     let thuExp;
     if (p.weeklyFixed !== null) {
-      let roomTotal = 0;
-      (ROOMS[currentFloor] || []).forEach(function(rn) {
-        const rs = getRoomState(currentFloor, rn);
-        if (rs === 'adult') roomTotal += p.weeklyFixed;
-      });
-      thuExp = Math.max(0, totalStock(p) - roomTotal - p.perBag * 2 + (s.orderQty || 0) * p.perBox);
+      thuExp = Math.max(0, totalStock(p) - roomTotalFor(currentFloor, p) * BATHS_BEFORE_DELIVERY - p.perBag * 2 + (s.orderQty || 0) * p.perBox);
     } else {
       thuExp = Math.max(0, totalStock(p) - (s.dailyUse || 0) * DAYS_DELIVERY - p.perBag + (s.orderQty || 0) * p.perBox);
     }
@@ -2026,14 +2019,14 @@ function reflectRoomToDaily(silent) {
   });
 
   // パッド：1日使用量に反映
-  // テープ・パンツ：集計数×3＋1袋 を週必要枚数として反映
+  // テープ・パンツ：集計数×週入浴回数＋1袋 を週必要枚数として反映
+  // 居室データが1件もない商品は保存済みの値を上書きしない
   products.forEach(function(p) {
+    if (totals[p.id] <= 0) return;
     if (p.weeklyFixed === null) {
       state[currentFloor][p.id].dailyUse = totals[p.id];
     } else {
-      // 集計数×3＋1袋
-      const weekly = totals[p.id] * 3 + p.perBag;
-      state[currentFloor][p.id].weeklyOverride = weekly > 0 ? weekly : null;
+      state[currentFloor][p.id].weeklyOverride = totals[p.id] * BATHS_PER_WEEK + p.perBag;
     }
   });
   if (!silent) syncInputsToState();
