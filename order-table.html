@@ -176,6 +176,23 @@ tbody tr td { border-top: 0.8px solid #666; }
 <div class="print-note">⚠️ 印刷時は必ず <strong>横向き（ランドスケープ）</strong> を選択してください。</div>
 <div id="root"></div>
 <script>
+var _APP_V = '0'; // AUTO_VERSION
+(function(){
+  var p = new URLSearchParams(location.search);
+  if (p.get('v') !== _APP_V) { p.set('v', _APP_V); location.replace(location.pathname + '?' + p.toString()); }
+})();
+/* ===== バージョン表示（左下・印刷時非表示） ===== */
+(function(){
+  var st=document.createElement('style');
+  st.textContent='@media print{#appVerBadge{display:none!important}}';
+  document.head.appendChild(st);
+  var v=document.createElement('div');
+  v.id='appVerBadge';
+  var t=parseInt(_APP_V,10);
+  v.textContent='ver.'+(t>0?new Date(t*1000).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'-');
+  v.style.cssText='position:fixed;bottom:4px;left:6px;font-size:10px;color:#888;opacity:.75;z-index:9998;pointer-events:none;';
+  document.body.appendChild(v);
+})();
 var PRODUCTS = [
   { label: '白小',   name: '尿取りパッド（2回）',  spec: '1箱144枚・1袋48枚',  cat: 'pad' },
   { label: '白大',   name: '尿取りパッド（4回）',  spec: '1箱224枚・1袋28枚',  cat: 'pad' },

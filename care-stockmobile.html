@@ -641,6 +641,18 @@ var _APP_V = '1782946506'; // AUTO_VERSION
   var p = new URLSearchParams(location.search);
   if (p.get('v') !== _APP_V) { p.set('v', _APP_V); location.replace(location.pathname + '?' + p.toString()); }
 })();
+/* ===== バージョン表示（左下・印刷時非表示） ===== */
+(function(){
+  var st=document.createElement('style');
+  st.textContent='@media print{#appVerBadge{display:none!important}}';
+  document.head.appendChild(st);
+  var v=document.createElement('div');
+  v.id='appVerBadge';
+  var t=parseInt(_APP_V,10);
+  v.textContent='ver.'+(t>0?new Date(t*1000).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'-');
+  v.style.cssText='position:fixed;bottom:4px;left:6px;font-size:10px;color:#888;opacity:.75;z-index:9998;pointer-events:none;';
+  document.body.appendChild(v);
+})();
 // ===== Firebase 設定 =====
 // Firebase コンソール(https://console.firebase.google.com)でプロジェクトを作成し、
 // 「プロジェクト設定 → マイアプリ」から取得した値を以下に入力してください。
