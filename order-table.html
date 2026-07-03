@@ -176,6 +176,11 @@ tbody tr td { border-top: 0.8px solid #666; }
 <div class="print-note">⚠️ 印刷時は必ず <strong>横向き（ランドスケープ）</strong> を選択してください。</div>
 <div id="root"></div>
 <script>
+var _APP_V = '0'; // AUTO_VERSION
+(function(){
+  var p = new URLSearchParams(location.search);
+  if (p.get('v') !== _APP_V) { p.set('v', _APP_V); location.replace(location.pathname + '?' + p.toString()); }
+})();
 var PRODUCTS = [
   { label: '白小',   name: '尿取りパッド（2回）',  spec: '1箱144枚・1袋48枚',  cat: 'pad' },
   { label: '白大',   name: '尿取りパッド（4回）',  spec: '1箱224枚・1袋28枚',  cat: 'pad' },
