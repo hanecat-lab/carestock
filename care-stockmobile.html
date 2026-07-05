@@ -1030,9 +1030,8 @@ function updateWeeklyColVisibility(pid) {
   if (!p) return;
   var col = document.getElementById('weekly-col-' + pid);
   if (!col) return;
-  if ((p.cat === 'tape' || p.cat === 'pants') && !isAdminMode) {
-    col.style.display = 'none';
-  }
+  if (p.weeklyFixed === null) { col.style.display = 'none'; return; } // パッドは常に非表示
+  col.style.display = isAdminMode ? '' : 'none';
 }
 
 function updateCard(pid) {
@@ -1043,7 +1042,7 @@ function updateCard(pid) {
   const atDel = calcAtDelivery(p);
   const afterWeek = calcAfterWeek(p);
   const hasInput = totalStock(p) > 0 || s.stockBoxes > 0 || s.stockBags > 0;
-  const isLow = p.special ? false : hasInput && (p.weeklyFixed !== null ? afterWeek < 0 : (s.dailyUse > 0 && afterWeek <= s.dailyUse * 2));
+  const isLow = p.special ? false : hasInput && (calcSundayStock(p) < getSafetyBoxes(p.id) * p.perBox);
   const isMismatch = s.orderQty > 0 && s.orderQty !== suggested && suggested > 0;
 
   const totEl = document.getElementById("tot-"+pid);
@@ -1269,6 +1268,9 @@ function switchFloor(floor, btn) {
   var grP = document.getElementById('graph-mobile');
   if (grP && grP.style.display !== 'none') renderGraphMobile();
   updateWeeklyDisplay();
+  var sunP = document.getElementById('sun-hist-mobile');
+  if (sunP && sunP.style.display !== 'none') renderSunHistMobile();
+  if (isAdminMode) showWeeklyInputs(true);
   if (currentCat === 'room') buildRoomSection();
 }
 
@@ -1306,7 +1308,8 @@ function switchCat(cat, btn) {
     const card = document.getElementById("card-"+p.id);
     if (card) {
       const s2 = state[currentFloor][p.id];
-      const isLow = p.weeklyFixed !== null ? calcAfterWeek(p) < 0 : (s2.dailyUse > 0 && calcAfterWeek(p) <= s2.dailyUse * 2);
+      const hasInput2 = totalStock(p) > 0 || s2.stockBoxes > 0 || s2.stockBags > 0;
+      const isLow = !p.special && hasInput2 && (calcSundayStock(p) < getSafetyBoxes(p.id) * p.perBox);
       card.className = "card" + (p.cat === cat ? " visible" : "") + (isLow ? " low" : "");
     }
   });
@@ -2516,14 +2519,15 @@ function toggleMode() {
     if (grIcon) grIcon.textContent = '▼ 開く';
     // 居室管理タブを表示
     document.getElementById('tab-room').style.display = 'inline-block';
-    // カード再計算（ズレ表示など）
-    products.forEach(function(p) { updateCard(p.id); });
+    // カード再計算（ズレ表示など）＋週必要枚数欄の表示
+    products.forEach(function(p) { updateCard(p.id); updateWeeklyColVisibility(p.id); });
   } else {
     btn.textContent = '⚙️';
     btn.className = 'btn-mode btn-mode-admin';
     banner.style.display = 'none';
     if (staffLabel) staffLabel.textContent = '📋 注文シート';
     showWeeklyInputs(false);
+    products.forEach(function(p) { updateWeeklyColVisibility(p.id); });
     // 連休モードが ONのままなら OFF に戻す
     if (isHolidayMode) toggleHoliday();
     // 居室管理タブ非表示・パッド類に戻す
@@ -2601,7 +2605,7 @@ function updateWeeklyFixed(pid, val) {
     delete data[pid]; // 空欄ならカスタム値を削除（固定値に戻る）
   } else {
     const num = parseInt(val);
-    if (!isNaN(num)) data[pid] = num;
+    if (!isNaN(num) && num >= 0) data[pid] = num;
   }
   saveWeeklyFixed(data);
   updateWeeklyDisplay();
@@ -2855,6 +2859,10 @@ function exportData() {
     try { data.sunHist[f] = JSON.parse(localStorage.getItem('diaper_sun_hist_' + f) || '[]'); } catch(e) {}
     try { data.graphLog[f] = JSON.parse(localStorage.getItem('diaper_graph_log_' + f) || '[]'); } catch(e) {}
   });
+  // 安全在庫（階別）・週必要枚数カスタム値
+  data.safetyBoxes = {};
+  FLOORS.forEach(function(f) { try { data.safetyBoxes[f] = JSON.parse(localStorage.getItem('diaper_safety_boxes_' + f) || '{}'); } catch(e) {} });
+  try { data.weeklyFixed = JSON.parse(localStorage.getItem('diaper_weekly_fixed') || '{}'); } catch(e) {}
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -2931,7 +2939,9 @@ function importData(event) {
       FLOORS.forEach(function(f) {
         if (data.sunHist && data.sunHist[f]) localStorage.setItem('diaper_sun_hist_' + f, JSON.stringify(data.sunHist[f]));
         if (data.graphLog && data.graphLog[f]) localStorage.setItem('diaper_graph_log_' + f, JSON.stringify(data.graphLog[f]));
+        if (data.safetyBoxes && data.safetyBoxes[f]) localStorage.setItem('diaper_safety_boxes_' + f, JSON.stringify(data.safetyBoxes[f]));
       });
+      if (data.weeklyFixed) localStorage.setItem('diaper_weekly_fixed', JSON.stringify(data.weeklyFixed));
       renderHistory();
       products.forEach(function(p) { updatePrevBadge(p.id); });
       syncInputsToState();
