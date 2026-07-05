@@ -1811,9 +1811,19 @@ function renderUsageMobile() {
     // 色は「予想と実在庫のズレ」パネルと統一：青＝余剰方向、オレンジ＝不足リスク方向
     var diffColor = diff === 0 ? '#888' : (diff > 0 ? '#e65100' : '#1565c0');
     var diffDisp = (diff > 0 ? '+' : (diff < 0 ? '−' : '±')) + Math.abs(diff) + '枚';
+    // 差を箱・袋に分解（小さく併記）
+    var absD = Math.abs(diff);
+    var dBoxes = Math.floor(absD / p.perBox);
+    var dRem = absD % p.perBox;
+    var dBags = p.perBag > 0 ? Math.floor(dRem / p.perBag) : 0;
+    var dSub = '';
+    if (diff !== 0 && (dBoxes > 0 || dBags > 0)) {
+      dSub = (dBoxes > 0 ? dBoxes + '箱' : '') + (dBags > 0 ? dBags + '袋' : '');
+    }
     html += '<td style="padding:4px 6px;text-align:right;font-weight:700">' + st.avg + '枚</td>';
     html += '<td style="padding:4px 6px;text-align:right;color:#555">' + planned + '枚</td>';
-    html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:' + diffColor + '">' + diffDisp + '</td>';
+    html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:' + diffColor + '">' + diffDisp
+          + (dSub ? '<span style="font-weight:400;font-size:9px;color:#999">（' + dSub + '）</span>' : '') + '</td>';
     html += '<td style="padding:4px 6px;text-align:right;color:#999;font-size:10px">' + st.min + '〜' + st.max + '（' + st.n + '週）</td>';
     html += '</tr>';
   });
