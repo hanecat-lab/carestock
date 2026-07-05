@@ -1758,25 +1758,43 @@ function realUsageStats(pid, weeksN) {
   var p = products.find(function(x){ return x.id === pid; });
   if (!p) return null;
   var data = collectGraphData(pid); // [{date,s,o}] 昇順・1年以内
+  // 直近 weeksN+1 点程度に絞る（過去 weeksN 週相当）
+  if (data.length > weeksN + 1) data = data.slice(-(weeksN + 1));
+  // 先頭・末尾で在庫が数え漏れ疑い（null/0）の点をトリム
+  while (data.length && (data[0].s == null || data[0].s === 0)) data = data.slice(1);
+  while (data.length && (data[data.length-1].s == null || data[data.length-1].s === 0)) data = data.slice(0, -1);
+  if (data.length < 2) return null;
+
+  // --- 期間集計方式：総消費 = 最初の在庫 − 最後の在庫 + 総納品 ---
+  // （途中の在庫の数え漏れは最初/最後しか使わないので相殺される）
+  var totalDelivered = 0;
+  for (var i = 0; i < data.length - 1; i++) {           // 最後の点の注文は窓外に納品されるので除外
+    if (data[i].o != null) totalDelivered += data[i].o * p.perBox;
+  }
+  var totalConsumed = data[0].s - data[data.length-1].s + totalDelivered;
+  // 実日数ベースの週数
+  var totalDays = dateDiffDays(data[0].date, data[data.length-1].date);
+  var weeks = totalDays > 0 ? totalDays / 7 : (data.length - 1);
+  if (weeks <= 0) return null;
+  var avg = Math.max(0, totalConsumed / weeks);
+
+  // --- 範囲（安全在庫の目安）：両端の在庫が有効な区間のみ・週正規化・負値/数え漏れ除外 ---
   var weekly = [];
-  for (var i = 0; i < data.length - 1; i++) {
-    var a = data[i], b = data[i+1];
-    if (a.s == null || b.s == null || a.o == null) continue;
-    var used = a.s + a.o * p.perBox - b.s; // 実消費（枚）
-    var days = dateDiffDays(a.date, b.date);
-    if (days <= 0) continue;
-    var perWeek = used * 7 / days;
-    if (perWeek < 0) continue; // 数え直し等のノイズは除外
+  for (var j = 0; j < data.length - 1; j++) {
+    var a = data[j], b = data[j+1];
+    if (a.s == null || a.s === 0 || b.s == null || b.s === 0 || a.o == null) continue;
+    var d = dateDiffDays(a.date, b.date);
+    if (d <= 0) continue;
+    var perWeek = (a.s + a.o * p.perBox - b.s) * 7 / d;
+    if (perWeek < 0) continue;
     weekly.push(perWeek);
   }
-  weekly = weekly.slice(-weeksN);
-  if (!weekly.length) return null;
-  var sum = weekly.reduce(function(x,y){ return x+y; }, 0);
   return {
-    avg: Math.round(sum/weekly.length),
-    min: Math.round(Math.min.apply(null, weekly)),
-    max: Math.round(Math.max.apply(null, weekly)),
-    n: weekly.length
+    avg: Math.round(avg),
+    min: weekly.length ? Math.round(Math.min.apply(null, weekly)) : null,
+    max: weekly.length ? Math.round(Math.max.apply(null, weekly)) : null,
+    n: weekly.length,
+    weeks: Math.round(weeks)
   };
 }
 
@@ -1824,7 +1842,8 @@ function renderUsageMobile() {
     html += '<td style="padding:4px 6px;text-align:right;color:#555">' + planned + '枚</td>';
     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:' + diffColor + '">' + diffDisp
           + (dSub ? '<span style="font-weight:400;font-size:9px;color:#999">（' + dSub + '）</span>' : '') + '</td>';
-    html += '<td style="padding:4px 6px;text-align:right;color:#999;font-size:10px">' + st.min + '〜' + st.max + '（' + st.n + '週）</td>';
+    var rangeDisp = (st.min != null && st.max != null) ? (st.min + '〜' + st.max) : '—';
+    html += '<td style="padding:4px 6px;text-align:right;color:#999;font-size:10px">' + rangeDisp + '（' + st.weeks + '週）</td>';
     html += '</tr>';
   });
   html += '</table>';
@@ -1832,7 +1851,8 @@ function renderUsageMobile() {
   html += '<div style="color:#666;padding:6px 4px;font-size:10px;line-height:1.7">'
         + '＜差の見方＞ <span style="color:#1565c0;font-weight:700">−（マイナス・青）</span>＝居室予定が実測より多い＝使用量を下げられます（過剰在庫の要因）。'
         + '<span style="color:#e65100;font-weight:700">＋（プラス・オレンジ）</span>＝汚染などで予定超過。安全在庫か使用量に上乗せを。'
-        + '「最小〜最大」の幅が大きいほど汚染の波が大きく、安全在庫を多めにすべき目安です。</div>';
+        + '「最小〜最大」の幅が大きいほど汚染の波が大きく、安全在庫を多めにすべき目安です。'
+        + '<br>※ 在庫の数え漏れ（0入力）がある週は自動で補正し、期間全体の在庫増減＋納品から平均を算出しています。</div>';
   panel.innerHTML = html;
 }
 
