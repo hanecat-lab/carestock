@@ -937,10 +937,10 @@ function calcOrder(p) {
     const needed = getSafetyBoxes(p.id) * p.perBox + weeklyNeed(p) + p.perBag * 1.5 - totalStock(p);
     return needed <= 0 ? 0 : Math.ceil(needed / p.perBox);
   }
-  // テープ・リハパン
-  const atDel = totalStock(p);
-  const needed = weeklyNeed(p) + p.perBag - atDel;
-  return needed <= 0 ? 0 : Math.ceil(needed / p.perBox) + getSafetyBoxes(p.id);
+  // テープ・リハパン：来週日曜予想 ≥ 安全在庫 を直接保証（パッドと同じ連続式）
+  const weekUse = roomTotalFor(currentFloor, p) * BATHS_PER_WEEK; // calcSundayStockと同じ消費項
+  const needed = getSafetyBoxes(p.id) * p.perBox + weekUse + p.perBag * 2 - totalStock(p);
+  return needed <= 0 ? 0 : Math.ceil(needed / p.perBox);
 }
 function calcAtDelivery(p) {
   if (p.weeklyFixed !== null) {
