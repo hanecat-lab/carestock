@@ -715,7 +715,7 @@ function fbInitLoad(db) {
       // Firebase が空 → localStorage の既存データをアップロードして共有開始
       _fbReady = true;
       var lsKeys = [
-        'diaper_history', 'diaper_rooms', 'diaper_weekly_fixed', 'diaper_safety_boxes',
+        'diaper_history', 'diaper_rooms', 'diaper_weekly_fixed', 'diaper_safety_boxes', 'diaper_safety_boxes_2F', 'diaper_safety_boxes_3F',
         'diaper_daily_2F', 'diaper_daily_3F',
         'diaper_saved_at_2F', 'diaper_saved_at_3F',
         'diaper_sun_hist_2F', 'diaper_sun_hist_3F',
@@ -2555,26 +2555,30 @@ function getWeeklyFixed(pid) {
   return data[pid] !== undefined ? data[pid] : null;
 }
 
-// --- 安全在庫（箱）カスタム値 --- 既定は1箱
-const SAFETY_BOXES_KEY = 'diaper_safety_boxes';
-function loadSafetyBoxes() {
-  try { return JSON.parse(localStorage.getItem(SAFETY_BOXES_KEY) || '{}'); }
+// --- 安全在庫（箱）カスタム値 --- 階ごと・既定は1箱
+function safetyKey(floor) { return 'diaper_safety_boxes_' + floor; }
+function loadSafetyBoxes(floor) {
+  try { return JSON.parse(localStorage.getItem(safetyKey(floor)) || '{}'); }
   catch(e) { return {}; }
 }
-function saveSafetyBoxes(data) {
+function saveSafetyBoxes(floor, data) {
   const json = JSON.stringify(data);
-  localStorage.setItem(SAFETY_BOXES_KEY, json);
-  fbWrite(SAFETY_BOXES_KEY, json);
+  localStorage.setItem(safetyKey(floor), json);
+  fbWrite(safetyKey(floor), json);
 }
 function getSafetyBoxes(pid) {
-  const data = loadSafetyBoxes();
-  return data[pid] !== undefined && data[pid] !== null ? data[pid] : 1; // 既定1箱
+  const data = loadSafetyBoxes(currentFloor);
+  if (data[pid] !== undefined && data[pid] !== null) return data[pid];
+  // 旧・フロア共通データからのフォールバック（移行用）
+  try { const old = JSON.parse(localStorage.getItem('diaper_safety_boxes') || '{}');
+        if (old[pid] !== undefined && old[pid] !== null) return old[pid]; } catch(e) {}
+  return 1; // 既定1箱
 }
 function updateSafetyBoxes(pid, val) {
-  const data = loadSafetyBoxes();
+  const data = loadSafetyBoxes(currentFloor);
   if (val === '' || val === null) { delete data[pid]; }
   else { const n = parseInt(val); if (!isNaN(n) && n >= 0) data[pid] = n; }
-  saveSafetyBoxes(data);
+  saveSafetyBoxes(currentFloor, data);
   const p = products.find(function(x){ return x.id === pid; });
   if (p) updateCard(pid);
 }
