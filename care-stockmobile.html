@@ -571,6 +571,11 @@
     <div class="history-toggle" id="gap-toggle-icon">▼ 開く</div>
   </div>
   <div id="gap-mobile" class="admin-only" style="display:none;margin-top:4px;font-size:11px;overflow-x:auto"></div>
+  <div class="history-header admin-only" onclick="toggleUsageMobile()" id="usage-header" style="margin-top:4px;display:none">
+    <div class="history-header-title">📊 実測消費と居室予定の差</div>
+    <div class="history-toggle" id="usage-toggle-icon">▼ 開く</div>
+  </div>
+  <div id="usage-mobile" class="admin-only" style="display:none;margin-top:4px;font-size:11px;overflow-x:auto"></div>
   <div class="history-header admin-only" onclick="toggleGraphMobile()" id="graph-header" style="margin-top:4px;display:none">
     <div class="history-header-title">📈 在庫・注文の推移（1年）</div>
     <div class="history-toggle" id="graph-toggle-icon">▼ 開く</div>
@@ -1194,6 +1199,8 @@ function updateCard(pid) {
   // ギャップパネルが開いていれば実在庫列を即時更新
   var gapPanel = document.getElementById('gap-mobile');
   if (gapPanel && gapPanel.style.display !== 'none') renderGapMobile();
+  var usagePanel = document.getElementById('usage-mobile');
+  if (usagePanel && usagePanel.style.display !== 'none') renderUsageMobile();
 
   updateSummary();
 }
@@ -1728,6 +1735,94 @@ function toggleGapMobile() {
   panel.style.display = isOpen ? 'none' : 'block';
   icon.textContent = isOpen ? '▼ 開く' : '▲ 閉じる';
   if (!isOpen) renderGapMobile();
+}
+
+// 'M/D' または 'YYYY/M/D' を Date に
+function parseHistDate(s) {
+  var parts = String(s).split('/');
+  if (parts.length === 3) return new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+  if (parts.length === 2) {
+    var y = new Date().getFullYear();
+    return new Date(y, parseInt(parts[0])-1, parseInt(parts[1]));
+  }
+  return null;
+}
+function dateDiffDays(d1, d2) {
+  var a = parseHistDate(d1), b = parseHistDate(d2);
+  if (!a || !b) return 7; // 不明時は1週とみなす
+  return Math.round((b - a) / 86400000);
+}
+
+// 既存の graph_log から実消費（1週あたり）を逆算して統計を返す
+function realUsageStats(pid, weeksN) {
+  var p = products.find(function(x){ return x.id === pid; });
+  if (!p) return null;
+  var data = collectGraphData(pid); // [{date,s,o}] 昇順・1年以内
+  var weekly = [];
+  for (var i = 0; i < data.length - 1; i++) {
+    var a = data[i], b = data[i+1];
+    if (a.s == null || b.s == null || a.o == null) continue;
+    var used = a.s + a.o * p.perBox - b.s; // 実消費（枚）
+    var days = dateDiffDays(a.date, b.date);
+    if (days <= 0) continue;
+    var perWeek = used * 7 / days;
+    if (perWeek < 0) continue; // 数え直し等のノイズは除外
+    weekly.push(perWeek);
+  }
+  weekly = weekly.slice(-weeksN);
+  if (!weekly.length) return null;
+  var sum = weekly.reduce(function(x,y){ return x+y; }, 0);
+  return {
+    avg: Math.round(sum/weekly.length),
+    min: Math.round(Math.min.apply(null, weekly)),
+    max: Math.round(Math.max.apply(null, weekly)),
+    n: weekly.length
+  };
+}
+
+function toggleUsageMobile() {
+  var panel = document.getElementById('usage-mobile');
+  var icon = document.getElementById('usage-toggle-icon');
+  var isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  icon.textContent = isOpen ? '▼ 開く' : '▲ 閉じる';
+  if (!isOpen) renderUsageMobile();
+}
+
+function renderUsageMobile() {
+  var panel = document.getElementById('usage-mobile');
+  var WEEKS_N = 8;
+  var html = '<div style="color:#888;padding:2px 4px 6px">直近' + WEEKS_N + '週の実測消費（記録から逆算）と現在の居室予定を比較（' + floorLabel(currentFloor) + '）</div>';
+  html += '<table style="border-collapse:collapse;width:100%;font-size:11px">';
+  html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">実測/週</th><th style="padding:4px 6px;text-align:right">居室予定/週</th><th style="padding:4px 6px;text-align:right">差</th><th style="padding:4px 6px;text-align:right">最小〜最大</th></tr>';
+  var anyRow = false;
+  products.forEach(function(p) {
+    if (p.special) return;
+    var st = realUsageStats(p.id, WEEKS_N);
+    var planned = Math.round(weeklyNeed(p));
+    html += '<tr style="border-top:1px solid #e0e0e0">';
+    html += '<td style="padding:4px 6px;font-weight:700">' + (p.short || p.name) + '</td>';
+    if (!st) {
+      html += '<td colspan="4" style="padding:4px 6px;text-align:right;color:#aaa">データ不足</td></tr>';
+      return;
+    }
+    anyRow = true;
+    var diff = st.avg - planned;
+    var diffColor = diff === 0 ? '#888' : (diff > 0 ? '#1565c0' : '#e65100');
+    var diffDisp = (diff > 0 ? '+' : (diff < 0 ? '−' : '±')) + Math.abs(diff) + '枚';
+    html += '<td style="padding:4px 6px;text-align:right;font-weight:700">' + st.avg + '枚</td>';
+    html += '<td style="padding:4px 6px;text-align:right;color:#555">' + planned + '枚</td>';
+    html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:' + diffColor + '">' + diffDisp + '</td>';
+    html += '<td style="padding:4px 6px;text-align:right;color:#999;font-size:10px">' + st.min + '〜' + st.max + '（' + st.n + '週）</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  if (!anyRow) { panel.innerHTML = '<div style="color:#aaa;padding:4px">まだ集計できる記録がありません（2回以上の注文確定が必要）</div>'; return; }
+  html += '<div style="color:#666;padding:6px 4px;font-size:10px;line-height:1.7">'
+        + '＜差の見方＞ <span style="color:#e65100;font-weight:700">−（マイナス）</span>＝居室予定が実測より多い＝使用量を下げられます（過剰在庫の要因）。'
+        + '<span style="color:#1565c0;font-weight:700">＋（プラス）</span>＝汚染などで予定超過。安全在庫か使用量に上乗せを。'
+        + '「最小〜最大」の幅が大きいほど汚染の波が大きく、安全在庫を多めにすべき目安です。</div>';
+  panel.innerHTML = html;
 }
 
 var graphPid = null;
@@ -2342,7 +2437,7 @@ function toggleMode() {
     if (isAdminMode) {
       // daily-colはweeklyFixed=trueのものは非表示のまま
       if (el.id && el.id.startsWith('daily-col-') && el.dataset.weekly === 'true') return;
-      if (el.id === 'sun-hist-header' || el.id === 'gap-header' || el.id === 'graph-header') return;  // 個別に制御
+      if (el.id === 'sun-hist-header' || el.id === 'gap-header' || el.id === 'usage-header' || el.id === 'graph-header') return;  // 個別に制御
       if (el.classList.contains('save-bar')) el.style.display = 'flex';
       else if (el.tagName === 'BUTTON') el.style.display = 'inline-block';
       else el.style.display = 'block';
@@ -2374,6 +2469,13 @@ function toggleMode() {
     if (gapPanel) gapPanel.style.display = 'none';
     if (gapHeader) gapHeader.style.display = 'flex';
     if (gapIcon) gapIcon.textContent = '▼ 開く';
+    // 実測消費の差を閉じた状態で表示
+    var usPanel = document.getElementById('usage-mobile');
+    var usHeader = document.getElementById('usage-header');
+    var usIcon = document.getElementById('usage-toggle-icon');
+    if (usPanel) usPanel.style.display = 'none';
+    if (usHeader) usHeader.style.display = 'flex';
+    if (usIcon) usIcon.textContent = '▼ 開く';
     // グラフを閉じた状態で表示
     var grPanel = document.getElementById('graph-mobile');
     var grHeader = document.getElementById('graph-header');
