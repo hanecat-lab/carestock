@@ -1103,7 +1103,7 @@ function updateCard(pid) {
     if (sugBtnEl) {
       sugBtnEl.innerHTML = suggested > 0
         ? '<button onclick="document.getElementById(\'oq-' + pid + '\').value=' + suggested + ';onInput(' + pid + ',\'orderQty\',' + suggested + ');showToast(\'入力しました。\')" style="cursor:pointer;border:none;background:#f57c00;color:#fff;border-radius:10px;padding:3px 0.3em;font-family:inherit;font-weight:800;font-size:17px;line-height:1.4;text-align:center;box-shadow:0 4px 0 #bf360c,0 5px 10px rgba(0,0,0,0.18)">👆 目安<span style="font-size:1.4em;font-weight:900">' + suggested + '箱</span>を入力</button>'
-        : '<div style="text-align:center"><div style="display:inline-block;font-size:18px;color:#fff;font-weight:700;padding:3px 1.05em;background:#388e3c;border-radius:10px;box-shadow:0 4px 0 #1b5e20,0 5px 10px rgba(0,0,0,0.18)">✅ 十分あります</div></div>';
+        : '<div style="text-align:center"><div style="display:inline-block;font-size:18px;color:#fff;font-weight:700;padding:3px 1.05em;background:#388e3c;border-radius:10px;box-shadow:0 4px 0 #1b5e20,0 5px 10px rgba(0,0,0,0.18)">✅ 在庫あり（追加OK）</div></div>';
     }
   }
 
