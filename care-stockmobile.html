@@ -798,7 +798,8 @@ const DAYS_DELIVERY = 4;
 const DAYS_WEEK_NORMAL = 7;
 const DAYS_WEEK_HOLIDAY = 14;
 let isHolidayMode = false;
-function getDaysWeek() { return isHolidayMode ? DAYS_WEEK_HOLIDAY : DAYS_WEEK_NORMAL; }
+function orderSpanWeeks() { return isHolidayMode ? (orderWeeks || 1) : 1; }
+function getDaysWeek() { return orderSpanWeeks() * DAYS_WEEK_NORMAL; }
 
 const colorDot = {
   "白小":"#f0f0f0","白大":"#e0e0e0","グレー":"#9e9e9e","緑":"#43a047",
@@ -938,7 +939,7 @@ function calcOrder(p) {
     return needed <= 0 ? 0 : Math.ceil(needed / p.perBox);
   }
   // テープ・リハパン：来週日曜予想 ≥ 安全在庫 を直接保証（パッドと同じ連続式）
-  const weekUse = roomTotalFor(currentFloor, p) * BATHS_PER_WEEK; // calcSundayStockと同じ消費項
+  const weekUse = roomTotalFor(currentFloor, p) * BATHS_PER_WEEK * orderSpanWeeks(); // calcSundayStockと同じ消費項（連休はorderWeeks倍）
   const needed = getSafetyBoxes(p.id) * p.perBox + weekUse + p.perBag * 2 - totalStock(p);
   return needed <= 0 ? 0 : Math.ceil(needed / p.perBox);
 }
@@ -955,9 +956,9 @@ function calcSundayStock(p) {
   const s = state[currentFloor][p.id];
   const ordered = s.orderQty * p.perBox;
   if (p.weeklyFixed === null) {
-    return totalStock(p) + ordered - s.dailyUse * 7 - p.perBag * 1.5;
+    return totalStock(p) + ordered - s.dailyUse * getDaysWeek() - p.perBag * 1.5;
   } else {
-    return totalStock(p) + ordered - roomTotalFor(currentFloor, p) * BATHS_PER_WEEK - p.perBag * 2;
+    return totalStock(p) + ordered - roomTotalFor(currentFloor, p) * BATHS_PER_WEEK * orderSpanWeeks() - p.perBag * 2;
   }
 }
 
@@ -1066,8 +1067,8 @@ function updateCard(pid) {
       else if (boxes4 > 0) txt = boxes4 + "箱";
       else txt = bags4 + "袋";
       use4vEl.textContent = txt;
-      // 7日消費
-      const use7pieces = s.dailyUse * getDaysWeek();
+      // 7日消費（参考表示は常に7日固定）
+      const use7pieces = s.dailyUse * DAYS_WEEK_NORMAL;
       const boxes7 = Math.ceil(use7pieces / p.perBox);
       const rem7 = use7pieces % p.perBox;
       const bags7 = rem7 > 0 ? Math.ceil(rem7 / p.perBag) : 0;
