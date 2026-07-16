@@ -2175,7 +2175,18 @@ function reflectRoomToDaily(silent) {
       state[currentFloor][p.id].weeklyOverride = totals[p.id] * BATHS_PER_WEEK + p.perBag;
     }
   });
-  if (!silent) syncInputsToState();
+    if (!silent) {
+    syncInputsToState();
+  } else {
+    // silentモードでも、1日使用量の入力フィールドだけは最新のstateを反映させる
+    products.forEach(function(p) {
+      const duEl = document.getElementById("du-" + p.id);
+      if (duEl) {
+        const val = state[currentFloor][p.id].dailyUse;
+        duEl.value = val === 0 ? "" : val;
+      }
+    });
+  }
   updateWeeklyDisplay();
   products.forEach(function(p) { updateCard(p.id); });
   if (!silent) showToast('✅ 居室合計を使用量に反映しました！');
