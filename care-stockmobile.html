@@ -2155,28 +2155,34 @@ function saveRoomChangeDate() {
 // 全居室の銘柄別1日使用量を集計してstateに反映
 function reflectRoomToDaily(silent) {
   const totals = {};
-  products.forEach(function(p) { totals[p.id] = 0; });
+  const present = {};   // 居室にエントリがある商品（0枚も「居室管理中」として扱う）
+  products.forEach(function(p) { totals[p.id] = 0; present[p.id] = false; });
 
   const rooms = ROOMS[currentFloor] || [];
   rooms.forEach(function(roomNo) {
     const rs = getRoomState(currentFloor, roomNo);
     products.forEach(function(p) {
       const val = rs.products[p.id];
+      if (val) present[p.id] = true;
       if (val && val.qty > 0) {
         totals[p.id] += (parseInt(val.qty) || 0);
       }
     });
   });
 
-  // パッド：1日使用量に反映
-  // テープ・パンツ：集計数×週入浴回数＋1袋 を週必要枚数として反映
-  // 居室データが1件もない商品は保存済みの値を上書きしない
+  // パッド：1日使用量に反映（0クリアも反映）
+  // テープ・パンツ：集計数×週入浴回数＋1袋 を週必要枚数として反映（0なら解除して既定値へ）
+  // 居室に一度も登録の無い商品は手動値を維持
+  let changed = false;
   products.forEach(function(p) {
-    if (totals[p.id] <= 0) return;
+    if (!present[p.id]) return;
     if (p.weeklyFixed === null) {
+      if (state[currentFloor][p.id].dailyUse !== totals[p.id]) changed = true;
       state[currentFloor][p.id].dailyUse = totals[p.id];
     } else {
-      state[currentFloor][p.id].weeklyOverride = totals[p.id] * BATHS_PER_WEEK + p.perBag;
+      const ov = totals[p.id] > 0 ? totals[p.id] * BATHS_PER_WEEK + p.perBag : undefined;
+      if (state[currentFloor][p.id].weeklyOverride !== ov) changed = true;
+      state[currentFloor][p.id].weeklyOverride = ov;
     }
   });
     if (!silent) {
@@ -2194,10 +2200,22 @@ function reflectRoomToDaily(silent) {
   updateWeeklyDisplay();
   products.forEach(function(p) { updateCard(p.id); });
   if (!silent) showToast('✅ 居室合計を使用量に反映しました！');
-  var now = new Date();
-  var dateStr = (now.getMonth()+1) + '/' + now.getDate();
-  localStorage.setItem('diaper_room_reflect_date_' + currentFloor, dateStr);
-  fbWrite('diaper_room_reflect_date_' + currentFloor, dateStr);
+  // 反映値を永続化（保存ボタンと同じキー。トースト・保存日時スタンプは出さない）
+  if (changed) {
+    const data = {};
+    products.forEach(function(p) { data[p.id] = state[currentFloor][p.id].dailyUse; });
+    const dailyJson = JSON.stringify(data);
+    localStorage.setItem(saveKey(currentFloor), dailyJson);
+    fbWrite(saveKey(currentFloor), dailyJson);
+    products.forEach(function(p) { updateDailyBadge(p.id); });
+  }
+  // 反映日は「値が実際に変わったとき」または「反映ボタンを押したとき」のみ更新
+  if (!silent || changed) {
+    var now = new Date();
+    var dateStr = (now.getMonth()+1) + '/' + now.getDate();
+    localStorage.setItem('diaper_room_reflect_date_' + currentFloor, dateStr);
+    fbWrite('diaper_room_reflect_date_' + currentFloor, dateStr);
+  }
   updateRoomReflectLabelMobile();
   updateReflectDateLabel();
 }
@@ -2220,9 +2238,10 @@ function updateRoomReflectLabelMobile() {
   var lbl = document.getElementById('room-reflect-label');
   if (!lbl) return;
   var savedDate = localStorage.getItem('diaper_room_reflect_date_' + currentFloor) || '';
-  // 居室データが実際にない場合は日付を削除
+  // 居室データが実際にない場合は日付を削除（Firebase側も空にして他端末での復活を防ぐ）
   if (savedDate && !hasRoomDataForFloor(currentFloor)) {
     localStorage.removeItem('diaper_room_reflect_date_' + currentFloor);
+    fbWrite('diaper_room_reflect_date_' + currentFloor, '');
     savedDate = '';
   }
   if (savedDate) {
