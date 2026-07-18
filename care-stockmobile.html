@@ -939,7 +939,8 @@ function calcOrder(p) {
     return needed <= 0 ? 0 : Math.ceil(needed / p.perBox);
   }
   // テープ・リハパン：来週日曜予想 ≥ 安全在庫 を直接保証（パッドと同じ連続式）
-  const weekUse = roomTotalFor(currentFloor, p) * BATHS_PER_WEEK * orderSpanWeeks(); // calcSundayStockと同じ消費項（連休はorderWeeks倍）
+  // 画面表示の「週必要枚数」と同じ weeklyNeed(p) を消費項に使う（表示と発注計算を一致させる）
+  const weekUse = weeklyNeed(p) * orderSpanWeeks();
   const needed = getSafetyBoxes(p.id) * p.perBox + weekUse + p.perBag * 2 - totalStock(p);
   return needed <= 0 ? 0 : Math.ceil(needed / p.perBox);
 }
@@ -958,7 +959,7 @@ function calcSundayStock(p) {
   if (p.weeklyFixed === null) {
     return totalStock(p) + ordered - s.dailyUse * getDaysWeek() - p.perBag * 1.5;
   } else {
-    return totalStock(p) + ordered - roomTotalFor(currentFloor, p) * BATHS_PER_WEEK * orderSpanWeeks() - p.perBag * 2;
+    return totalStock(p) + ordered - weeklyNeed(p) * orderSpanWeeks() - p.perBag * 2;
   }
 }
 
@@ -1131,14 +1132,7 @@ function updateCard(pid) {
   if (afEl) afEl.className = "after-box" + (thurLow ? " low" : "");
   if (afvEl) {
     afvEl.className = "after-val" + (thurLow ? " low" : "");
-    const boxes = Math.floor(nextSunRem / p.perBox);
-    const remAfterBoxes = nextSunRem % p.perBox;
-    const bags = Math.floor(remAfterBoxes / p.perBag);
-    let stockDisp = "";
-    if (boxes > 0 && bags > 0) stockDisp = boxes + "箱" + bags + "袋";
-    else if (boxes > 0) stockDisp = boxes + "箱";
-    else if (bags > 0) stockDisp = bags + "袋";
-    else stockDisp = "0袋";
+    const stockDisp = formatBoxBag(nextSunRem, p).str;
     afvEl.innerHTML = stockDisp + '<div style="font-size:10px;font-weight:400;color:#888;margin-top:2px">' + nextSunRem + '枚</div>';
   }
   if (afdEl) { afdEl.style.display="none"; }
@@ -1150,10 +1144,7 @@ function updateCard(pid) {
     if (sunLblEl) sunLblEl.textContent = isHolidayMode ? orderSpanWeeks() + '週後在庫予想' : '来週日曜在庫予想';
     const sunStock = calcSundayStock(p);
     const sunLow = sunStock < 0;
-    const sunBoxes = Math.floor(Math.max(0, sunStock) / p.perBox);
-    const sunBagsRem = Math.max(0, sunStock) % p.perBox;
-    const sunBags = Math.floor(sunBagsRem / p.perBag);
-    let sunDisp = sunLow ? '不足' : (sunBoxes > 0 ? sunBoxes+'箱' : '') + (sunBags > 0 ? sunBags+'袋' : '') || '0袋';
+    let sunDisp = sunLow ? '不足' : formatBoxBag(Math.max(0, sunStock), p).str;
     sunEl.innerHTML = sunDisp + '<div style="font-size:9px;font-weight:400;color:#aaa;margin-top:1px">' + Math.round(sunStock) + '枚</div>';
     sunEl.style.color = sunLow ? '#e53935' : '#555';
     const sunBox = document.getElementById('sun-'+pid);
@@ -1563,12 +1554,7 @@ function renderThuCheck() {
     if (!el) return;
     if (!isThursday || !rec || rec.items[p.id] === undefined) { el.innerHTML = ''; return; }
     var exp = rec.items[p.id];
-    var expBoxes = Math.floor(exp / p.perBox);
-    var rem = exp % p.perBox;
-    var expBags = p.perBag > 0 ? Math.floor(rem / p.perBag) : 0;
-    var dispStr = expBoxes > 0 ? expBoxes + '箱' : '';
-    if (expBags > 0) dispStr += expBags + '袋';
-    if (!dispStr) dispStr = exp + '枚';
+    var dispStr = formatBoxBag(exp, p).str;
     el.innerHTML = '<div style="text-align:right;font-size:13px;color:#1565c0;margin-top:3px;font-weight:700">🚚 木曜チェック：予想 ' + dispStr + '</div>';
   });
 }
@@ -1713,10 +1699,7 @@ function renderSunHistMobile() {
     hist.forEach(function(h) {
       var val = h.items ? h.items[p.id] : undefined;
       if (val === undefined) { html += '<td style="padding:3px 6px;text-align:center;color:#bbb">-</td>'; return; }
-      var boxes = Math.floor(Math.max(0,val)/p.perBox);
-      var rem = Math.max(0,val)%p.perBox;
-      var bags = Math.floor(rem/p.perBag);
-      var disp = val < 0 ? '<span style="color:#e53935">不足</span>' : (boxes>0?boxes+'箱':'')+(bags>0?bags+'袋':'')+'<br><span style="color:#aaa">('+val+'枚)</span>';
+      var disp = val < 0 ? '<span style="color:#e53935">不足</span>' : formatBoxBag(Math.max(0,val), p).str+'<br><span style="color:#aaa">('+val+'枚)</span>';
       var stk = h.stocks && h.stocks[p.id] ? '<br><span style="color:#bbb;font-size:9px">在庫'+h.stocks[p.id].boxes+'箱'+h.stocks[p.id].bags+'袋</span>' : '';
       html += '<td style="padding:3px 6px;text-align:center">' + disp + stk + '</td>';
     });
@@ -1758,6 +1741,20 @@ function dateDiffDays(d1, d2) {
   var a = parseHistDate(d1), b = parseHistDate(d2);
   if (!a || !b) return 7; // 不明時は1週とみなす
   return Math.round((b - a) / 86400000);
+}
+
+// 枚数→箱・袋・端数枚に分解し、常に何かしら表示される文字列を返す（「0袋」のような曖昧表記を避ける）
+function formatBoxBag(pieces, p) {
+  var abs = Math.abs(pieces);
+  var boxes = Math.floor(abs / p.perBox);
+  var rem = abs % p.perBox;
+  var bags = p.perBag > 0 ? Math.floor(rem / p.perBag) : 0;
+  var remPieces = p.perBag > 0 ? rem % p.perBag : rem;
+  var parts = [];
+  if (boxes > 0) parts.push(boxes + '箱');
+  if (bags > 0) parts.push(bags + '袋');
+  if (remPieces > 0 || parts.length === 0) parts.push(remPieces + '枚');
+  return { boxes: boxes, bags: bags, remPieces: remPieces, str: parts.join('') };
 }
 
 // 既存の graph_log から実消費（1週あたり）を逆算して統計を返す
@@ -1838,14 +1835,7 @@ function renderUsageMobile() {
     var diffColor = diff === 0 ? '#888' : (diff > 0 ? '#e65100' : '#1565c0');
     var diffDisp = (diff > 0 ? '+' : (diff < 0 ? '−' : '±')) + Math.abs(diff) + '枚';
     // 差を箱・袋に分解（小さく併記）
-    var absD = Math.abs(diff);
-    var dBoxes = Math.floor(absD / p.perBox);
-    var dRem = absD % p.perBox;
-    var dBags = p.perBag > 0 ? Math.floor(dRem / p.perBag) : 0;
-    var dSub = '';
-    if (diff !== 0 && (dBoxes > 0 || dBags > 0)) {
-      dSub = (dBoxes > 0 ? dBoxes + '箱' : '') + (dBags > 0 ? dBags + '袋' : '');
-    }
+    var dSub = diff !== 0 ? formatBoxBag(diff, p).str : '';
     html += '<td style="padding:4px 6px;text-align:right;font-weight:700">' + st.avg + '枚</td>';
     html += '<td style="padding:4px 6px;text-align:right;color:#555">' + planned + '枚</td>';
     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:' + diffColor + '">' + diffDisp
@@ -2060,18 +2050,8 @@ function renderGapMobile() {
     anyRow = true;
     var gap = actual - predicted;
     var gapColor = gap === 0 ? '#888' : (gap > 0 ? '#1565c0' : '#e65100');
-    var absGap = Math.abs(gap);
-    var gapBoxes = Math.floor(absGap / p.perBox);
-    var gapRem = absGap % p.perBox;
-    var gapBags = p.perBag > 0 ? Math.floor(gapRem / p.perBag) : 0;
-    var gapRemPieces = p.perBag > 0 ? gapRem % p.perBag : gapRem;
     var sign = gap > 0 ? '+' : '-';
-    var gapDisp = gap === 0 ? '±0' : sign;
-    if (gap !== 0) {
-      if (gapBoxes > 0) gapDisp += gapBoxes + '箱';
-      if (gapBags > 0) gapDisp += gapBags + '袋';
-      if (gapRemPieces > 0 || (gapBoxes === 0 && gapBags === 0)) gapDisp += gapRemPieces + '枚';
-    }
+    var gapDisp = gap === 0 ? '±0' : sign + formatBoxBag(gap, p).str;
     html += '<tr style="border-top:1px solid #e0e0e0">';
     html += '<td style="padding:4px 6px;font-weight:700">' + (p.short || p.name) + '</td>';
     html += '<td style="padding:4px 6px;text-align:right">' + predicted + '枚</td>';
@@ -2180,7 +2160,7 @@ function reflectRoomToDaily(silent) {
       if (state[currentFloor][p.id].dailyUse !== totals[p.id]) changed = true;
       state[currentFloor][p.id].dailyUse = totals[p.id];
     } else {
-      const ov = totals[p.id] > 0 ? totals[p.id] * BATHS_PER_WEEK + p.perBag : undefined;
+      const ov = totals[p.id] > 0 ? totals[p.id] * BATHS_PER_WEEK : undefined;
       if (state[currentFloor][p.id].weeklyOverride !== ov) changed = true;
       state[currentFloor][p.id].weeklyOverride = ov;
     }
