@@ -792,10 +792,19 @@ function fbInitLoad(db) {
 }
 
 if (FB_ENABLED) {
-  firebase.initializeApp(FIREBASE_CONFIG);
-  firebase.auth().signInAnonymously()
-    .then(function() { fbInitLoad(firebase.database()); })
-    .catch(function(e) { console.warn('Firebase 認証エラー:', e); });
+  // CDNが読めない・初期化に失敗した場合でもアプリ本体（端末内データでの動作）は止めない
+  if (typeof firebase === 'undefined') {
+    console.warn('Firebase を読み込めませんでした。端末内データのみで動作します。');
+  } else {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      firebase.auth().signInAnonymously()
+        .then(function() { fbInitLoad(firebase.database()); })
+        .catch(function(e) { console.warn('Firebase 認証エラー:', e); });
+    } catch(e) {
+      console.warn('Firebase 初期化エラー:', e);
+    }
+  }
 }
 // ===== Firebase 設定ここまで =====
 
