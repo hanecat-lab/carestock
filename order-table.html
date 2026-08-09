@@ -2,304 +2,1061 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>注文管理表</title>
+
 <style>
+/* =========================================================
+   A4 LANDSCAPE
+========================================================= */
+
 @page {
-  size: 297mm 210mm;
+  size: A4 landscape;
   margin: 5mm;
 }
-* { margin: 0; padding: 0; box-sizing: border-box; }
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
 body {
-  font-family: 'Noto Sans CJK JP', 'Noto Sans JP', 'IPAPGothic', sans-serif;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family:
+    'Noto Sans CJK JP',
+    'Noto Sans JP',
+    'IPAPGothic',
+    sans-serif;
+
   font-size: 7px;
   color: #111;
   background: #fff;
-  line-height: 1.3;
+  line-height: 1.1;
 }
+
+/* =========================================================
+   PAGE
+   A4: 297 × 210mm
+   margin: 5mm
+   usable: 287 × 200mm
+========================================================= */
+
 .page {
+  width: 287mm;
+  height: 200mm;
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
   page-break-after: always;
 }
+
 .page:last-child {
   page-break-after: auto;
 }
+
+/* =========================================================
+   TITLE
+========================================================= */
+
 .page-title {
+  width: 287mm;
+  height: 8mm;
+
+  display: flex;
+  align-items: center;
+
+  border-bottom: 1.5px solid #333;
+
+  padding: 0 1mm;
+
+  font-weight: 700;
+  line-height: 1;
+}
+
+.title-note {
+  flex: 1;
+
+  text-align: left;
+
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.title-main {
+  flex: 0 0 auto;
+
   text-align: center;
+
   font-size: 11px;
   font-weight: 700;
-  border-bottom: 1.5px solid #333;
-  padding-bottom: 2mm;
-  margin-bottom: 0;
+
+  white-space: nowrap;
 }
+
+.title-space {
+  flex: 1;
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+
 table {
   border-collapse: collapse;
-  width: 100%;
+  border-spacing: 0;
+
+  width: 287mm;
+  max-width: 287mm;
+
   table-layout: fixed;
 }
-th, td {
+
+th,
+td {
   border: 0.5px solid #888;
   vertical-align: top;
 }
-.col-cat      { width: 10mm; }
-.col-product  { width: 30mm; }
-.col-week-l   { width: 15.2mm; }
-.col-week-r   { width: 15.2mm; }
-tbody tr td { border-top: 0.8px solid #666; }
-.cat-start td, .cat-start th { border-top: 2px solid #000 !important; }
+
+/* =========================================================
+   COLUMN WIDTH
+========================================================= */
+
+.col-cat {
+  width: 10mm;
+}
+
+.col-product {
+  width: 30mm;
+}
+
+/*
+  8週間 × 2列
+
+  10
+  + 30
+  + 15.44 × 16
+  ≒ 287mm
+*/
+
+.col-week-l,
+.col-week-r {
+  width: 15.44mm;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+thead tr {
+  height: 9mm;
+}
+
+thead th {
+  height: 9mm;
+  vertical-align: middle;
+}
+
+.week-th {
+  height: 9mm;
+
+  padding: 1px;
+
+  text-align: center;
+  vertical-align: middle;
+
+  font-size: 6px;
+  font-weight: 700;
+
+  background: #fff;
+}
+
+.week-slash {
+  display: block;
+
+  height: 3mm;
+
+  font-size: 13px;
+  line-height: 1;
+
+  color: #888;
+}
+
+.week-label {
+  display: flex;
+
+  justify-content: space-around;
+  align-items: center;
+
+  font-size: 7px;
+  font-weight: 700;
+
+  color: #555;
+}
+
+/* =========================================================
+   WEEK SEPARATOR
+========================================================= */
+
+.week-sep {
+  border-left: 3px solid #000 !important;
+}
+
+.order-sep {
+  border-left: 0.8px solid #555 !important;
+}
+
+/* =========================================================
+   BODY ROW
+========================================================= */
+
+tbody tr {
+  height: 11mm;
+}
+
+tbody tr td {
+  height: 11mm;
+
+  border-top: 0.8px solid #666;
+}
+
+.cat-start td,
+.cat-start th {
+  border-top: 2px solid #000 !important;
+}
+
+/* =========================================================
+   CATEGORY
+========================================================= */
+
 .cat-td {
   writing-mode: vertical-rl;
   text-orientation: mixed;
+
   text-align: center;
   vertical-align: middle;
-  font-size: 10px;
+
+  font-size: 9px;
   font-weight: 700;
-  padding: 2px 1px;
-  border-color: #555;
-}
-.week-sep  { border-left: 3px solid #000 !important; }
-.order-sep { border-left: 0.8px solid #555 !important; }
-.week-th {
-  text-align: center;
-  font-size: 6.5px;
-  font-weight: 700;
-  background: #fff;
+
   padding: 1px;
-}
-.week-num {
-  display: block;
-  font-size: 7.5px;
-  font-weight: 900;
-  letter-spacing: -0.3px;
-}
-.week-date-blank {
-  display: inline-block;
-  border-bottom: 0.7px solid #000;
-  width: 26mm;
-  height: 7px;
-  margin-top: 1px;
-}
-.sub-th {
-  background: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-  padding: 1px 0;
-  color: #000;
-  border-top: 0.5px solid #555;
-}
-.product-col {
-  background: #fff;
-  vertical-align: middle;
-  padding: 6px 3px;
-}
-.product-label {
-  font-size: 15px;
-  font-weight: 900;
-  color: #000;
-  text-align: center;
-}
-.product-name {
-  font-size: 9.6px;
-  color: #000;
-  margin-top: 10px;
-  text-align: right;
-}
-.product-spec {
-  font-size: 5.5px;
-  color: #555;
-  margin-top: 0.5px;
-}
-.section-td {
-  background: #fff;
-  font-weight: 700;
-  font-size: 7.5px;
-  text-align: center;
-  padding: 1px 2px;
-  color: #000;
+
   border-color: #555;
 }
-.data-cell {
-  padding: 8px 1px;
+
+/* =========================================================
+   PRODUCT
+========================================================= */
+
+.product-col {
+  width: 30mm;
+  height: 11mm;
+
+  background: #fff;
+
+  vertical-align: middle;
+
+  padding: 1px 2px;
+
+  overflow: hidden;
 }
-.cell-row {
-  display: flex;
-  align-items: center;
-  gap: 1px;
+
+.product-label {
+  font-size: 13px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  color: #000;
+
+  text-align: center;
+
+  white-space: nowrap;
+}
+
+.product-name {
   font-size: 6.5px;
+  line-height: 1;
+
+  color: #000;
+
+  margin-top: 1.2mm;
+
+  text-align: center;
+
+  white-space: nowrap;
+
+  overflow: hidden;
 }
-.cell-row + .cell-row {
-  margin-top: 14px;
+
+.product-spec {
+  font-size: 4.5px;
+  line-height: 1;
+
+  color: #555;
+
+  margin-top: 0.4mm;
+
+  text-align: center;
+
+  white-space: nowrap;
+
+  overflow: hidden;
 }
-.check-o {
-  flex-shrink: 0;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 0.7px solid #000;
+
+/* =========================================================
+   STOCK CELL
+========================================================= */
+
+.stock-cell {
+  width: 15.44mm;
+  height: 11mm;
+
+  padding: 0.8mm 1px;
+
+  vertical-align: middle !important;
+
+  position: relative;
 }
-.bl {
-  display: inline-block;
-  border-bottom: 0.5px solid #000;
-  height: 9px;
+
+.stock-space {
+  width: 100%;
+  height: 7.5mm;
 }
-.bl-xs { width: 14px; }
-.bl-s  { width: 11px; }
-.lbl { color: #000; font-size: 5.5px; }
+
+/* =========================================================
+   ORDER CELL
+========================================================= */
+
+.order-cell {
+  width: 15.44mm;
+  height: 11mm;
+
+  padding: 0.8mm 1px;
+
+  vertical-align: middle !important;
+}
+
+/* =========================================================
+   SIGN ROW
+========================================================= */
+
+.sign-row {
+  height: 10mm !important;
+}
+
+.sign-row td {
+  height: 10mm !important;
+}
+
+.sign-label {
+  vertical-align: middle !important;
+
+  text-align: center;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   SCREEN
+========================================================= */
 
 @media screen {
-  body { background: #e0e0e0; padding: 10px; }
-  .page {
-    background: #fff;
-    margin-bottom: 20px;
-    padding: 5mm;
-    width: 297mm;
-    min-height: 210mm;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+
+  body {
+    background: #e0e0e0;
+
+    padding: 10px;
   }
+
+  .page {
+    width: 297mm;
+    height: 210mm;
+
+    padding: 5mm;
+
+    margin: 0 auto 20px auto;
+
+    background: #fff;
+
+    box-shadow:
+      0 2px 8px rgba(0,0,0,0.2);
+
+    overflow: hidden;
+  }
+
   .print-note {
-    background: #fff3cd;
-    border: 1px solid #f0ad4e;
-    border-radius: 4px;
+    width: 297mm;
+
     padding: 8px 14px;
     margin-bottom: 14px;
+
+    background: #fff3cd;
+
+    border: 1px solid #f0ad4e;
+    border-radius: 4px;
+
     font-size: 13px;
+
     color: #333;
-    width: 297mm;
   }
 }
+
+/* =========================================================
+   PRINT
+========================================================= */
+
 @media print {
-  .print-note { display: none; }
-  html { zoom: 0.91; }
+
+  html,
+  body {
+    width: 297mm;
+    height: 210mm;
+
+    margin: 0;
+    padding: 0;
+
+    background: #fff;
+  }
+
+  .print-note,
+  #appVerBadge {
+    display: none !important;
+  }
+
+  .page {
+    width: 287mm;
+    height: 200mm;
+
+    margin: 0;
+    padding: 0;
+
+    overflow: hidden;
+
+    page-break-after: always;
+  }
+
+  .page:last-child {
+    page-break-after: auto;
+  }
+
+  table {
+    width: 287mm;
+    max-width: 287mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 </style>
 </head>
+
 <body>
-<div class="print-note">⚠️ 印刷時は必ず <strong>横向き（ランドスケープ）</strong> を選択してください。</div>
+
+<!-- =======================================================
+     PRINT NOTE
+======================================================= -->
+
+<div class="print-note">
+  ⚠️ 印刷時は必ず
+  <strong>A4・横向き（ランドスケープ）</strong>
+  を選択してください。
+  印刷倍率は<strong>100%</strong>を推奨します。
+</div>
+
 <div id="root"></div>
+
 <script>
-var _APP_V = '1785104691'; // AUTO_VERSION
+
+/* =========================================================
+   APP VERSION
+========================================================= */
+
+var _APP_V = '1785104691';
+
 (function(){
+
   var p = new URLSearchParams(location.search);
-  if (p.get('v') !== _APP_V) { p.set('v', _APP_V); location.replace(location.pathname + '?' + p.toString()); }
+
+  if (p.get('v') !== _APP_V) {
+
+    p.set('v', _APP_V);
+
+    location.replace(
+      location.pathname + '?' + p.toString()
+    );
+
+  }
+
 })();
-/* ===== バージョン表示（左下・印刷時非表示） ===== */
+
+/* =========================================================
+   VERSION BADGE
+========================================================= */
+
 (function(){
-  var st=document.createElement('style');
-  st.textContent='@media print{#appVerBadge{display:none!important}}';
+
+  var st = document.createElement('style');
+
+  st.textContent =
+    '@media print {' +
+      '#appVerBadge {' +
+        'display:none!important;' +
+      '}' +
+    '}';
+
   document.head.appendChild(st);
-  var v=document.createElement('div');
-  v.id='appVerBadge';
-  var t=parseInt(_APP_V,10);
-  v.textContent='ver.'+(t>0?new Date(t*1000).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'-');
-  v.style.cssText='position:fixed;bottom:4px;left:6px;font-size:10px;color:#888;opacity:.75;z-index:9998;pointer-events:none;';
+
+  var v = document.createElement('div');
+
+  v.id = 'appVerBadge';
+
+  var t = parseInt(_APP_V, 10);
+
+  v.textContent =
+    'ver.' +
+    (
+      t > 0
+        ? new Date(t * 1000).toLocaleString(
+            'ja-JP',
+            {
+              month: 'numeric',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            }
+          )
+        : '-'
+    );
+
+  v.style.cssText =
+    'position:fixed;' +
+    'bottom:4px;' +
+    'left:6px;' +
+    'font-size:10px;' +
+    'color:#888;' +
+    'opacity:.75;' +
+    'z-index:9998;' +
+    'pointer-events:none;';
+
   document.body.appendChild(v);
+
 })();
+
+/* =========================================================
+   PRODUCTS
+========================================================= */
+
 var PRODUCTS = [
-  { label: '白小',   name: '尿取りパッド（2回）',  spec: '1箱144枚・1袋48枚',  cat: 'pad' },
-  { label: '白大',   name: '尿取りパッド（4回）',  spec: '1箱224枚・1袋28枚',  cat: 'pad' },
-  { label: 'グレー', name: '長時間安心パッド',     spec: '1箱144枚・1袋36枚',  cat: 'pad' },
-  { label: '緑',     name: '夜パッド ふつう',      spec: '1箱120枚・1袋30枚',  cat: 'pad' },
-  { label: '青',     name: '夜パッド 多い',        spec: '1箱90枚・1袋30枚',   cat: 'pad' },
-  { label: '特多',   name: '夜パッド 特多',        spec: '1箱80枚・1袋20枚',   cat: 'pad' },
-  { label: '10回',   name: '夜パッド 10回',        spec: '1箱64枚・1袋16枚',   cat: 'pad' },
-  { label: '12回',   name: '夜パッド 12回',        spec: '1箱56枚・1袋14枚',   cat: 'pad' },
-  { label: 'M〜L',   name: 'フィットパンツ M〜L',  spec: '1箱66枚・1袋22枚',   cat: 'pants' },
-  { label: 'L〜LL',  name: 'フィットパンツ L〜LL', spec: '1箱60枚・1袋20枚',   cat: 'pants' },
-  { label: 'S',      name: 'テープ止め S',         spec: '1箱66枚・1袋22枚',   cat: 'tape' },
-  { label: 'M',      name: 'テープ止め M',         spec: '1箱80枚・1袋20枚',   cat: 'tape' },
-  { label: 'L',      name: 'テープ止め L',         spec: '1箱80枚・1袋20枚',   cat: 'tape' },
-  { label: '吸水シート', name: '吸水シート',           spec: '1箱576枚・1袋72枚',  cat: 'sheet' },
+
+  {
+    label: '白小',
+    name: '尿取りパッド（2回）',
+    spec: '1箱144枚・1袋48枚',
+    cat: 'pad'
+  },
+
+  {
+    label: '白大',
+    name: '尿取りパッド（4回）',
+    spec: '1箱224枚・1袋28枚',
+    cat: 'pad'
+  },
+
+  {
+    label: 'グレー',
+    name: '長時間安心パッド',
+    spec: '1箱144枚・1袋36枚',
+    cat: 'pad'
+  },
+
+  {
+    label: '緑',
+    name: '夜パッド ふつう',
+    spec: '1箱120枚・1袋30枚',
+    cat: 'pad'
+  },
+
+  {
+    label: '青',
+    name: '夜パッド 多い',
+    spec: '1箱90枚・1袋30枚',
+    cat: 'pad'
+  },
+
+  {
+    label: '特多',
+    name: '夜パッド 特多',
+    spec: '1箱80枚・1袋20枚',
+    cat: 'pad'
+  },
+
+  {
+    label: '10回',
+    name: '夜パッド 10回',
+    spec: '1箱64枚・1袋16枚',
+    cat: 'pad'
+  },
+
+  {
+    label: '12回',
+    name: '夜パッド 12回',
+    spec: '1箱56枚・1袋14枚',
+    cat: 'pad'
+  },
+
+  {
+    label: 'M〜L',
+    name: 'フィットパンツ M〜L',
+    spec: '1箱66枚・1袋22枚',
+    cat: 'pants'
+  },
+
+  {
+    label: 'L〜LL',
+    name: 'フィットパンツ L〜LL',
+    spec: '1箱60枚・1袋20枚',
+    cat: 'pants'
+  },
+
+  {
+    label: 'S',
+    name: 'テープ止め S',
+    spec: '1箱66枚・1袋22枚',
+    cat: 'tape'
+  },
+
+  {
+    label: 'M',
+    name: 'テープ止め M',
+    spec: '1箱80枚・1袋20枚',
+    cat: 'tape'
+  },
+
+  {
+    label: 'L',
+    name: 'テープ止め L',
+    spec: '1箱80枚・1袋20枚',
+    cat: 'tape'
+  },
+
+  {
+    label: '吸水シート',
+    name: '吸水シート',
+    spec: '1箱576枚・1袋72枚',
+    cat: 'sheet'
+  }
+
 ];
 
+/* =========================================================
+   SECTIONS
+========================================================= */
+
 var SECTIONS = [
-  { cat: 'pad',   label: '尿取りパッド' },
-  { cat: 'pants', label: 'リハパン' },
-  { cat: 'tape',  label: 'テープ止め' },
-  { cat: 'sheet', label: 'ユニチャーム' },
+
+  {
+    cat: 'pad',
+    label: '尿取りパッド'
+  },
+
+  {
+    cat: 'pants',
+    label: 'リハパン'
+  },
+
+  {
+    cat: 'tape',
+    label: 'テープ止め'
+  },
+
+  {
+    cat: 'sheet',
+    label: 'ユニチャーム'
+  }
+
 ];
+
+/* =========================================================
+   WEEKS
+========================================================= */
 
 var WEEKS = 8;
 
+/* =========================================================
+   STOCK CELL
+========================================================= */
+
 function stockCell() {
-  return '<td class="week-sep" style="padding:5px 4px 4px;vertical-align:top;position:relative">'
-    + '<div style="height:24px"></div>'
-    + '</td>';
+
+  return (
+    '<td class="week-sep stock-cell">' +
+      '<div class="stock-space"></div>' +
+    '</td>'
+  );
+
 }
+
+/* =========================================================
+   ORDER CELL
+========================================================= */
 
 function orderCell() {
-  return '<td class="order-sep" style="vertical-align:middle;padding:10px 3px"></td>';
+
+  return (
+    '<td class="order-sep order-cell"></td>'
+  );
+
 }
 
-function buildPage() {
-  // カテゴリごとの商品数を集計
-  var catCount = {};
-  PRODUCTS.forEach(function(p) { catCount[p.cat] = (catCount[p.cat] || 0) + 1; });
+/* =========================================================
+   FIND SECTION
+========================================================= */
 
-  var html = '<div class="page">';
-  html += '<div class="page-title" style="display:flex;align-items:baseline">'
-        + '<span style="font-size:10px;font-weight:700;flex:1;text-align:left">在庫の箱数は「正」の字で、袋数は数字を〇で囲んで記入</span>'
-        + '<span>尿取りパッド注文表</span>'
-        + '<span style="flex:1"></span>'
-        + '</div>';
+function getSection(cat) {
+
+  for (
+    var i = 0;
+    i < SECTIONS.length;
+    i++
+  ) {
+
+    if (SECTIONS[i].cat === cat) {
+      return SECTIONS[i];
+    }
+
+  }
+
+  return {
+    cat: cat,
+    label: ''
+  };
+
+}
+
+/* =========================================================
+   BUILD PAGE
+========================================================= */
+
+function buildPage() {
+
+  /* -----------------------------------------
+     カテゴリ別商品数
+  ----------------------------------------- */
+
+  var catCount = {};
+
+  PRODUCTS.forEach(function(p){
+
+    catCount[p.cat] =
+      (catCount[p.cat] || 0) + 1;
+
+  });
+
+  /* -----------------------------------------
+     PAGE
+  ----------------------------------------- */
+
+  var html =
+    '<div class="page">';
+
+  /* -----------------------------------------
+     TITLE
+  ----------------------------------------- */
+
+  html +=
+    '<div class="page-title">' +
+
+      '<span class="title-note">' +
+        '在庫の箱数は「正」の字で、袋数は数字を〇で囲んで記入' +
+      '</span>' +
+
+      '<span class="title-main">' +
+        '尿取りパッド注文表' +
+      '</span>' +
+
+      '<span class="title-space"></span>' +
+
+    '</div>';
+
+  /* -----------------------------------------
+     TABLE
+  ----------------------------------------- */
+
   html += '<table>';
 
-  // colgroup
-  html += '<colgroup><col class="col-cat"><col class="col-product">';
-  for (var i = 0; i < WEEKS; i++) {
-    html += '<col class="col-week-l"><col class="col-week-r">';
+  /* -----------------------------------------
+     COLGROUP
+  ----------------------------------------- */
+
+  html += '<colgroup>';
+
+  html += '<col class="col-cat">';
+  html += '<col class="col-product">';
+
+  for (
+    var i = 0;
+    i < WEEKS;
+    i++
+  ) {
+
+    html += '<col class="col-week-l">';
+    html += '<col class="col-week-r">';
+
   }
+
   html += '</colgroup>';
 
-  // thead row1
-  html += '<thead><tr>';
-  html += '<th style="font-size:7px;font-weight:700;text-align:center;vertical-align:middle;padding:2px"></th>';
-  html += '<th style="font-size:12px;font-weight:700;text-align:center;vertical-align:middle;padding:2px">商品</th>';
-  for (var w = 1; w <= WEEKS; w++) {
-    html += '<th class="week-th week-sep" colspan="2" style="padding:1px">'
-          + '<span style="font-size:16px;color:#888">/</span>'
-          + '<div style="display:flex;justify-content:space-around;font-size:8px;font-weight:700;color:#555;margin-top:1px">'
-          + '<span>在庫</span><span>注文</span>'
-          + '</div>'
-          + '</th>';
-  }
-  html += '</tr></thead>';
+  /* =====================================================
+     THEAD
+  ===================================================== */
 
-  // tbody
-  html += '<tbody>';
-  var lastCat = null;
-  PRODUCTS.forEach(function(p) {
-    html += '<tr' + (p.cat !== lastCat ? ' class="cat-start"' : '') + '>';
-    if (p.cat !== lastCat) {
-      var sec = SECTIONS.filter(function(s) { return s.cat === p.cat; })[0];
-      html += '<td class="cat-td" rowspan="' + catCount[p.cat] + '">' + sec.label + '</td>';
-      lastCat = p.cat;
-    }
-    html += '<td class="product-col">'
-          + '<div class="product-label">' + p.label + '</div>'
-          + (p.name !== p.label ? '<div class="product-name">' + p.name + '</div>' : '')
-          + '</td>';
-    for (var j = 0; j < WEEKS; j++) {
-      html += stockCell();
-      html += orderCell();
-    }
-    html += '</tr>';
-  });
-  // サイン行
-  html += '<tr style="height:14mm">';
-  html += '<td></td>';
-  html += '<td style="vertical-align:middle;text-align:center;font-size:15px;font-weight:700">搬入確認者</td>';
-  for (var s = 0; s < WEEKS; s++) {
-    html += '<td class="week-sep" colspan="2"></td>';
+  html += '<thead>';
+
+  html += '<tr>';
+
+  /* -----------------------------------------
+     CATEGORY HEADER
+  ----------------------------------------- */
+
+  html +=
+    '<th style="' +
+      'font-size:7px;' +
+      'font-weight:700;' +
+      'text-align:center;' +
+      'vertical-align:middle;' +
+      'padding:2px;' +
+    '">' +
+    '</th>';
+
+  /* -----------------------------------------
+     PRODUCT HEADER
+  ----------------------------------------- */
+
+  html +=
+    '<th style="' +
+      'font-size:12px;' +
+      'font-weight:700;' +
+      'text-align:center;' +
+      'vertical-align:middle;' +
+      'padding:2px;' +
+    '">' +
+      '商品' +
+    '</th>';
+
+  /* -----------------------------------------
+     8 WEEKS
+  ----------------------------------------- */
+
+  for (
+    var w = 1;
+    w <= WEEKS;
+    w++
+  ) {
+
+    html +=
+      '<th ' +
+        'class="week-th week-sep" ' +
+        'colspan="2"' +
+      '>' +
+
+        '<span class="week-slash">' +
+          '/' +
+        '</span>' +
+
+        '<div class="week-label">' +
+          '<span>在庫</span>' +
+          '<span>注文</span>' +
+        '</div>' +
+
+      '</th>';
+
   }
+
   html += '</tr>';
-  html += '</tbody></table>';
+
+  html += '</thead>';
+
+  /* =====================================================
+     TBODY
+  ===================================================== */
+
+  html += '<tbody>';
+
+  var lastCat = null;
+
+  PRODUCTS.forEach(function(p){
+
+    var newCategory =
+      p.cat !== lastCat;
+
+    html +=
+      '<tr' +
+      (
+        newCategory
+          ? ' class="cat-start"'
+          : ''
+      ) +
+      '>';
+
+    /* -----------------------------------------
+       CATEGORY
+    ----------------------------------------- */
+
+    if (newCategory) {
+
+      var section =
+        getSection(p.cat);
+
+      html +=
+        '<td ' +
+          'class="cat-td" ' +
+          'rowspan="' +
+            catCount[p.cat] +
+          '"' +
+        '>' +
+          section.label +
+        '</td>';
+
+      lastCat = p.cat;
+
+    }
+
+    /* -----------------------------------------
+       PRODUCT
+    ----------------------------------------- */
+
+    html +=
+      '<td class="product-col">';
+
+    html +=
+      '<div class="product-label">' +
+        p.label +
+      '</div>';
+
+    if (
+      p.name &&
+      p.name !== p.label
+    ) {
+
+      html +=
+        '<div class="product-name">' +
+          p.name +
+        '</div>';
+
+    }
+
+    if (p.spec) {
+
+      html +=
+        '<div class="product-spec">' +
+          p.spec +
+        '</div>';
+
+    }
+
+    html += '</td>';
+
+    /* -----------------------------------------
+       8 WEEKS × 2 COLUMNS
+    ----------------------------------------- */
+
+    for (
+      var j = 0;
+      j < WEEKS;
+      j++
+    ) {
+
+      html += stockCell();
+
+      html += orderCell();
+
+    }
+
+    html += '</tr>';
+
+  });
+
+  /* =====================================================
+     SIGN ROW
+  ===================================================== */
+
+  html +=
+    '<tr class="sign-row">';
+
+  html +=
+    '<td></td>';
+
+  html +=
+    '<td class="sign-label">' +
+      '搬入確認者' +
+    '</td>';
+
+  for (
+    var s = 0;
+    s < WEEKS;
+    s++
+  ) {
+
+    html +=
+      '<td ' +
+        'class="week-sep" ' +
+        'colspan="2"' +
+      '></td>';
+
+  }
+
+  html += '</tr>';
+
+  /* -----------------------------------------
+     END TABLE
+  ----------------------------------------- */
+
+  html += '</tbody>';
+  html += '</table>';
+
+  /* -----------------------------------------
+     END PAGE
+  ----------------------------------------- */
+
   html += '</div>';
+
   return html;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('root').innerHTML =
-    buildPage();
-});
+/* =========================================================
+   DOM READY
+========================================================= */
+
+document.addEventListener(
+  'DOMContentLoaded',
+  function(){
+
+    var root =
+      document.getElementById('root');
+
+    if (!root) {
+      return;
+    }
+
+    root.innerHTML =
+      buildPage();
+
+  }
+);
+
 </script>
+
 </body>
 </html>
