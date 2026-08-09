@@ -377,8 +377,8 @@ tbody tr td {
   }
 
   .page {
-    width: 297mm;
-    height: 210mm;
+    width: 287mm;
+    height: 200mm;
 
     padding: 5mm;
 
@@ -413,17 +413,27 @@ tbody tr td {
    PRINT
 ========================================================= */
 
-<style>
-
 @media print {
 
-  html,
+  @page {
+    size: A4 landscape;
+    margin: 5mm;
+  }
+
+  html {
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0;
+  }
+
   body {
-    width: 297mm;
-    height: 210mm;
+    width: 100%;
+    height: auto;
     margin: 0;
     padding: 0;
     background: #fff;
+    overflow: hidden;
   }
 
   .print-note,
@@ -431,15 +441,30 @@ tbody tr td {
     display: none !important;
   }
 
-  .page {
+  #root {
     width: 287mm;
     height: 200mm;
     margin: 0;
     padding: 0;
     overflow: hidden;
+  }
 
+  .page {
+    width: 287mm;
+    height: 200mm;
+
+    margin: 0;
+    padding: 0;
+
+    overflow: hidden;
+
+    page-break-before: auto;
     page-break-after: auto;
+    page-break-inside: avoid;
+
+    break-before: auto;
     break-after: auto;
+    break-inside: avoid;
   }
 
   .page:last-child {
@@ -450,6 +475,25 @@ tbody tr td {
   table {
     width: 287mm;
     max-width: 287mm;
+
+    margin: 0;
+    padding: 0;
+
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tbody {
+    display: table-row-group;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 
   * {
@@ -457,12 +501,7 @@ tbody tr td {
     print-color-adjust: exact;
   }
 }
-
-</style>
-</head>
-
-<body>
-
+   
 <!-- =======================================================
      PRINT NOTE
 ======================================================= -->
