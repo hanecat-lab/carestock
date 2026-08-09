@@ -6,8 +6,9 @@
 <title>注文管理表</title>
 
 <style>
+
 /* =========================================================
-   A4 LANDSCAPE
+   A4 横向き
 ========================================================= */
 
 @page {
@@ -15,16 +16,21 @@
   margin: 5mm;
 }
 
+
+/* =========================================================
+   RESET
+========================================================= */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html,
-body {
+html {
   width: 100%;
-  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
@@ -37,30 +43,35 @@ body {
   font-size: 7px;
   color: #111;
   background: #fff;
+
   line-height: 1.1;
+
+  margin: 0;
+  padding: 0;
 }
+
 
 /* =========================================================
    PAGE
-   A4: 297 × 210mm
-   margin: 5mm
-   usable: 287 × 200mm
+   A4 297 × 210mm
+   余白5mm
+   実使用領域 287 × 200mm
 ========================================================= */
 
 .page {
   width: 287mm;
   height: 200mm;
+
   margin: 0;
   padding: 0;
+
   overflow: hidden;
+
   page-break-after: auto;
   break-after: auto;
 }
 
-.page:last-child {
-  page-break-after: auto;
-  break-after: auto;
-}
+
 /* =========================================================
    TITLE
 ========================================================= */
@@ -76,7 +87,6 @@ body {
 
   padding: 0 1mm;
 
-  font-weight: 700;
   line-height: 1;
 }
 
@@ -86,6 +96,8 @@ body {
   text-align: left;
 
   font-size: 8px;
+  font-weight: 700;
+
   white-space: nowrap;
 }
 
@@ -104,25 +116,29 @@ body {
   flex: 1;
 }
 
+
 /* =========================================================
    TABLE
 ========================================================= */
 
 table {
-  border-collapse: collapse;
-  border-spacing: 0;
-
   width: 287mm;
   max-width: 287mm;
 
+  border-collapse: collapse;
+  border-spacing: 0;
+
   table-layout: fixed;
+
+  margin: 0;
+  padding: 0;
 }
 
 th,
 td {
   border: 0.5px solid #888;
-  vertical-align: top;
 }
+
 
 /* =========================================================
    COLUMN WIDTH
@@ -136,19 +152,11 @@ td {
   width: 30mm;
 }
 
-/*
-  8週間 × 2列
-
-  10
-  + 30
-  + 15.44 × 16
-  ≒ 287mm
-*/
-
 .col-week-l,
 .col-week-r {
   width: 15.44mm;
 }
+
 
 /* =========================================================
    HEADER
@@ -160,7 +168,9 @@ thead tr {
 
 thead th {
   height: 9mm;
+
   vertical-align: middle;
+  text-align: center;
 }
 
 .week-th {
@@ -168,8 +178,8 @@ thead th {
 
   padding: 1px;
 
-  text-align: center;
   vertical-align: middle;
+  text-align: center;
 
   font-size: 6px;
   font-weight: 700;
@@ -200,6 +210,7 @@ thead th {
   color: #555;
 }
 
+
 /* =========================================================
    WEEK SEPARATOR
 ========================================================= */
@@ -212,24 +223,29 @@ thead th {
   border-left: 0.8px solid #555 !important;
 }
 
+
 /* =========================================================
-   BODY ROW
+   PRODUCT ROW
+   14商品 × 11.8mm
 ========================================================= */
 
 tbody tr {
-  height: 11mm;
+  height: 11.8mm;
 }
 
 tbody tr td {
-  height: 11mm;
+  height: 11.8mm;
 
   border-top: 0.8px solid #666;
+
+  vertical-align: middle;
 }
 
 .cat-start td,
 .cat-start th {
   border-top: 2px solid #000 !important;
 }
+
 
 /* =========================================================
    CATEGORY
@@ -250,25 +266,27 @@ tbody tr td {
   border-color: #555;
 }
 
+
 /* =========================================================
    PRODUCT
 ========================================================= */
 
 .product-col {
   width: 30mm;
-  height: 12mm;
+  height: 11.8mm;
 
   background: #fff;
 
   vertical-align: middle;
 
-  padding: 1px 2px;
+  padding: 0.8mm 2px;
 
   overflow: hidden;
 }
 
 .product-label {
   font-size: 13px;
+
   line-height: 1;
 
   font-weight: 900;
@@ -282,6 +300,7 @@ tbody tr td {
 
 .product-name {
   font-size: 6.5px;
+
   line-height: 1;
 
   color: #000;
@@ -297,6 +316,7 @@ tbody tr td {
 
 .product-spec {
   font-size: 4.5px;
+
   line-height: 1;
 
   color: #555;
@@ -310,13 +330,14 @@ tbody tr td {
   overflow: hidden;
 }
 
+
 /* =========================================================
    STOCK CELL
 ========================================================= */
 
 .stock-cell {
   width: 15.44mm;
-  height: 12mm;
+  height: 11.8mm;
 
   padding: 0.8mm 1px;
 
@@ -327,8 +348,9 @@ tbody tr td {
 
 .stock-space {
   width: 100%;
-  height: 8.5mm;
+  height: 8.2mm;
 }
+
 
 /* =========================================================
    ORDER CELL
@@ -336,12 +358,13 @@ tbody tr td {
 
 .order-cell {
   width: 15.44mm;
-  height: 12mm;
+  height: 11.8mm;
 
   padding: 0.8mm 1px;
 
   vertical-align: middle !important;
 }
+
 
 /* =========================================================
    SIGN ROW
@@ -364,6 +387,7 @@ tbody tr td {
   font-weight: 700;
 }
 
+
 /* =========================================================
    SCREEN
 ========================================================= */
@@ -377,30 +401,32 @@ tbody tr td {
   }
 
   .page {
-    width: 287mm;
-    height: 200mm;
-
-    padding: 5mm;
+    width: 297mm;
+    height: 210mm;
 
     margin: 0 auto 20px auto;
 
+    padding: 5mm;
+
     background: #fff;
+
+    overflow: hidden;
 
     box-shadow:
       0 2px 8px rgba(0,0,0,0.2);
-
-    overflow: hidden;
   }
 
   .print-note {
     width: 297mm;
 
     padding: 8px 14px;
+
     margin-bottom: 14px;
 
     background: #fff3cd;
 
     border: 1px solid #f0ad4e;
+
     border-radius: 4px;
 
     font-size: 13px;
@@ -408,6 +434,7 @@ tbody tr td {
     color: #333;
   }
 }
+
 
 /* =========================================================
    PRINT
@@ -423,6 +450,7 @@ tbody tr td {
   html {
     width: 100%;
     height: auto;
+
     margin: 0;
     padding: 0;
   }
@@ -430,9 +458,12 @@ tbody tr td {
   body {
     width: 100%;
     height: auto;
+
     margin: 0;
     padding: 0;
+
     background: #fff;
+
     overflow: hidden;
   }
 
@@ -444,9 +475,17 @@ tbody tr td {
   #root {
     width: 287mm;
     height: 200mm;
+
     margin: 0;
     padding: 0;
+
     overflow: hidden;
+
+    page-break-before: auto;
+    page-break-after: auto;
+
+    break-before: auto;
+    break-after: auto;
   }
 
   .page {
@@ -465,11 +504,6 @@ tbody tr td {
     break-before: auto;
     break-after: auto;
     break-inside: avoid;
-  }
-
-  .page:last-child {
-    page-break-after: auto;
-    break-after: auto;
   }
 
   table {
@@ -501,7 +535,14 @@ tbody tr td {
     print-color-adjust: exact;
   }
 }
-   
+
+</style>
+</head>
+
+
+<body>
+
+
 <!-- =======================================================
      PRINT NOTE
 ======================================================= -->
@@ -513,7 +554,13 @@ tbody tr td {
   印刷倍率は<strong>100%</strong>を推奨します。
 </div>
 
+
+<!-- =======================================================
+     ROOT
+======================================================= -->
+
 <div id="root"></div>
+
 
 <script>
 
@@ -521,23 +568,27 @@ tbody tr td {
    APP VERSION
 ========================================================= */
 
-var _APP_V = '1786319179';
+var _APP_V = '1785104691';
 
 (function(){
 
-  var p = new URLSearchParams(location.search);
+  var p =
+    new URLSearchParams(location.search);
 
   if (p.get('v') !== _APP_V) {
 
     p.set('v', _APP_V);
 
     location.replace(
-      location.pathname + '?' + p.toString()
+      location.pathname +
+      '?' +
+      p.toString()
     );
 
   }
 
 })();
+
 
 /* =========================================================
    VERSION BADGE
@@ -545,7 +596,8 @@ var _APP_V = '1786319179';
 
 (function(){
 
-  var st = document.createElement('style');
+  var st =
+    document.createElement('style');
 
   st.textContent =
     '@media print {' +
@@ -556,24 +608,35 @@ var _APP_V = '1786319179';
 
   document.head.appendChild(st);
 
-  var v = document.createElement('div');
+
+  var v =
+    document.createElement('div');
 
   v.id = 'appVerBadge';
 
-  var t = parseInt(_APP_V, 10);
+
+  var t =
+    parseInt(_APP_V, 10);
+
 
   v.textContent =
+    'ver.' +
     (
       t > 0
-        ? new Date(t * 1000).toLocaleString(
+        ? new Date(
+            t * 1000
+          ).toLocaleString(
             'ja-JP',
             {
               month: 'numeric',
               day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
             }
           )
         : '-'
     );
+
 
   v.style.cssText =
     'position:fixed;' +
@@ -585,9 +648,11 @@ var _APP_V = '1786319179';
     'z-index:9998;' +
     'pointer-events:none;';
 
+
   document.body.appendChild(v);
 
 })();
+
 
 /* =========================================================
    PRODUCTS
@@ -695,6 +760,7 @@ var PRODUCTS = [
 
 ];
 
+
 /* =========================================================
    SECTIONS
 ========================================================= */
@@ -723,11 +789,13 @@ var SECTIONS = [
 
 ];
 
+
 /* =========================================================
    WEEKS
 ========================================================= */
 
 var WEEKS = 8;
+
 
 /* =========================================================
    STOCK CELL
@@ -743,6 +811,7 @@ function stockCell() {
 
 }
 
+
 /* =========================================================
    ORDER CELL
 ========================================================= */
@@ -755,8 +824,9 @@ function orderCell() {
 
 }
 
+
 /* =========================================================
-   FIND SECTION
+   GET SECTION
 ========================================================= */
 
 function getSection(cat) {
@@ -768,7 +838,9 @@ function getSection(cat) {
   ) {
 
     if (SECTIONS[i].cat === cat) {
+
       return SECTIONS[i];
+
     }
 
   }
@@ -780,6 +852,7 @@ function getSection(cat) {
 
 }
 
+
 /* =========================================================
    BUILD PAGE
 ========================================================= */
@@ -787,7 +860,7 @@ function getSection(cat) {
 function buildPage() {
 
   /* -----------------------------------------
-     カテゴリ別商品数
+     カテゴリごとの商品数
   ----------------------------------------- */
 
   var catCount = {};
@@ -799,12 +872,14 @@ function buildPage() {
 
   });
 
+
   /* -----------------------------------------
      PAGE
   ----------------------------------------- */
 
   var html =
     '<div class="page">';
+
 
   /* -----------------------------------------
      TITLE
@@ -825,11 +900,13 @@ function buildPage() {
 
     '</div>';
 
+
   /* -----------------------------------------
      TABLE
   ----------------------------------------- */
 
   html += '<table>';
+
 
   /* -----------------------------------------
      COLGROUP
@@ -837,8 +914,12 @@ function buildPage() {
 
   html += '<colgroup>';
 
-  html += '<col class="col-cat">';
-  html += '<col class="col-product">';
+  html +=
+    '<col class="col-cat">';
+
+  html +=
+    '<col class="col-product">';
+
 
   for (
     var i = 0;
@@ -846,12 +927,17 @@ function buildPage() {
     i++
   ) {
 
-    html += '<col class="col-week-l">';
-    html += '<col class="col-week-r">';
+    html +=
+      '<col class="col-week-l">';
+
+    html +=
+      '<col class="col-week-r">';
 
   }
 
+
   html += '</colgroup>';
+
 
   /* =====================================================
      THEAD
@@ -860,6 +946,7 @@ function buildPage() {
   html += '<thead>';
 
   html += '<tr>';
+
 
   /* -----------------------------------------
      CATEGORY HEADER
@@ -875,6 +962,7 @@ function buildPage() {
     '">' +
     '</th>';
 
+
   /* -----------------------------------------
      PRODUCT HEADER
   ----------------------------------------- */
@@ -889,6 +977,7 @@ function buildPage() {
     '">' +
       '商品' +
     '</th>';
+
 
   /* -----------------------------------------
      8 WEEKS
@@ -911,17 +1000,22 @@ function buildPage() {
         '</span>' +
 
         '<div class="week-label">' +
+
           '<span>在庫</span>' +
+
           '<span>注文</span>' +
+
         '</div>' +
 
       '</th>';
 
   }
 
+
   html += '</tr>';
 
   html += '</thead>';
+
 
   /* =====================================================
      TBODY
@@ -929,12 +1023,15 @@ function buildPage() {
 
   html += '<tbody>';
 
+
   var lastCat = null;
+
 
   PRODUCTS.forEach(function(p){
 
     var newCategory =
       p.cat !== lastCat;
+
 
     html +=
       '<tr' +
@@ -945,6 +1042,7 @@ function buildPage() {
       ) +
       '>';
 
+
     /* -----------------------------------------
        CATEGORY
     ----------------------------------------- */
@@ -954,6 +1052,7 @@ function buildPage() {
       var section =
         getSection(p.cat);
 
+
       html +=
         '<td ' +
           'class="cat-td" ' +
@@ -961,12 +1060,16 @@ function buildPage() {
             catCount[p.cat] +
           '"' +
         '>' +
+
           section.label +
+
         '</td>';
+
 
       lastCat = p.cat;
 
     }
+
 
     /* -----------------------------------------
        PRODUCT
@@ -975,10 +1078,12 @@ function buildPage() {
     html +=
       '<td class="product-col">';
 
+
     html +=
       '<div class="product-label">' +
         p.label +
       '</div>';
+
 
     if (
       p.name &&
@@ -992,6 +1097,7 @@ function buildPage() {
 
     }
 
+
     if (p.spec) {
 
       html +=
@@ -1001,10 +1107,12 @@ function buildPage() {
 
     }
 
+
     html += '</td>';
 
+
     /* -----------------------------------------
-       8 WEEKS × 2 COLUMNS
+       8 WEEKS
     ----------------------------------------- */
 
     for (
@@ -1019,9 +1127,11 @@ function buildPage() {
 
     }
 
+
     html += '</tr>';
 
   });
+
 
   /* =====================================================
      SIGN ROW
@@ -1030,13 +1140,16 @@ function buildPage() {
   html +=
     '<tr class="sign-row">';
 
+
   html +=
     '<td></td>';
+
 
   html +=
     '<td class="sign-label">' +
       '搬入確認者' +
     '</td>';
+
 
   for (
     var s = 0;
@@ -1052,14 +1165,18 @@ function buildPage() {
 
   }
 
+
   html += '</tr>';
+
 
   /* -----------------------------------------
      END TABLE
   ----------------------------------------- */
 
   html += '</tbody>';
+
   html += '</table>';
+
 
   /* -----------------------------------------
      END PAGE
@@ -1067,8 +1184,10 @@ function buildPage() {
 
   html += '</div>';
 
+
   return html;
 }
+
 
 /* =========================================================
    DOM READY
@@ -1081,9 +1200,11 @@ document.addEventListener(
     var root =
       document.getElementById('root');
 
+
     if (!root) {
       return;
     }
+
 
     root.innerHTML =
       buildPage();
