@@ -50,19 +50,17 @@ body {
 .page {
   width: 287mm;
   height: 200mm;
-
   margin: 0;
   padding: 0;
-
   overflow: hidden;
-
-  page-break-after: always;
+  page-break-after: auto;
+  break-after: auto;
 }
 
 .page:last-child {
   page-break-after: auto;
+  break-after: auto;
 }
-
 /* =========================================================
    TITLE
 ========================================================= */
@@ -415,16 +413,16 @@ tbody tr td {
    PRINT
 ========================================================= */
 
+<style>
+
 @media print {
 
   html,
   body {
     width: 297mm;
     height: 210mm;
-
     margin: 0;
     padding: 0;
-
     background: #fff;
   }
 
@@ -436,17 +434,17 @@ tbody tr td {
   .page {
     width: 287mm;
     height: 200mm;
-
     margin: 0;
     padding: 0;
-
     overflow: hidden;
 
-    page-break-after: always;
+    page-break-after: auto;
+    break-after: auto;
   }
 
   .page:last-child {
     page-break-after: auto;
+    break-after: auto;
   }
 
   table {
@@ -459,6 +457,7 @@ tbody tr td {
     print-color-adjust: exact;
   }
 }
+
 </style>
 </head>
 
@@ -525,7 +524,6 @@ var _APP_V = '1786316338';
   var t = parseInt(_APP_V, 10);
 
   v.textContent =
-    'ver.' +
     (
       t > 0
         ? new Date(t * 1000).toLocaleString(
@@ -533,8 +531,6 @@ var _APP_V = '1786316338';
             {
               month: 'numeric',
               day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
             }
           )
         : '-'
