@@ -164,7 +164,7 @@
       transform-origin: center bottom;
     }
 
-    .app.is-counting .mascot-wrap { animation: bounce 1s cubic-bezier(.31,.03,.4,1) infinite; }
+    .mascot-wrap.is-bouncing { animation: mascotBounce 1s cubic-bezier(.31,.03,.4,1) infinite !important; will-change: transform; }
 
     .mascot-shadow {
       position: absolute;
@@ -177,7 +177,7 @@
       transition: transform .14s ease, opacity .14s ease;
     }
 
-    .app.is-counting .mascot-shadow { animation: shadowPulse 1s cubic-bezier(.31,.03,.4,1) infinite; }
+    .mascot-shadow.is-bouncing { animation: shadowPulse 1s cubic-bezier(.31,.03,.4,1) infinite !important; }
 
     svg { overflow: visible; display: block; width: 100%; height: 100%; }
 
@@ -214,55 +214,6 @@
     .counter.pop { animation: numberPop .45s cubic-bezier(.1,.8,.22,1); }
     .app.is-finale .counter { opacity: 0; transform: translate(-50%, -50%) scale(.6); }
     .app.is-finale .ring { opacity: .12; transform: scale(.8); }
-
-    .celebration-message {
-      position: absolute;
-      z-index: 6;
-      top: 50%;
-      left: 50%;
-      width: min(92%, 26rem);
-      display: grid;
-      gap: .12em;
-      justify-items: center;
-      color: #fff5cf;
-      font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
-      font-size: clamp(2rem, 9.1vw, 3.35rem);
-      font-weight: 900;
-      line-height: 1.08;
-      letter-spacing: -.09em;
-      text-align: center;
-      text-shadow:
-        1px 1px 0 #8c4c25,
-        2px 2px 0 #8c4c25,
-        3px 3px 0 rgba(89, 35, 21, .7),
-        0 0 18px rgba(255, 208, 91, .86);
-      opacity: 0;
-      pointer-events: none;
-      transform: translate(-50%, 180%) rotate(-4deg) scale(.82);
-    }
-
-    .celebration-message span {
-      display: block;
-      background: linear-gradient(180deg, #fffde5 0%, #ffe5a0 46%, #f4a861 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-stroke: .65px rgba(113, 54, 27, .55);
-      filter: saturate(1.1);
-    }
-
-    .celebration-message span:last-child { font-size: .74em; letter-spacing: -.12em; }
-    .app.is-finale .celebration-message { animation: messageLaunch 1.2s cubic-bezier(.12,.8,.2,1) .25s both; }
-    .app.is-finale .celebration-message span:last-child { animation: inkShine 1.8s ease-in-out 1.05s infinite alternate; }
-
-    @keyframes messageLaunch {
-      0% { opacity: 0; transform: translate(-50%, 180%) rotate(-7deg) scale(.7); }
-      62% { opacity: 1; transform: translate(-50%, -67%) rotate(2deg) scale(1.07); }
-      80% { transform: translate(-50%, -52%) rotate(-2deg) scale(.98); }
-      100% { opacity: 1; transform: translate(-50%, -58%) rotate(-3deg) scale(1); }
-    }
-
-    @keyframes inkShine { from { filter: brightness(1) saturate(1.05); } to { filter: brightness(1.18) saturate(1.22); } }
 
     .control {
       grid-row: 3;
@@ -337,7 +288,7 @@
       left: max(1rem, env(safe-area-inset-left));
       bottom: max(1rem, env(safe-area-inset-bottom));
       display: grid;
-      grid-template-columns: repeat(3, 2.35rem);
+      grid-template-columns: repeat(4, 2.35rem);
       gap: .42rem;
       transition: opacity .2s ease, transform .2s ease;
     }
@@ -382,6 +333,10 @@
     .firework-mark.willow::after { width: .15rem; height: .82rem; inset: .2rem auto auto .65rem; border-radius: .2rem; background: #8de6cb; box-shadow: -.38rem .22rem 0 -.04rem #8de6cb, .38rem .22rem 0 -.04rem #8de6cb; }
     .firework-mark.ring::before { border: 3px solid #ba9bff; box-shadow: inset 0 0 0 3px transparent; }
     .firework-mark.ring::after { inset: .4rem; border: 2px solid #76e7ed; }
+
+    .shot-mark { display: flex; align-items: flex-end; justify-content: center; gap: 2px; width: 1.5rem; height: 1.45rem; }
+    .shot-mark i { display: block; width: .22rem; height: .94rem; border-radius: .25rem .25rem .1rem .1rem; background: linear-gradient(#fff1a2, #ff8b71); box-shadow: 0 0 3px #ffb265; }
+    .shot-mark i::before { content: ""; display: block; width: 0; height: 0; margin: -.3rem 0 0 -.05rem; border-left: .16rem solid transparent; border-right: .16rem solid transparent; border-bottom: .34rem solid #7f4ced; }
 
     .app[data-firework-style="ring"] .bloom { background: radial-gradient(circle, #fffdf4 0 4%, var(--bloom) 5% 8%, transparent 9% 34%, var(--bloom) 35% 38%, transparent 39%); }
     .app[data-firework-style="willow"] .bloom { border-radius: 46% 46% 52% 52%; background: radial-gradient(circle, #fffdf4 0 4%, var(--bloom) 5% 8%, transparent 9%), repeating-conic-gradient(from 180deg, var(--bloom) 0 4deg, transparent 4deg 16deg); }
@@ -442,7 +397,7 @@
       100% { opacity: 0; transform: scale(1.34) rotate(38deg); }
     }
 
-    @keyframes bounce {
+    @keyframes mascotBounce {
       0%, 100% { transform: translateY(0) scale(1, 1); }
       12% { transform: translateY(0) scale(1.08, .91); }
       44% { transform: translateY(-20%) scale(.95, 1.06); }
@@ -472,6 +427,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+      .mascot-wrap.is-bouncing, .mascot-shadow.is-bouncing { animation-duration: 1s !important; animation-iteration-count: infinite !important; }
     }
   </style>
 </head>
@@ -495,15 +451,14 @@
       <button class="option-button firework-option" type="button" data-firework="burst" aria-label="放射花火" aria-pressed="true"><span class="firework-mark burst" aria-hidden="true"></span></button>
       <button class="option-button firework-option" type="button" data-firework="willow" aria-label="しだれ花火" aria-pressed="false"><span class="firework-mark willow" aria-hidden="true"></span></button>
       <button class="option-button firework-option" type="button" data-firework="ring" aria-label="輪花火" aria-pressed="false"><span class="firework-mark ring" aria-hidden="true"></span></button>
+      <button class="option-button shot-option" type="button" data-shots="1" aria-label="花火を1発同時に打ち上げる" aria-pressed="true"><span class="shot-mark" aria-hidden="true"><i></i></span></button>
+      <button class="option-button shot-option" type="button" data-shots="2" aria-label="花火を2発同時に打ち上げる" aria-pressed="false"><span class="shot-mark" aria-hidden="true"><i></i><i></i></span></button>
+      <button class="option-button shot-option" type="button" data-shots="3" aria-label="花火を3発同時に打ち上げる" aria-pressed="false"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span></button>
     </div>
     <div class="firework-blooms" aria-hidden="true">
       <span class="bloom one"></span>
       <span class="bloom two"></span>
       <span class="bloom three"></span>
-    </div>
-    <div class="celebration-message" aria-live="polite">
-      <span>太陽さん</span>
-      <span>おめでとうございます！</span>
     </div>
     <section class="stage" aria-live="polite">
       <div class="ring">
@@ -539,9 +494,12 @@
       const canvas = document.getElementById('fireworks');
       const ctx = canvas.getContext('2d', { alpha: true });
       const mascotSvg = document.getElementById('mascotSvg');
+      const mascotWrap = document.querySelector('.mascot-wrap');
+      const mascotShadow = document.querySelector('.mascot-shadow');
       const motifButtons = [...document.querySelectorAll('.motif-option')];
       const paletteButtons = [...document.querySelectorAll('.palette-option')];
       const fireworkButtons = [...document.querySelectorAll('.firework-option')];
+      const shotButtons = [...document.querySelectorAll('.shot-option')];
       const palettes = {
         sunset: { hues: [24, 48, 294, 344], blooms: ['#ffbe70', '#d782ed', '#ff84b2'] },
         ocean: { hues: [178, 202, 224, 268], blooms: ['#65e7df', '#79a8ff', '#b28cf2'] },
@@ -554,6 +512,7 @@
         ring: { count: 18, minSpeed: 2.8, maxSpeed: 3.1, gravity: .012, drag: .994, decay: .042 }
       };
       let activeFirework = 'burst';
+      let simultaneousShots = 1;
 
       let state = 'idle';
       let countdownFrame = 0;
@@ -565,7 +524,7 @@
       let rockets = [];
       let particles = [];
       const particleLimit = 54;
-      const rocketLimit = 1;
+      const maximumSimultaneousShots = 3;
       const frameInterval = 1000 / 24;
 
       function setCounter(value) {
@@ -586,6 +545,19 @@
         ctx.setTransform(1, 0, 0, 1, 0, 0);
       }
 
+      function startMascotBounce() {
+        mascotWrap.classList.remove('is-bouncing');
+        mascotShadow.classList.remove('is-bouncing');
+        void mascotWrap.offsetWidth;
+        mascotWrap.classList.add('is-bouncing');
+        mascotShadow.classList.add('is-bouncing');
+      }
+
+      function stopMascotBounce() {
+        mascotWrap.classList.remove('is-bouncing');
+        mascotShadow.classList.remove('is-bouncing');
+      }
+
       function startCountdown() {
         stopFireworks();
         state = 'counting';
@@ -593,6 +565,7 @@
         setCounter(duration);
         app.classList.remove('is-finale');
         app.classList.add('is-counting');
+        startMascotBounce();
         controlButton.setAttribute('aria-label', 'カウントダウン中');
         mascotButton.setAttribute('aria-label', 'カウントダウン中');
         countdownStartedAt = performance.now();
@@ -615,6 +588,7 @@
       }
 
       function createRocket(xRatio = Math.random() * .66 + .17, yRatio = Math.random() * .24 + .15) {
+        if (rockets.length >= simultaneousShots) return;
         rockets.push({
           x: canvas.width * (.18 + Math.random() * .64),
           y: canvas.height + 18,
@@ -700,24 +674,33 @@
         fireworksFrame = requestAnimationFrame(drawFireworks);
       }
 
+      function launchShotGroup() {
+        const positions = [[.22, .34], [.50, .22], [.78, .34]];
+        for (let index = 0; index < simultaneousShots; index += 1) {
+          const [x, y] = positions[index];
+          createRocket(x, y);
+        }
+      }
+
       function startFinale() {
         cancelAnimationFrame(countdownFrame);
         state = 'finale';
         app.classList.remove('is-counting');
         app.classList.add('is-finale');
+        stopMascotBounce();
         controlButton.setAttribute('aria-label', 'もう一度');
         mascotButton.setAttribute('aria-label', 'もう一度');
         resizeCanvas();
         rockets = [];
         particles = [];
         lastFireworkFrame = 0;
-        createRocket(.5, .25);
+        launchShotGroup();
         cancelAnimationFrame(fireworksFrame);
         fireworksFrame = requestAnimationFrame(drawFireworks);
         clearInterval(fireworksInterval);
         fireworksInterval = window.setInterval(() => {
-          if (rockets.length < rocketLimit && particles.length < 24) createRocket();
-        }, 1900);
+          if (rockets.length === 0 && particles.length < 18) launchShotGroup();
+        }, 2100);
       }
 
       function stopFireworks() {
@@ -760,9 +743,15 @@
         fireworkButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.firework === type)));
       }
 
+      function applySimultaneousShots(count) {
+        simultaneousShots = Math.min(maximumSimultaneousShots, Math.max(1, count));
+        shotButtons.forEach((button) => button.setAttribute('aria-pressed', String(Number(button.dataset.shots) === simultaneousShots)));
+      }
+
       motifButtons.forEach((button) => button.addEventListener('click', () => applyMotif(button.dataset.motif)));
       paletteButtons.forEach((button) => button.addEventListener('click', () => applyPalette(button.dataset.palette)));
       fireworkButtons.forEach((button) => button.addEventListener('click', () => applyFireworkType(button.dataset.firework)));
+      shotButtons.forEach((button) => button.addEventListener('click', () => applySimultaneousShots(Number(button.dataset.shots))));
       controlButton.addEventListener('click', activate);
       mascotButton.addEventListener('click', activate);
       window.addEventListener('resize', () => { if (state === 'finale') resizeCanvas(); }, { passive: true });
