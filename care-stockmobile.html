@@ -1311,6 +1311,7 @@ function updateSummary() {
 function onInput(pid, field, val) {
   state[currentFloor][pid][field] = Math.max(0, parseInt(val) || 0);
   updateCard(pid);
+  _draftDeferred = false;   // 実際に入力し直したら、×による保留を解除する
   scheduleDraftSave();
 }
 
@@ -1329,8 +1330,11 @@ function draftDataOf(floor) {
 
 // 注文確定時点の内容。確定後に何も変えずに閉じた場合は下書きを作らない
 var _committedSnapshot = null;
+// ×で判断を保留した状態。画面が空のままでも下書きを消さない
+var _draftDeferred = false;
 
 function saveDraft(floor) {
+  if (_draftDeferred) return;   // ×で判断を保留中は、下書きを上書きも削除もしない
   var data = draftDataOf(floor);
   var hasAny = products.some(function(p) {
     var d = data[p.id];
@@ -1410,12 +1414,14 @@ function checkDraftOnStartup() {
   try { draft = JSON.parse(raw); } catch(e) { clearDraft(floor); return; }
   if (new Date(draft.ts).toDateString() !== new Date().toDateString()) { clearDraft(floor); return; }
   if (!draftDiffersFromState(floor, draft.data)) { clearDraft(floor); return; }  // 失われていない
-  showConfirmMobile('前回入力していたデータが残っています。復元しますか？', function() {
+  showDraftRestoreDialog(function() {        // 復元する
     restoreDraft(floor, draft.data);
     clearDraft(floor);
-  }, function() {
+  }, function() {                            // 新しく入力（下書きのみ破棄）
     clearDraft(floor);
-  }, '復元する');
+  }, function() {                            // ×（決定せず閉じる／下書きは残す）
+    _draftDeferred = true;
+  });
 }
 
 // バックグラウンドからの復帰時：ページは生きており入力も残っているので確認は出さない。
@@ -1703,6 +1709,27 @@ function doConfirmOrder(dateStr) {
   // 確定内容を記録し、このまま閉じても次回に復元を尋ねないようにする
   _committedSnapshot = { floor: currentFloor, json: JSON.stringify(draftDataOf(currentFloor)) };
   setTimeout(function() { window.scrollTo({ top: scrollY, behavior: 'instant' }); }, 50);
+}
+
+// 下書き復元の3択（× = 決定せず閉じる / 新しく入力 = 破棄 / 復元する）
+function showDraftRestoreDialog(onRestore, onNew, onClose) {
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  var box = document.createElement('div');
+  box.style.cssText = 'position:relative;background:#fff;border-radius:12px;padding:24px;max-width:320px;width:88%;box-shadow:0 4px 20px rgba(0,0,0,0.2)';
+  box.innerHTML =
+      '<button id="draft-close" aria-label="閉じる" style="position:absolute;top:2px;right:2px;width:44px;height:44px;border:none;background:none;color:#888;font-size:22px;line-height:1;cursor:pointer;font-family:inherit">×</button>'
+    + '<div style="font-size:14px;font-weight:700;color:#333;margin:4px 34px 16px 0;line-height:1.6">前回の入力データが残っています。<br>復元して作業を続けますか？</div>'
+    + '<div style="display:flex;gap:10px;justify-content:flex-end">'
+    + '<button id="draft-new" style="padding:10px 14px;border:1px solid #ccc;border-radius:8px;background:#f5f5f5;color:#555;cursor:pointer;font-family:inherit;font-size:13px">新しく入力</button>'
+    + '<button id="draft-restore" style="padding:10px 16px;border:none;border-radius:8px;background:#e65100;color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700">復元する</button>'
+    + '</div>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  var close = function(cb) { document.body.removeChild(overlay); if (cb) cb(); };
+  document.getElementById('draft-restore').onclick = function() { close(onRestore); };
+  document.getElementById('draft-new').onclick     = function() { close(onNew); };
+  document.getElementById('draft-close').onclick   = function() { close(onClose); };
 }
 
 function showConfirmMobile(msg, onOk, onCancel, okLabel) {
