@@ -683,6 +683,8 @@ const FB_PATH = 'carestock_v2'; // Firebase Realtime DB のルートパス（変
 
 let _fbDb = null;
 let _fbReady = false;
+// syncFromFirebase は fbInitLoad の中で定義されるため、トップレベルから呼べるようここへ保持する
+let _syncFromFirebase = null;
 
 // Firebase にデータを書き込む（JSON文字列のまま保存し、構造の変換を防ぐ）
 function fbWrite(key, value) {
@@ -777,21 +779,13 @@ function fbInitLoad(db) {
         showToast('☁️ クラウドから同期しました');
       });
     }
-    // visibilitychange：タブ切替・ホームボタンからの復帰
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'hidden') {
-        saveDraft(currentFloor);
-      } else if (document.visibilityState === 'visible') {
-        maybeRestoreDraft(currentFloor);
-      }
-    });
-    // pageshow：iOS bfcache からの復元・ページ再表示時のフォールバック
-    window.addEventListener('pageshow', function(e) {
-      if (e.persisted) maybeRestoreDraft(currentFloor);
-    });
+    _syncFromFirebase = syncFromFirebase;  // トップレベルのリスナーから呼べるようにする
+    // Firebaseによるstate/DOMの上書きが済んだ後に、消えた入力の復元を確認する
+    checkDraftOnStartup();
   }).catch(function(e) {
     _fbReady = true;
     console.warn('Firebase 読み込みエラー:', e);
+    checkDraftOnStartup();
   });
 }
 
@@ -1313,6 +1307,7 @@ function updateSummary() {
 function onInput(pid, field, val) {
   state[currentFloor][pid][field] = Math.max(0, parseInt(val) || 0);
   updateCard(pid);
+  scheduleDraftSave();
 }
 
 // --- バックグラウンド遷移で消える未保存の入力を端末内に一時退避（下書き） ---
@@ -1344,27 +1339,69 @@ function restoreDraft(floor, data) {
   syncInputsToState();
 }
 
-// syncFromFirebaseはFirebase認証成功後にのみ定義されるローカル関数のため、未定義なら何もしない
+// syncFromFirebaseはFirebase読み込み完了後に _syncFromFirebase へ代入される（未設定なら何もしない）
 function trySyncFromFirebase() {
-  if (typeof syncFromFirebase === 'function') syncFromFirebase();
+  if (_syncFromFirebase) _syncFromFirebase();
 }
 
-// バックグラウンドから戻った時：下書きがあれば確認してから復元、なければ従来通りFirebase同期
-function maybeRestoreDraft(floor) {
+// 入力のたびに下書きを保存（ライフサイクルイベントに依存せず強制終了にも耐える）
+var _draftTimer = null;
+function scheduleDraftSave() {
+  if (_draftTimer) clearTimeout(_draftTimer);
+  _draftTimer = setTimeout(function() { _draftTimer = null; saveDraft(currentFloor); }, 800);
+}
+
+// 下書きが現在のstateと食い違うか＝入力が実際に失われたか
+function draftDiffersFromState(floor, data) {
+  var differs = false;
+  products.forEach(function(p) {
+    var d = data[p.id];
+    if (!d) return;
+    var s = state[floor][p.id];
+    if ((s.stockBoxes||0) !== d.stockBoxes || (s.stockBags||0) !== d.stockBags
+     || (s.dailyUse||0)  !== d.dailyUse  || (s.orderQty||0)  !== d.orderQty) differs = true;
+  });
+  return differs;
+}
+
+// 未保存の入力を抱えているか（在庫・注文は元々永続化されないので非ゼロなら未保存）
+function hasUnsavedInput(floor) {
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(saveKey(floor)) || '{}'); } catch(e) {}
+  var found = false;
+  products.forEach(function(p) {
+    var s = state[floor][p.id];
+    if ((s.stockBoxes||0) > 0 || (s.stockBags||0) > 0 || (s.orderQty||0) > 0) found = true;
+    if (saved[p.id] !== undefined && (s.dailyUse||0) !== saved[p.id]) found = true;
+  });
+  return found;
+}
+
+// 起動時のみ：入力が本当に失われている時だけ復元を確認する
+var _draftChecked = false;
+function checkDraftOnStartup() {
+  if (_draftChecked) return;
+  _draftChecked = true;
+  var floor = currentFloor;
   var raw = localStorage.getItem(draftKey(floor));
-  if (!raw) { trySyncFromFirebase(); return; }
+  if (!raw) return;
   var draft;
-  try { draft = JSON.parse(raw); } catch(e) { clearDraft(floor); trySyncFromFirebase(); return; }
-  var sameDay = new Date(draft.ts).toDateString() === new Date().toDateString();
-  if (!sameDay) { clearDraft(floor); trySyncFromFirebase(); return; }
-  showConfirmMobile('入力中のデータが見つかりました。復元しますか？', function() {
+  try { draft = JSON.parse(raw); } catch(e) { clearDraft(floor); return; }
+  if (new Date(draft.ts).toDateString() !== new Date().toDateString()) { clearDraft(floor); return; }
+  if (!draftDiffersFromState(floor, draft.data)) { clearDraft(floor); return; }  // 失われていない
+  showConfirmMobile('前回入力していたデータが残っています。復元しますか？', function() {
     restoreDraft(floor, draft.data);
     clearDraft(floor);
-    // 復元を選んだ場合はこの端末の入力を優先し、Firebase同期は行わない
   }, function() {
     clearDraft(floor);
-    trySyncFromFirebase();
   }, '復元する');
+}
+
+// バックグラウンドからの復帰時：ページは生きており入力も残っているので確認は出さない。
+// 未保存の入力があるときはFirebase同期で消さないようスキップする
+function onReturnToForeground(floor) {
+  if (hasUnsavedInput(floor)) return;
+  trySyncFromFirebase();
 }
 
 function switchFloor(floor, btn) {
@@ -3260,6 +3297,22 @@ if (fnEl) fnEl.value = localStorage.getItem('facility_name') || '';
 reflectRoomToDaily(true);  // 居室管理を自動反映
 updateReflectDateLabel();
 updateRoomReflectLabelMobile();
+
+// --- ライフサイクル：下書きの保存とバックグラウンド復帰時の同期 ---
+// Firebaseの成否に関わらず必ず登録されるよう、トップレベルで設定する
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') saveDraft(currentFloor);
+  else if (document.visibilityState === 'visible') onReturnToForeground(currentFloor);
+});
+// pagehide：iOSでアプリを閉じる際に visibilitychange より確実に発火する
+window.addEventListener('pagehide', function() { saveDraft(currentFloor); });
+// pageshow：iOS bfcache からの復元
+window.addEventListener('pageshow', function(e) { if (e.persisted) onReturnToForeground(currentFloor); });
+
+// 起動時の復元確認。Firebaseが走る場合はその読み込み完了後に呼ばれるためここでは呼ばない
+if (!FB_ENABLED || typeof firebase === 'undefined') checkDraftOnStartup();
+// Firebaseが応答しないまま固まった場合の保険（checkDraftOnStartupは一度きり）
+setTimeout(checkDraftOnStartup, 10000);
 // 起動時にfloor-bannerに反映日付を表示
 (function() {
   var floor = currentFloor;
