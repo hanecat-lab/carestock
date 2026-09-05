@@ -779,11 +779,15 @@ function fbInitLoad(db) {
     }
     // visibilitychange：タブ切替・ホームボタンからの復帰
     document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'visible') syncFromFirebase();
+      if (document.visibilityState === 'hidden') {
+        saveDraft(currentFloor);
+      } else if (document.visibilityState === 'visible') {
+        maybeRestoreDraft(currentFloor);
+      }
     });
     // pageshow：iOS bfcache からの復元・ページ再表示時のフォールバック
     window.addEventListener('pageshow', function(e) {
-      if (e.persisted) syncFromFirebase();
+      if (e.persisted) maybeRestoreDraft(currentFloor);
     });
   }).catch(function(e) {
     _fbReady = true;
@@ -923,6 +927,7 @@ function saveDailyUse() {
   showToast("💾 " + floorLabel(currentFloor) + "の使用量を保存しました！");
   updateSaveDateLabel();
   products.forEach(function(p) { updateDailyBadge(p.id); });
+  clearDraft(currentFloor);
 }
 
 function updateSaveDateLabel() {
@@ -1310,6 +1315,58 @@ function onInput(pid, field, val) {
   updateCard(pid);
 }
 
+// --- バックグラウンド遷移で消える未保存の入力を端末内に一時退避（下書き） ---
+function draftKey(floor) { return 'diaper_draft_' + floor; }
+
+function saveDraft(floor) {
+  var data = {};
+  var hasAny = false;
+  products.forEach(function(p) {
+    var s = state[floor][p.id];
+    var d = { stockBoxes: s.stockBoxes||0, stockBags: s.stockBags||0, dailyUse: s.dailyUse||0, orderQty: s.orderQty||0 };
+    if (d.stockBoxes || d.stockBags || d.dailyUse || d.orderQty) hasAny = true;
+    data[p.id] = d;
+  });
+  if (!hasAny) { clearDraft(floor); return; }
+  localStorage.setItem(draftKey(floor), JSON.stringify({ ts: Date.now(), data: data }));
+}
+
+function clearDraft(floor) { localStorage.removeItem(draftKey(floor)); }
+
+function restoreDraft(floor, data) {
+  products.forEach(function(p) {
+    var d = data[p.id];
+    if (!d) return;
+    var s = state[floor][p.id];
+    s.stockBoxes = d.stockBoxes; s.stockBags = d.stockBags;
+    s.dailyUse = d.dailyUse; s.orderQty = d.orderQty;
+  });
+  syncInputsToState();
+}
+
+// syncFromFirebaseはFirebase認証成功後にのみ定義されるローカル関数のため、未定義なら何もしない
+function trySyncFromFirebase() {
+  if (typeof syncFromFirebase === 'function') syncFromFirebase();
+}
+
+// バックグラウンドから戻った時：下書きがあれば確認してから復元、なければ従来通りFirebase同期
+function maybeRestoreDraft(floor) {
+  var raw = localStorage.getItem(draftKey(floor));
+  if (!raw) { trySyncFromFirebase(); return; }
+  var draft;
+  try { draft = JSON.parse(raw); } catch(e) { clearDraft(floor); trySyncFromFirebase(); return; }
+  var sameDay = new Date(draft.ts).toDateString() === new Date().toDateString();
+  if (!sameDay) { clearDraft(floor); trySyncFromFirebase(); return; }
+  showConfirmMobile('入力中のデータが見つかりました。復元しますか？', function() {
+    restoreDraft(floor, draft.data);
+    clearDraft(floor);
+    // 復元を選んだ場合はこの端末の入力を優先し、Firebase同期は行わない
+  }, function() {
+    clearDraft(floor);
+    trySyncFromFirebase();
+  }, '復元する');
+}
+
 function switchFloor(floor, btn) {
   currentFloor = floor;
   localStorage.setItem('diaper_local_floor', floor);
@@ -1584,10 +1641,11 @@ function doConfirmOrder(dateStr) {
   showToast('✅ ' + floorLabel(currentFloor) + 'の注文を保存しました！');
   renderHistory();
   products.forEach(function(p) { updatePrevBadge(p.id); });
+  clearDraft(currentFloor);
   setTimeout(function() { window.scrollTo({ top: scrollY, behavior: 'instant' }); }, 50);
 }
 
-function showConfirmMobile(msg, onOk) {
+function showConfirmMobile(msg, onOk, onCancel, okLabel) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center';
   const box = document.createElement('div');
@@ -1595,12 +1653,12 @@ function showConfirmMobile(msg, onOk) {
   box.innerHTML = '<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:16px;line-height:1.6">' + msg.replace(/\n/g,'<br>') + '</div>'
     + '<div style="display:flex;gap:10px;justify-content:flex-end">'
     + '<button id="mob-cancel" style="padding:8px 16px;border:1px solid #ccc;border-radius:8px;background:#f5f5f5;cursor:pointer;font-family:inherit;font-size:13px">キャンセル</button>'
-    + '<button id="mob-ok" style="padding:8px 16px;border:none;border-radius:8px;background:#e65100;color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700">上書き</button>'
+    + '<button id="mob-ok" style="padding:8px 16px;border:none;border-radius:8px;background:#e65100;color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700">' + (okLabel || '上書き') + '</button>'
     + '</div>';
   overlay.appendChild(box);
   document.body.appendChild(overlay);
   document.getElementById('mob-ok').onclick = function() { document.body.removeChild(overlay); onOk(); };
-  document.getElementById('mob-cancel').onclick = function() { document.body.removeChild(overlay); };
+  document.getElementById('mob-cancel').onclick = function() { document.body.removeChild(overlay); if (onCancel) onCancel(); };
 }
 
 
