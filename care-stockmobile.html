@@ -647,9 +647,12 @@
 
 <script>
 var _APP_V = '1788619332'; // AUTO_VERSION
+// 新バージョン読み込みのための再読込中フラグ。この間は下書きを触らない
+// （空の画面のまま pagehide が発火し、保存済みの下書きを消してしまうのを防ぐ）
+var _isRedirecting = false;
 (function(){
   var p = new URLSearchParams(location.search);
-  if (p.get('v') !== _APP_V) { p.set('v', _APP_V); location.replace(location.pathname + '?' + p.toString()); }
+  if (p.get('v') !== _APP_V) { _isRedirecting = true; p.set('v', _APP_V); location.replace(location.pathname + '?' + p.toString()); }
 })();
 /* ===== バージョン表示（左下・印刷時非表示） ===== */
 (function(){
@@ -798,9 +801,10 @@ if (FB_ENABLED) {
       firebase.initializeApp(FIREBASE_CONFIG);
       firebase.auth().signInAnonymously()
         .then(function() { fbInitLoad(firebase.database()); })
-        .catch(function(e) { console.warn('Firebase 認証エラー:', e); });
+        .catch(function(e) { console.warn('Firebase 認証エラー:', e); checkDraftOnStartup(); });
     } catch(e) {
       console.warn('Firebase 初期化エラー:', e);
+      checkDraftOnStartup();
     }
   }
 }
@@ -1313,16 +1317,29 @@ function onInput(pid, field, val) {
 // --- バックグラウンド遷移で消える未保存の入力を端末内に一時退避（下書き） ---
 function draftKey(floor) { return 'diaper_draft_' + floor; }
 
-function saveDraft(floor) {
+// 入力欄由来の値だけを取り出す（下書きの中身）
+function draftDataOf(floor) {
   var data = {};
-  var hasAny = false;
   products.forEach(function(p) {
     var s = state[floor][p.id];
-    var d = { stockBoxes: s.stockBoxes||0, stockBags: s.stockBags||0, dailyUse: s.dailyUse||0, orderQty: s.orderQty||0 };
-    if (d.stockBoxes || d.stockBags || d.dailyUse || d.orderQty) hasAny = true;
-    data[p.id] = d;
+    data[p.id] = { stockBoxes: s.stockBoxes||0, stockBags: s.stockBags||0, dailyUse: s.dailyUse||0, orderQty: s.orderQty||0 };
+  });
+  return data;
+}
+
+// 注文確定時点の内容。確定後に何も変えずに閉じた場合は下書きを作らない
+var _committedSnapshot = null;
+
+function saveDraft(floor) {
+  var data = draftDataOf(floor);
+  var hasAny = products.some(function(p) {
+    var d = data[p.id];
+    return d.stockBoxes || d.stockBags || d.dailyUse || d.orderQty;
   });
   if (!hasAny) { clearDraft(floor); return; }
+  // 注文確定した内容そのままなら、救うべき作業は無い
+  if (_committedSnapshot && _committedSnapshot.floor === floor
+      && _committedSnapshot.json === JSON.stringify(data)) { clearDraft(floor); return; }
   localStorage.setItem(draftKey(floor), JSON.stringify({ ts: Date.now(), data: data }));
 }
 
@@ -1379,9 +1396,13 @@ function hasUnsavedInput(floor) {
 
 // 起動時のみ：入力が本当に失われている時だけ復元を確認する
 var _draftChecked = false;
+var _appReady = false;   // 起動時チェックが済むまでライフサイクルで下書きを触らない
+function canTouchDraft() { return _appReady && !_isRedirecting; }
 function checkDraftOnStartup() {
+  if (_isRedirecting) return;   // 直後に再読込されるので何もしない（下書きを保持）
   if (_draftChecked) return;
   _draftChecked = true;
+  _appReady = true;
   var floor = currentFloor;
   var raw = localStorage.getItem(draftKey(floor));
   if (!raw) return;
@@ -1679,6 +1700,8 @@ function doConfirmOrder(dateStr) {
   renderHistory();
   products.forEach(function(p) { updatePrevBadge(p.id); });
   clearDraft(currentFloor);
+  // 確定内容を記録し、このまま閉じても次回に復元を尋ねないようにする
+  _committedSnapshot = { floor: currentFloor, json: JSON.stringify(draftDataOf(currentFloor)) };
   setTimeout(function() { window.scrollTo({ top: scrollY, behavior: 'instant' }); }, 50);
 }
 
@@ -3301,11 +3324,11 @@ updateRoomReflectLabelMobile();
 // --- ライフサイクル：下書きの保存とバックグラウンド復帰時の同期 ---
 // Firebaseの成否に関わらず必ず登録されるよう、トップレベルで設定する
 document.addEventListener('visibilitychange', function() {
-  if (document.visibilityState === 'hidden') saveDraft(currentFloor);
+  if (document.visibilityState === 'hidden') { if (canTouchDraft()) saveDraft(currentFloor); }
   else if (document.visibilityState === 'visible') onReturnToForeground(currentFloor);
 });
 // pagehide：iOSでアプリを閉じる際に visibilitychange より確実に発火する
-window.addEventListener('pagehide', function() { saveDraft(currentFloor); });
+window.addEventListener('pagehide', function() { if (canTouchDraft()) saveDraft(currentFloor); });
 // pageshow：iOS bfcache からの復元
 window.addEventListener('pageshow', function(e) { if (e.persisted) onReturnToForeground(currentFloor); });
 
