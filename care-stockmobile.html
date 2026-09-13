@@ -587,6 +587,11 @@
     <div class="history-toggle" id="graph-toggle-icon">▼ 開く</div>
   </div>
   <div id="graph-mobile" class="admin-only" style="display:none;margin-top:4px"></div>
+  <div class="history-header admin-only" onclick="toggleMoneyGraphMobile()" id="money-graph-header" style="margin-top:4px;display:none">
+    <div class="history-header-title">💰 注文金額の推移（2階＋3階）</div>
+    <div class="history-toggle" id="money-graph-toggle-icon">▼ 開く</div>
+  </div>
+  <div id="money-graph-mobile" class="admin-only" style="display:none;margin-top:4px"></div>
 </div>
 
 <!-- バックアップ -->
@@ -1707,7 +1712,8 @@ function doConfirmOrder(dateStr) {
   try { gLog = JSON.parse(localStorage.getItem(glKey) || '[]'); } catch(e) {}
   const gEntry = { date: dateStr, data: {} };
   products.forEach(function(p) {
-    gEntry.data[p.id] = { s: totalStock(p), o: state[currentFloor][p.id].orderQty || 0 };
+    // u = 確定時点の単価（1枚あたり）。値上げがあっても過去の実績が歪まないよう記録する
+    gEntry.data[p.id] = { s: totalStock(p), o: state[currentFloor][p.id].orderQty || 0, u: getUnitPrice(p.id) };
   });
   const gIdx = gLog.findIndex(function(g) { return g.date === dateStr; });
   if (gIdx >= 0) { gLog[gIdx] = gEntry; } else { gLog.push(gEntry); }
@@ -1742,6 +1748,7 @@ function doConfirmOrder(dateStr) {
   clearDraft(currentFloor);
   // 確定内容を記録し、このまま閉じても次回に復元を尋ねないようにする
   _committedSnapshot = { floor: currentFloor, json: JSON.stringify(draftDataOf(currentFloor)) };
+  renderMoneyGraphMobile();   // 確定した注文を金額グラフへ反映
   setTimeout(function() { window.scrollTo({ top: scrollY, behavior: 'instant' }); }, 50);
 }
 
@@ -2360,6 +2367,117 @@ function renderGraphMobile() {
     + '</div>';
 }
 
+// --- 注文金額の推移（2階＋3階の合計・管理者モードのみ）---
+function toggleMoneyGraphMobile() {
+  var panel = document.getElementById('money-graph-mobile');
+  var icon = document.getElementById('money-graph-toggle-icon');
+  var isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  icon.textContent = isOpen ? '▼ 開く' : '▲ 閉じる';
+  if (!isOpen) renderMoneyGraphMobile();
+}
+
+// 両フロアの注文ログを日付ごとに合算して金額にする
+// u（確定時の単価）があればそれを使い、無ければ現在の単価で計算する
+function collectMoneyGraphData() {
+  var byDate = {};
+  FLOORS.forEach(function(floor) {
+    var log = [];
+    try { log = JSON.parse(localStorage.getItem('diaper_graph_log_' + floor) || '[]'); } catch(e) {}
+    log.forEach(function(g) {
+      var yen = 0;
+      products.forEach(function(p) {
+        var d = g.data && g.data[p.id];
+        if (!d || !d.o) return;
+        var price = (d.u !== undefined && d.u !== null) ? d.u : getUnitPrice(p.id);
+        yen += d.o * p.perBox * price;
+      });
+      if (byDate[g.date] === undefined) byDate[g.date] = 0;
+      byDate[g.date] += yen;
+    });
+  });
+  return Object.keys(byDate).sort().map(function(dt) {
+    return { date: dt, yen: Math.round(byDate[dt]) };
+  });
+}
+
+function renderMoneyGraphMobile() {
+  var panel = document.getElementById('money-graph-mobile');
+  if (!panel || panel.style.display === 'none') return;
+  var data = collectMoneyGraphData();
+  if (!data.length) {
+    panel.innerHTML = '<div style="color:#aaa;padding:8px 4px;font-size:12px">まだ注文の記録がありません</div>';
+    return;
+  }
+  var hasPrice = data.some(function(d) { return d.yen > 0; });
+  if (!hasPrice) {
+    panel.innerHTML = '<div style="color:#aaa;padding:8px 4px;font-size:12px">単価が未設定です。各商品のカードで単価を入力してください</div>';
+    return;
+  }
+
+  var W = 360, H = 190, padL = 46, padR = 10, padT = 16, padB = 26;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  var maxY = 1;
+  data.forEach(function(d) { if (d.yen > maxY) maxY = d.yen; });
+  // 切りの良い上限に丸める（有効数字2桁）
+  var digits = Math.pow(10, Math.max(0, String(Math.round(maxY)).length - 2));
+  maxY = Math.ceil(maxY / digits) * digits;
+
+  var n = data.length;
+  var slot = plotW / n;
+  var barW = Math.max(2, Math.min(18, slot * 0.7));
+  function bx(i) { return padL + slot * (i + 0.5); }
+  function by(v) { return padT + plotH * (1 - v / maxY); }
+
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block;background:#fff;border:1px solid #e0e0e0;border-radius:8px">'
+    + '<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (padT+plotH) + '" stroke="#ccc"/>'
+    + '<line x1="' + padL + '" y1="' + (padT+plotH) + '" x2="' + (padL+plotW) + '" y2="' + (padT+plotH) + '" stroke="#ccc"/>';
+
+  // Y軸：4分割の目盛りと補助線
+  for (var k = 1; k <= 4; k++) {
+    var yv = maxY * k / 4, yy = by(yv);
+    svg += '<line x1="' + padL + '" y1="' + yy.toFixed(1) + '" x2="' + (padL+plotW) + '" y2="' + yy.toFixed(1) + '" stroke="#eee"/>'
+      + '<text x="' + (padL-3) + '" y="' + (yy+3).toFixed(1) + '" font-size="9" fill="#1565c0" text-anchor="end">'
+      + (yv >= 10000 ? Math.round(yv/1000) + 'k' : Math.round(yv).toLocaleString()) + '</text>';
+  }
+  svg += '<text x="' + (padL-3) + '" y="' + (padT-4) + '" font-size="9" fill="#1565c0" text-anchor="end">円</text>';
+
+  // 棒
+  data.forEach(function(d, i) {
+    var h = plotH * (d.yen / maxY);
+    if (h < 0) h = 0;
+    svg += '<rect x="' + (bx(i) - barW/2).toFixed(1) + '" y="' + by(d.yen).toFixed(1) + '" width="' + barW.toFixed(1)
+      + '" height="' + h.toFixed(1) + '" fill="#1565c0" opacity="0.85" rx="1"/>';
+  });
+
+  // X軸：2週間ごとに「M/D」ラベル（既存グラフと同じ間引き方）
+  var lastLabelTime = null;
+  data.forEach(function(d, i) {
+    var parts = d.date.split('/');
+    if (parts.length !== 3) return;
+    var dt = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2])).getTime();
+    if (lastLabelTime !== null && dt - lastLabelTime < 14 * 86400000) return;
+    lastLabelTime = dt;
+    var mx = bx(i);
+    svg += '<line x1="' + mx.toFixed(1) + '" y1="' + (padT+plotH) + '" x2="' + mx.toFixed(1) + '" y2="' + (padT+plotH+3) + '" stroke="#999"/>'
+      + '<text x="' + mx.toFixed(1) + '" y="' + (H-8) + '" font-size="9" fill="#999" text-anchor="middle">'
+      + parseInt(parts[1]) + '/' + parseInt(parts[2]) + '</text>';
+  });
+  svg += '</svg>';
+
+  var total = data.reduce(function(a, d) { return a + d.yen; }, 0);
+  var avg = Math.round(total / n);
+  panel.innerHTML =
+      '<div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:4px;font-size:11px;color:#555">'
+    + '<span>合計 <b style="font-size:14px;color:#1565c0">' + total.toLocaleString() + '</b> 円</span>'
+    + '<span>1回あたり平均 <b style="font-size:14px;color:#1565c0">' + avg.toLocaleString() + '</b> 円</span>'
+    + '</div>'
+    + svg
+    + '<div style="font-size:11px;color:#999;margin-top:4px;padding-bottom:4px;text-align:center">'
+    + '記録 ' + n + ' 件（2階＋3階の合計）／単価を入れた商品のみ集計'
+    + '</div>';
+}
+
 function renderGapMobile() {
   var panel = document.getElementById('gap-mobile');
   var hist = [];
@@ -2825,7 +2943,7 @@ function toggleMode() {
     if (isAdminMode) {
       // daily-colはweeklyFixed=trueのものは非表示のまま
       if (el.id && el.id.startsWith('daily-col-') && el.dataset.weekly === 'true') return;
-      if (el.id === 'sun-hist-header' || el.id === 'gap-header' || el.id === 'usage-header' || el.id === 'schedule-header' || el.id === 'graph-header') return;  // 個別に制御
+      if (el.id === 'sun-hist-header' || el.id === 'gap-header' || el.id === 'usage-header' || el.id === 'schedule-header' || el.id === 'graph-header' || el.id === 'money-graph-header') return;  // 個別に制御
       if (el.classList.contains('save-bar')) el.style.display = 'flex';
       else if (el.tagName === 'BUTTON') el.style.display = 'inline-block';
       else el.style.display = 'block';
@@ -2878,6 +2996,13 @@ function toggleMode() {
     if (grPanel) grPanel.style.display = 'none';
     if (grHeader) grHeader.style.display = 'flex';
     if (grIcon) grIcon.textContent = '▼ 開く';
+    // 注文金額の推移を閉じた状態で表示
+    var mgPanel = document.getElementById('money-graph-mobile');
+    var mgHeader = document.getElementById('money-graph-header');
+    var mgIcon = document.getElementById('money-graph-toggle-icon');
+    if (mgPanel) mgPanel.style.display = 'none';
+    if (mgHeader) mgHeader.style.display = 'flex';
+    if (mgIcon) mgIcon.textContent = '▼ 開く';
     // 居室管理タブを表示
     document.getElementById('tab-room').style.display = 'inline-block';
     // カード再計算（ズレ表示など）＋週必要枚数欄の表示
@@ -2943,6 +3068,7 @@ function updateUnitPrice(pid, val) {
   else { const n = parseFloat(val); if (!isNaN(n) && n >= 0) data[pid] = n; }
   saveUnitPrices(data);
   updateSummary();
+  renderMoneyGraphMobile();   // 単価を変えたら金額グラフも引き直す
 }
 
 // --- 予備ストック（別置きの在庫）--- 階ごと・記録のみで発注計算には使わない
