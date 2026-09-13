@@ -544,27 +544,27 @@
     <div style="font-size:18px;font-weight:900;color:#2e7d32;margin-bottom:12px;text-align:center;border-bottom:2px solid #a5d6a7;padding-bottom:8px">📋 注文内容の確認</div>
     <div id="popup-content-mobile" style="overflow-y:auto;flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:0 8px"></div>
     <div style="display:flex;gap:8px;margin:12px 0;flex-shrink:0">
-      <div style="flex:1;border:2px solid #e65100;border-radius:8px;padding:6px;text-align:center">
-        <span style="font-size:10px;color:#888;display:block">パッド計</span>
-        <span id="popup-pad-tot-mobile" style="font-size:22px;font-weight:900;color:#e65100">0</span>
-        <span style="font-size:12px;color:#999;margin-left:4px">箱</span>
+      <div style="flex:1;border:2px solid var(--order);border-radius:8px;padding:6px;text-align:center">
+        <span style="font-size:10px;color:var(--ink-3);display:block">パッド計</span>
+        <span id="popup-pad-tot-mobile" style="font-size:22px;font-weight:900;color:var(--order)">0</span>
+        <span style="font-size:12px;color:var(--ink-3);margin-left:4px">箱</span>
       </div>
-      <div style="flex:1;border:2px solid #e65100;border-radius:8px;padding:6px;text-align:center">
-        <span style="font-size:10px;color:#888;display:block">テープ・リハパン計</span>
-        <span id="popup-tape-tot-mobile" style="font-size:22px;font-weight:900;color:#e65100">0</span>
-        <span style="font-size:12px;color:#999;margin-left:4px">箱</span>
+      <div style="flex:1;border:2px solid var(--order);border-radius:8px;padding:6px;text-align:center">
+        <span style="font-size:10px;color:var(--ink-3);display:block">テープ・リハパン計</span>
+        <span id="popup-tape-tot-mobile" style="font-size:22px;font-weight:900;color:var(--order)">0</span>
+        <span style="font-size:12px;color:var(--ink-3);margin-left:4px">箱</span>
       </div>
     </div>
-    <div style="color:#e53935;font-size:18px;text-align:center;margin:8px 0 2px;flex-shrink:0">用紙に記入して下さい。</div>
-    <div id="popup-delivery-date" style="color:#e53935;font-size:18px;text-align:center;margin-bottom:8px;flex-shrink:0"></div>
+    <div style="color:var(--danger);font-size:18px;text-align:center;margin:8px 0 2px;flex-shrink:0">用紙に記入して下さい。</div>
+    <div id="popup-delivery-date" style="color:var(--danger);font-size:18px;text-align:center;margin-bottom:8px;flex-shrink:0"></div>
     <div style="display:flex;gap:10px;flex-shrink:0">
-      <button onclick="closeOrderPopupMobile()" style="flex:1;padding:12px;background:#f5f5f5;color:#888;border:2px solid #ddd;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">戻る</button>
+      <button onclick="closeOrderPopupMobile()" style="flex:1;padding:12px;background:#f5f5f5;color:var(--ink-3);border:2px solid #ddd;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">戻る</button>
       <button id="popup-ok-btn-mobile" style="flex:1;padding:12px;background:#fff;color:#2e7d32;border:2px solid #2e7d32;border-radius:10px;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit">✅ 確定して保存</button>
     </div>
   </div>
 </div>
 
-<button class="btn-scroll-summary" onclick="const el=document.getElementById('summary');const header=document.getElementById('header');const offset=el.getBoundingClientRect().top+window.scrollY-header.offsetHeight-8;window.scrollTo({top:offset,behavior:'smooth'})"><span style="font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle">3</span>📋 注文確定画面へ ↓</button>
+<button class="btn-scroll-summary" onclick="const el=document.getElementById('summary');const header=document.getElementById('header');const offset=el.getBoundingClientRect().top+window.scrollY-header.offsetHeight-8;window.scrollTo({top:offset,behavior:'smooth'})"><span style="font-size:14px;background:#fff;color:var(--info);border:2px solid var(--info);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle">3</span>📋 注文確定画面へ ↓</button>
 <div id="cards"></div>
 <div id="scroll-top-btn-wrap" style="text-align:center;padding:10px 16px 4px">
   <button onclick="window.scrollTo({top:0,behavior:'smooth'})" style="padding:12px 32px;background:#d6edd6;color:#0a4a0a;border:2px solid #4a8a4a;border-radius:14px;font-size:18px;font-weight:800;cursor:pointer;font-family:inherit">↑ 上に戻る</button>
@@ -573,7 +573,7 @@
 
 
 <div id="summary">
-  <div class="summary-title"><span style="font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle">3</span>📋 今週の注文内容（全カテゴリ）</div>
+  <div class="summary-title"><span style="font-size:14px;background:#fff;color:var(--info);border:2px solid var(--info);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle">3</span>📋 今週の注文内容（全カテゴリ）</div>
   <div id="summary-body"><div class="summary-empty">注文箱数を入力してください</div></div>
   <div id="money-summary" style="display:none"></div>
   <div id="total-boxes" style="display:none">0</div>
@@ -588,7 +588,7 @@
       <div>【パッド類】</div>
       <div>現在庫 ＝ 箱数×1箱枚数 ＋ 袋数×1袋枚数</div>
       <div>推奨注文 ＝ ⌈（週消費量 ＋ 1.5袋 ＋ 安全在庫 − 現在庫）÷ 1箱枚数⌉</div>
-      <div style="color:#888;font-size:9px;margin-left:1em">※ 来週日曜に必ず安全在庫（既定1箱・商品ごとに変更可）が残るよう逆算</div>
+      <div style="color:var(--ink-2);font-size:9px;margin-left:1em">※ 来週日曜に必ず安全在庫（既定1箱・商品ごとに変更可）が残るよう逆算</div>
       <div style="margin-top:6px">【テープ止め・リハパン】</div>
       <div>推奨注文 ＝ ⌈（週必要枚数 ＋ 1袋 − 現在庫）÷ 1箱枚数⌉ ＋ 安全在庫（既定1箱）</div>
       <div style="margin-top:6px">【吸水シート】</div>
@@ -601,7 +601,7 @@
       <div class="admin-only" style="margin-top:6px">【納品後の在庫】</div>
       <div class="admin-only">パッド類：現在庫 − 1日使用量×納品までの日数 − 予備1袋 ＋ 注文数×1箱枚数</div>
       <div class="admin-only">テープ止め・リハパン：現在庫 − 居室集計×納品までの入浴回数 − 予備2袋 ＋ 注文数×1箱枚数</div>
-      <div class="admin-only" style="color:#888">※ 納品までの日数・入浴回数は「🔧 注文サイクル設定」に従います</div>
+      <div class="admin-only" style="color:var(--ink-2)">※ 納品までの日数・入浴回数は「🔧 注文サイクル設定」に従います</div>
     </div>
   </div>
 </div>
@@ -665,7 +665,7 @@
     キャッシュクリアや機種変更の前に書き出しておきましょう。
   </div>
   <div style="margin-bottom:8px">
-    <div style="font-size:11px;color:#888;margin-bottom:4px">書き出しファイル名の先頭に付ける名前（任意）</div>
+    <div style="font-size:11px;color:var(--ink-3);margin-bottom:4px">書き出しファイル名の先頭に付ける名前（任意）</div>
     <input type="text" id="facility-name" placeholder="例：ケアユニット" value=""
       style="width:100%;padding:8px;border:1.5px solid #dde8e4;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"
       oninput="localStorage.setItem('facility_name', this.value)" onchange="localStorage.setItem('facility_name', this.value)">
@@ -680,7 +680,7 @@
   <div id="import-status" style="display:none"></div>
   <div style="margin-top:8px">
     <button class="btn-export" style="width:100%" onclick="exportStockRecords()">📊 在庫記録 書き出し（CSV）</button>
-    <div style="font-size:10px;color:#aaa;margin-top:4px">注文確定時に記録された在庫と日曜予想をExcelで開ける形式で書き出します</div>
+    <div style="font-size:10px;color:var(--ink-3);margin-top:4px">注文確定時に記録された在庫と日曜予想をExcelで開ける形式で書き出します</div>
   </div>
   <div style="border-top:1px solid #a0d4b0;margin:10px 0 8px"></div>
   <div class="backup-title">🏠 フロア別（使用量＋居室）</div>
@@ -720,7 +720,7 @@ var _isRedirecting = false;
   v.id='appVerBadge';
   var t=parseInt(_APP_V,10);
   v.textContent='ver.'+(t>0?new Date(t*1000).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'-');
-  v.style.cssText='position:fixed;bottom:4px;left:6px;font-size:10px;color:#888;opacity:.75;z-index:9998;pointer-events:none;';
+  v.style.cssText='position:fixed;bottom:4px;left:6px;font-size:10px;color:var(--ink-3);opacity:.75;z-index:9998;pointer-events:none;';
   document.body.appendChild(v);
 })();
 // ===== Firebase 設定 =====
@@ -1109,7 +1109,7 @@ function buildCards() {
 
     // 吸水シートは箱+袋在庫・注文・納品後在庫つきカード
     if (p.special) {
-      card.innerHTML = "\n      <div class=\"card-header\">\n        <div style=\"flex:1\"><div class=\"card-name\">" + (p.short || p.name) + "</div></div>\n      </div>\n      <div class=\"card-badges\">\n        <span class=\"badge-box\">📦 1箱 = " + (p.bagPerBox) + "袋（" + (p.perBox) + "枚）</span>\n        <span class=\"badge-bag\">🛍 1袋 = " + (p.perBag) + "枚</span>\n      </div>\n      <div class=\"card-body\">\n        <div style=\"font-size:13px;font-weight:800;color:#2a6a3a;margin-bottom:6px\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">1</span>現在の在庫</div>\n        <div class=\"stock-row\">\n          <div class=\"stock-col\">\n            <div class=\"col-label label-box\">📦 箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sb-'+" + (p.id) + ",-1,'stockBoxes'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-box\"\n                id=\"sb-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBoxes',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sb-'+" + (p.id) + ",1,'stockBoxes'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-box\" id=\"sbp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n          <div class=\"stock-sep\">+</div>\n          <div class=\"stock-col\">\n            <div class=\"col-label label-bag\">🛍 袋数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sg-'+" + (p.id) + ",-1,'stockBags'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-bag\"\n                id=\"sg-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBags',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sg-'+" + (p.id) + ",1,'stockBags'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-bag\" id=\"sgp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n        <div style=\"text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px\">\n          <span style=\"font-size:12px;color:#888\">合計：</span>\n          <span class=\"total-box\" id=\"tot-" + (p.id) + "\" style=\"font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0\">0</span>\n          <span style=\"font-size:11px;color:#888\">枚</span>\n          <div class=\"admin-only\" id=\"spare-row-" + (p.id) + "\" style=\"display:none;text-align:left;font-size:11px;color:#666;margin-top:6px;padding-top:6px;border-top:1px dashed #ddd;line-height:2.2\">\n            予備 📦<input type=\"number\" inputmode=\"numeric\" min=\"0\" id=\"spb-" + (p.id) + "\" placeholder=\"0\" oninput=\"updateSpare(" + (p.id) + ",'boxes',this.value)\" style=\"width:44px;padding:4px;border:1px solid #ccc;border-radius:6px;text-align:center;font-family:inherit;font-size:12px\">箱\n            🛍<input type=\"number\" inputmode=\"numeric\" min=\"0\" id=\"spg-" + (p.id) + "\" placeholder=\"0\" oninput=\"updateSpare(" + (p.id) + ",'bags',this.value)\" style=\"width:44px;padding:4px;border:1px solid #ccc;border-radius:6px;text-align:center;font-family:inherit;font-size:12px\">袋\n            <span id=\"spv-" + (p.id) + "\">（0枚）</span>\n            ／単価 <input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"0.1\" id=\"upr-" + (p.id) + "\" placeholder=\"0\" oninput=\"updateUnitPrice(" + (p.id) + ",this.value)\" style=\"width:56px;padding:4px;border:1px solid #ccc;border-radius:6px;text-align:center;font-family:inherit;font-size:12px\">円/枚\n          </div>\n        </div>\n        <div class=\"bottom-row\">\n          <div class=\"bottom-col admin-only\" id=\"after-col-" + (p.id) + "\" style=\"flex:0.7;display:none\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:#bbb\">納品後の在庫</div>\n            <div class=\"after-box\" id=\"af-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"afv-" + (p.id) + "\">0<span class=\"total-unit\">枚</span></div>\n              <div class=\"after-del\" id=\"afd-" + (p.id) + "\" style=\"display:none\"></div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" id=\"sun-col-" + (p.id) + "\" style=\"flex:0.7;display:none\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:#bbb\">来週の日曜の在庫予想</div>\n            <div class=\"after-box\" id=\"sun-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"sunv-" + (p.id) + "\" style=\"font-size:12px\">-</div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" style=\"flex:1.3\">\n            <div class=\"suggest-label\" id=\"ol-" + (p.id) + "\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>" + (p.short || p.name) + " 注文箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('oq-'+" + (p.id) + ",-1,'orderQty'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n                id=\"oq-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"font-size:26px;padding:12px 4px;border:2.5px solid #e53935;border-radius:8px;background:#fff5f5;font-weight:800;color:#c0392b;flex:1;min-width:0;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none\"\n                oninput=\"onInput(" + (p.id) + ",'orderQty',this.value)\">\n              <button class=\"spin-btn plus plus-ord\" onclick=\"stepInput('oq-'+" + (p.id) + ",1,'orderQty'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-order\" id=\"oqp-" + (p.id) + "\" style=\"display:none\"></div>\n            <div style=\"color:#e53935;font-size:20px;line-height:1.6;margin-top:10px\">※2階と3階合わせて5箱から注文可<br>（目安：在庫が1箱になったら）</div>\n          </div>\n        </div>\n      </div>";
+      card.innerHTML = "\n      <div class=\"card-header\">\n        <div style=\"flex:1\"><div class=\"card-name\">" + (p.short || p.name) + "</div></div>\n      </div>\n      <div class=\"card-badges\">\n        <span class=\"badge-box\">📦 1箱 = " + (p.bagPerBox) + "袋（" + (p.perBox) + "枚）</span>\n        <span class=\"badge-bag\">🛍 1袋 = " + (p.perBag) + "枚</span>\n      </div>\n      <div class=\"card-body\">\n        <div style=\"font-size:13px;font-weight:800;color:#2a6a3a;margin-bottom:6px\"><span style=\"font-size:14px;background:#fff;color:var(--info);border:2px solid var(--info);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">1</span>現在の在庫</div>\n        <div class=\"stock-row\">\n          <div class=\"stock-col\">\n            <div class=\"col-label label-box\">📦 箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sb-'+" + (p.id) + ",-1,'stockBoxes'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-box\"\n                id=\"sb-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBoxes',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sb-'+" + (p.id) + ",1,'stockBoxes'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-box\" id=\"sbp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n          <div class=\"stock-sep\">+</div>\n          <div class=\"stock-col\">\n            <div class=\"col-label label-bag\">🛍 袋数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sg-'+" + (p.id) + ",-1,'stockBags'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-bag\"\n                id=\"sg-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBags',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sg-'+" + (p.id) + ",1,'stockBags'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-bag\" id=\"sgp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n        <div style=\"text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px\">\n          <span style=\"font-size:12px;color:var(--ink-3)\">合計：</span>\n          <span class=\"total-box\" id=\"tot-" + (p.id) + "\" style=\"font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0\">0</span>\n          <span style=\"font-size:11px;color:var(--ink-3)\">枚</span>\n          <div class=\"admin-only\" id=\"spare-row-" + (p.id) + "\" style=\"display:none;text-align:left;font-size:11px;color:#666;margin-top:6px;padding-top:6px;border-top:1px dashed #ddd;line-height:2.2\">\n            予備 📦<input type=\"number\" inputmode=\"numeric\" min=\"0\" id=\"spb-" + (p.id) + "\" placeholder=\"0\" oninput=\"updateSpare(" + (p.id) + ",'boxes',this.value)\" style=\"width:44px;padding:4px;border:1px solid #ccc;border-radius:6px;text-align:center;font-family:inherit;font-size:12px\">箱\n            🛍<input type=\"number\" inputmode=\"numeric\" min=\"0\" id=\"spg-" + (p.id) + "\" placeholder=\"0\" oninput=\"updateSpare(" + (p.id) + ",'bags',this.value)\" style=\"width:44px;padding:4px;border:1px solid #ccc;border-radius:6px;text-align:center;font-family:inherit;font-size:12px\">袋\n            <span id=\"spv-" + (p.id) + "\">（0枚）</span>\n            ／単価 <input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"0.1\" id=\"upr-" + (p.id) + "\" placeholder=\"0\" oninput=\"updateUnitPrice(" + (p.id) + ",this.value)\" style=\"width:56px;padding:4px;border:1px solid #ccc;border-radius:6px;text-align:center;font-family:inherit;font-size:12px\">円/枚\n          </div>\n        </div>\n        <div class=\"bottom-row\">\n          <div class=\"bottom-col admin-only\" id=\"after-col-" + (p.id) + "\" style=\"flex:0.7;display:none\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:var(--ink-3)\">納品後の在庫</div>\n            <div class=\"after-box\" id=\"af-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"afv-" + (p.id) + "\">0<span class=\"total-unit\">枚</span></div>\n              <div class=\"after-del\" id=\"afd-" + (p.id) + "\" style=\"display:none\"></div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" id=\"sun-col-" + (p.id) + "\" style=\"flex:0.7;display:none\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:var(--ink-3)\">来週の日曜の在庫予想</div>\n            <div class=\"after-box\" id=\"sun-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"sunv-" + (p.id) + "\" style=\"font-size:12px\">-</div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" style=\"flex:1.3\">\n            <div class=\"suggest-label\" id=\"ol-" + (p.id) + "\"><span style=\"font-size:14px;background:#fff;color:var(--info);border:2px solid var(--info);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>" + (p.short || p.name) + " 注文箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('oq-'+" + (p.id) + ",-1,'orderQty'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n                id=\"oq-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"font-size:26px;padding:12px 4px;border:2.5px solid var(--danger);border-radius:8px;background:#fff5f5;font-weight:800;color:var(--danger);flex:1;min-width:0;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none\"\n                oninput=\"onInput(" + (p.id) + ",'orderQty',this.value)\">\n              <button class=\"spin-btn plus plus-ord\" onclick=\"stepInput('oq-'+" + (p.id) + ",1,'orderQty'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-order\" id=\"oqp-" + (p.id) + "\" style=\"display:none\"></div>\n            <div style=\"color:var(--danger);font-size:20px;line-height:1.6;margin-top:10px\">※2階と3階合わせて5箱から注文可<br>（目安：在庫が1箱になったら）</div>\n          </div>\n        </div>\n      </div>";
       container.appendChild(card);
       return;
     }
@@ -1119,7 +1119,7 @@ function buildCards() {
     const subHtml = p.abs
       ? "<div class=\"card-sub\">" + (p.name) + "　" + (p.abs) + "</div>" : "";
 
-    card.innerHTML = "\n      <div class=\"card-header\">\n        " + (dotHtml) + "\n        <div style=\"flex:1\">\n          <div class=\"card-name\">" + (p.short || p.name) + "</div>\n          " + (subHtml) + "\n        </div>\n        <div class=\"badge-low\" id=\"low-" + (p.id) + "\" style=\"display:none\">⚠ 不足注意</div>\n      </div>\n      <div class=\"card-badges\">\n        <span class=\"badge-box\">📦 1箱 = " + (Math.round(p.perBox/p.perBag)) + "袋（" + (p.perBox) + "枚）</span>\n        <span class=\"badge-bag\">🛍 1袋 = " + (p.perBag) + "枚</span>\n      </div>\n      <div class=\"card-body\">\n        <div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:6px\">\n          <div style=\"font-size:13px;font-weight:800;color:#2a6a3a\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">1</span>現在の在庫</div>\n          <div id=\"use4-" + (p.id) + "\" class=\"admin-only\" style=\"font-size:10px;color:#888;display:none;text-align:right;line-height:1.9\">\n            <span style=\"color:#aaa;font-size:9px\">※1枚でも使えば1袋カウント</span><br>\n            納品までの消費：<span id=\"use4v-" + (p.id) + "\" style=\"font-weight:700;color:#c07000\"></span><br>\n            7日消費：<span id=\"use7v-" + (p.id) + "\" style=\"font-weight:700;color:#888\"></span>\n          </div>\n        </div>\n        <div class=\"stock-row\">\n          <div class=\"stock-col\">\n            <div class=\"col-label label-box\">📦 箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sb-'+" + (p.id) + ",-1,'stockBoxes'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-box\"\n                id=\"sb-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBoxes',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sb-'+" + (p.id) + ",1,'stockBoxes'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-box\" id=\"sbp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n          <div class=\"stock-sep\">+</div>\n          <div class=\"stock-col\">\n            <div class=\"col-label label-bag\">🛍 袋数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sg-'+" + (p.id) + ",-1,'stockBags'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-bag\"\n                id=\"sg-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBags',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sg-'+" + (p.id) + ",1,'stockBags'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-bag\" id=\"sgp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n        <div style=\"text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px\">\n          <span style=\"font-size:12px;color:#888\">合計：</span>\n          <span class=\"total-box\" id=\"tot-" + (p.id) + "\" style=\"font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0\">0</span>\n          <span style=\"font-size:11px;color:#888\">枚</span>\n          <div class=\"admin-only\" id=\"spare-row-" + (p.id) + "\" style=\"display:none;text-align:left;font-size:11px;color:#666;margin-top:6px;padding-top:6px;border-top:1px dashed #ddd;line-height:2.2\">\n            予備 📦<input type=\"number\" inputmode=\"numeric\" min=\"0\" id=\"spb-" + (p.id) + "\" placeholder=\"0\" oninput=\"updateSpare(" + (p.id) + ",'boxes',this.value)\" style=\"width:44px;padding:4px;border:1px solid #ccc;border-radius:6px;text-align:center;font-family:inherit;font-size:12px\">箱\n            🛍<input type=\"number\" inputmode=\"numeric\" min=\"0\" id=\"spg-" + (p.id) + "\" placeholder=\"0\" oninput=\"updateSpare(" + (p.id) + ",'bags',this.value)\" style=\"width:44px;padding:4px;border:1px solid #ccc;border-radius:6px;text-align:center;font-family:inherit;font-size:12px\">袋\n            <span id=\"spv-" + (p.id) + "\">（0枚）</span>\n            ／単価 <input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"0.1\" id=\"upr-" + (p.id) + "\" placeholder=\"0\" oninput=\"updateUnitPrice(" + (p.id) + ",this.value)\" style=\"width:56px;padding:4px;border:1px solid #ccc;border-radius:6px;text-align:center;font-family:inherit;font-size:12px\">円/枚\n          </div>\n          <div class=\"admin-only\" style=\"font-size:12px;color:#aaa;margin-top:2px;display:none\" id=\"gap-row-" + (p.id) + "\">\n            前回予想とのズレ：<span id=\"gapv-" + (p.id) + "\">-</span>\n          </div>\n        </div>\n        <div class=\"bottom-row\">\n\n          <div class=\"bottom-col admin-only\" id=\"daily-col-" + (p.id) + "\" " + (p.weeklyFixed !== null ? 'style="display:none"' : '') + " data-weekly=\"" + (p.weeklyFixed !== null) + "\">\n            <div class=\"daily-label-row\">\n              <div class=\"daily-saved-dot\" id=\"dot-" + (p.id) + "\"></div>\n              <div class=\"col-label label-daily\" style=\"margin-bottom:0\">1日使用量(枚)</div>\n            </div>\n            <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-daily\"\n              id=\"du-" + (p.id) + "\" value=\"\" placeholder=\"0\" oninput=\"onInput(" + (p.id) + ",'dailyUse',this.value)\">\n          </div>\n          <div class=\"bottom-col\" id=\"weekly-col-" + (p.id) + "\" " + ((p.weeklyFixed === null || ((p.cat === "tape" || p.cat === "pants") && !isAdminMode)) ? "style=\"display:none\"" : "") + ">\n            <div class=\"col-label label-daily\">週必要枚数</div>\n            <div id=\"weekly-disp-" + (p.id) + "\" style=\"border:2px solid #a0d4b0;border-radius:10px;padding:10px 4px;text-align:center;background:#f0fdf6;font-size:16px;font-weight:800;color:#1a4a3a\">\n              " + (p.weeklyFixed) + "<span style=\"font-size:10px;font-weight:400\">枚</span>\n            </div>\n            <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n              id=\"weekly-input-" + (p.id) + "\"\n              style=\"display:none;width:100%;padding:8px 4px;border:2px solid #f57c00;border-radius:10px;font-size:16px;text-align:center;font-weight:800;font-family:inherit;outline:none;background:#fff8f0;margin-top:4px;box-sizing:border-box\"\n              placeholder=\"" + (p.weeklyFixed) + "\"\n              oninput=\"updateWeeklyFixed(" + (p.id) + ", this.value)\">\n          </div>\n          <div class=\"bottom-col admin-only\" id=\"safety-col-" + (p.id) + "\" style=\"flex:0.7;display:none\">\n            <div class=\"col-label label-daily\" style=\"margin-bottom:0\">安全在庫(箱)</div>\n            <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-daily\" id=\"saf-" + (p.id) + "\" value=\"\" placeholder=\"1\" oninput=\"updateSafetyBoxes(" + (p.id) + ", this.value)\">\n          </div>\n          <div class=\"bottom-col admin-only\" id=\"after-col-" + (p.id) + "\" style=\"flex:0.7;display:none\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:#bbb\">納品後の在庫</div>\n            <div class=\"after-box\" id=\"af-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"afv-" + (p.id) + "\">0<span class=\"total-unit\">枚</span></div>\n              <div class=\"after-del\" id=\"afd-" + (p.id) + "\" style=\"display:none\"></div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" style=\"flex:1.3\">\n            <div class=\"suggest-label\" id=\"ol-" + (p.id) + "\"><span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>" + (p.short || p.name) + " 注文箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('oq-'+" + (p.id) + ",-1,'orderQty'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n                id=\"oq-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"font-size:26px;padding:12px 4px;border:2.5px solid #e53935;border-radius:8px;background:#fff5f5;font-weight:800;color:#c0392b;flex:1;min-width:0;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none\"\n                oninput=\"onInput(" + (p.id) + ",'orderQty',this.value)\">\n              <button class=\"spin-btn plus plus-ord\" onclick=\"stepInput('oq-'+" + (p.id) + ",1,'orderQty'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-order\" id=\"oqp-" + (p.id) + "\" style=\"display:none\"></div>\n            <div id=\"suggest-btn-" + (p.id) + "\" style=\"margin-top:6px\"></div>\n            <div style=\"text-align:right;font-size:15px;color:#aaa;margin-top:4px\" id=\"sun-col-" + (p.id) + "\">\n              <span id=\"sunlbl-" + (p.id) + "\">来週日曜在庫予想</span>：<span id=\"sunv-" + (p.id) + "\">-</span>\n            </div>\n            <div id=\"thu-check-" + (p.id) + "\" style=\"margin-top:4px\"></div>\n            <div class=\"prev-badge\" id=\"prev-" + (p.id) + "\" style=\"display:none;text-align:right;font-size:12px;color:#888;margin-top:2px\"></div>\n          </div>\n        </div>\n      </div>\n    ";
+    card.innerHTML = "\n      <div class=\"card-header\">\n        " + (dotHtml) + "\n        <div style=\"flex:1\">\n          <div class=\"card-name\">" + (p.short || p.name) + "</div>\n          " + (subHtml) + "\n        </div>\n        <div class=\"badge-low\" id=\"low-" + (p.id) + "\" style=\"display:none\">⚠ 不足注意</div>\n      </div>\n      <div class=\"card-badges\">\n        <span class=\"badge-box\">📦 1箱 = " + (Math.round(p.perBox/p.perBag)) + "袋（" + (p.perBox) + "枚）</span>\n        <span class=\"badge-bag\">🛍 1袋 = " + (p.perBag) + "枚</span>\n      </div>\n      <div class=\"card-body\">\n        <div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:6px\">\n          <div style=\"font-size:13px;font-weight:800;color:#2a6a3a\"><span style=\"font-size:14px;background:#fff;color:var(--info);border:2px solid var(--info);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">1</span>現在の在庫</div>\n          <div id=\"use4-" + (p.id) + "\" class=\"admin-only\" style=\"font-size:10px;color:var(--ink-3);display:none;text-align:right;line-height:1.9\">\n            <span style=\"color:var(--ink-3);font-size:9px\">※1枚でも使えば1袋カウント</span><br>\n            納品までの消費：<span id=\"use4v-" + (p.id) + "\" style=\"font-weight:700;color:var(--order)\"></span><br>\n            7日消費：<span id=\"use7v-" + (p.id) + "\" style=\"font-weight:700;color:var(--ink-3)\"></span>\n          </div>\n        </div>\n        <div class=\"stock-row\">\n          <div class=\"stock-col\">\n            <div class=\"col-label label-box\">📦 箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sb-'+" + (p.id) + ",-1,'stockBoxes'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-box\"\n                id=\"sb-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBoxes',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sb-'+" + (p.id) + ",1,'stockBoxes'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-box\" id=\"sbp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n          <div class=\"stock-sep\">+</div>\n          <div class=\"stock-col\">\n            <div class=\"col-label label-bag\">🛍 袋数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('sg-'+" + (p.id) + ",-1,'stockBags'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-bag\"\n                id=\"sg-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"-webkit-appearance:none;border-radius:8px;flex:1;min-width:0;text-align:center\"\n                oninput=\"onInput(" + (p.id) + ",'stockBags',this.value)\">\n              <button class=\"spin-btn plus\" onclick=\"stepInput('sg-'+" + (p.id) + ",1,'stockBags'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-bag\" id=\"sgp-" + (p.id) + "\" style=\"display:none\"></div>\n          </div>\n        </div>\n        <div style=\"text-align:right;padding-right:4px;margin-top:-4px;margin-bottom:6px\">\n          <span style=\"font-size:12px;color:var(--ink-3)\">合計：</span>\n          <span class=\"total-box\" id=\"tot-" + (p.id) + "\" style=\"font-size:14px;font-weight:700;color:#555;background:none;border:none;padding:0\">0</span>\n          <span style=\"font-size:11px;color:var(--ink-3)\">枚</span>\n          <div class=\"admin-only\" id=\"spare-row-" + (p.id) + "\" style=\"display:none;text-align:left;font-size:11px;color:#666;margin-top:6px;padding-top:6px;border-top:1px dashed #ddd;line-height:2.2\">\n            予備 📦<input type=\"number\" inputmode=\"numeric\" min=\"0\" id=\"spb-" + (p.id) + "\" placeholder=\"0\" oninput=\"updateSpare(" + (p.id) + ",'boxes',this.value)\" style=\"width:44px;padding:4px;border:1px solid #ccc;border-radius:6px;text-align:center;font-family:inherit;font-size:12px\">箱\n            🛍<input type=\"number\" inputmode=\"numeric\" min=\"0\" id=\"spg-" + (p.id) + "\" placeholder=\"0\" oninput=\"updateSpare(" + (p.id) + ",'bags',this.value)\" style=\"width:44px;padding:4px;border:1px solid #ccc;border-radius:6px;text-align:center;font-family:inherit;font-size:12px\">袋\n            <span id=\"spv-" + (p.id) + "\">（0枚）</span>\n            ／単価 <input type=\"number\" inputmode=\"decimal\" min=\"0\" step=\"0.1\" id=\"upr-" + (p.id) + "\" placeholder=\"0\" oninput=\"updateUnitPrice(" + (p.id) + ",this.value)\" style=\"width:56px;padding:4px;border:1px solid #ccc;border-radius:6px;text-align:center;font-family:inherit;font-size:12px\">円/枚\n          </div>\n          <div class=\"admin-only\" style=\"font-size:12px;color:var(--ink-3);margin-top:2px;display:none\" id=\"gap-row-" + (p.id) + "\">\n            前回予想とのズレ：<span id=\"gapv-" + (p.id) + "\">-</span>\n          </div>\n        </div>\n        <div class=\"bottom-row\">\n\n          <div class=\"bottom-col admin-only\" id=\"daily-col-" + (p.id) + "\" " + (p.weeklyFixed !== null ? 'style="display:none"' : '') + " data-weekly=\"" + (p.weeklyFixed !== null) + "\">\n            <div class=\"daily-label-row\">\n              <div class=\"daily-saved-dot\" id=\"dot-" + (p.id) + "\"></div>\n              <div class=\"col-label label-daily\" style=\"margin-bottom:0\">1日使用量(枚)</div>\n            </div>\n            <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-daily\"\n              id=\"du-" + (p.id) + "\" value=\"\" placeholder=\"0\" oninput=\"onInput(" + (p.id) + ",'dailyUse',this.value)\">\n          </div>\n          <div class=\"bottom-col\" id=\"weekly-col-" + (p.id) + "\" " + ((p.weeklyFixed === null || ((p.cat === "tape" || p.cat === "pants") && !isAdminMode)) ? "style=\"display:none\"" : "") + ">\n            <div class=\"col-label label-daily\">週必要枚数</div>\n            <div id=\"weekly-disp-" + (p.id) + "\" style=\"border:2px solid #a0d4b0;border-radius:10px;padding:10px 4px;text-align:center;background:#f0fdf6;font-size:16px;font-weight:800;color:#1a4a3a\">\n              " + (p.weeklyFixed) + "<span style=\"font-size:10px;font-weight:400\">枚</span>\n            </div>\n            <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n              id=\"weekly-input-" + (p.id) + "\"\n              style=\"display:none;width:100%;padding:8px 4px;border:2px solid var(--order);border-radius:10px;font-size:16px;text-align:center;font-weight:800;font-family:inherit;outline:none;background:#fff8f0;margin-top:4px;box-sizing:border-box\"\n              placeholder=\"" + (p.weeklyFixed) + "\"\n              oninput=\"updateWeeklyFixed(" + (p.id) + ", this.value)\">\n          </div>\n          <div class=\"bottom-col admin-only\" id=\"safety-col-" + (p.id) + "\" style=\"flex:0.7;display:none\">\n            <div class=\"col-label label-daily\" style=\"margin-bottom:0\">安全在庫(箱)</div>\n            <input type=\"number\" inputmode=\"numeric\" min=\"0\" class=\"bg-daily\" id=\"saf-" + (p.id) + "\" value=\"\" placeholder=\"1\" oninput=\"updateSafetyBoxes(" + (p.id) + ", this.value)\">\n          </div>\n          <div class=\"bottom-col admin-only\" id=\"after-col-" + (p.id) + "\" style=\"flex:0.7;display:none\">\n            <div class=\"col-label label-after\" style=\"font-size:9px;color:var(--ink-3)\">納品後の在庫</div>\n            <div class=\"after-box\" id=\"af-" + (p.id) + "\">\n              <div class=\"after-val\" id=\"afv-" + (p.id) + "\">0<span class=\"total-unit\">枚</span></div>\n              <div class=\"after-del\" id=\"afd-" + (p.id) + "\" style=\"display:none\"></div>\n            </div>\n          </div>\n          <div class=\"bottom-col\" style=\"flex:1.3\">\n            <div class=\"suggest-label\" id=\"ol-" + (p.id) + "\"><span style=\"font-size:14px;background:#fff;color:var(--info);border:2px solid var(--info);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>" + (p.short || p.name) + " 注文箱数</div>\n            <div class=\"spin-wrap\">\n              <button class=\"spin-btn minus\" onclick=\"stepInput('oq-'+" + (p.id) + ",-1,'orderQty'," + (p.id) + ")\">－</button>\n              <input type=\"number\" inputmode=\"numeric\" min=\"0\"\n                id=\"oq-" + (p.id) + "\" value=\"\" placeholder=\"0\"\n                style=\"font-size:26px;padding:12px 4px;border:2.5px solid var(--danger);border-radius:8px;background:#fff5f5;font-weight:800;color:var(--danger);flex:1;min-width:0;text-align:center;outline:none;font-family:inherit;-webkit-appearance:none\"\n                oninput=\"onInput(" + (p.id) + ",'orderQty',this.value)\">\n              <button class=\"spin-btn plus plus-ord\" onclick=\"stepInput('oq-'+" + (p.id) + ",1,'orderQty'," + (p.id) + ")\">＋</button>\n            </div>\n            <div class=\"sub-pieces sub-order\" id=\"oqp-" + (p.id) + "\" style=\"display:none\"></div>\n            <div id=\"suggest-btn-" + (p.id) + "\" style=\"margin-top:6px\"></div>\n            <div style=\"text-align:right;font-size:15px;color:var(--ink-3);margin-top:4px\" id=\"sun-col-" + (p.id) + "\">\n              <span id=\"sunlbl-" + (p.id) + "\">来週日曜在庫予想</span>：<span id=\"sunv-" + (p.id) + "\">-</span>\n            </div>\n            <div id=\"thu-check-" + (p.id) + "\" style=\"margin-top:4px\"></div>\n            <div class=\"prev-badge\" id=\"prev-" + (p.id) + "\" style=\"display:none;text-align:right;font-size:12px;color:var(--ink-3);margin-top:2px\"></div>\n          </div>\n        </div>\n      </div>\n    ";
     container.appendChild(card);
   });
 }
@@ -1238,12 +1238,12 @@ function updateCard(pid) {
   const olEl = document.getElementById("ol-"+pid);
     if (olEl) {
     olEl.style.color="#1a4a3a";
-    olEl.innerHTML = '<span style=\"font-size:14px;background:#fff;color:#1565c0;border:2px solid #1565c0;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>' + (p.short || p.name) + " 注文箱数";
+    olEl.innerHTML = '<span style=\"font-size:14px;background:#fff;color:var(--info);border:2px solid var(--info);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;font-weight:800;vertical-align:middle\">2</span>' + (p.short || p.name) + " 注文箱数";
     var sugBtnEl = document.getElementById('suggest-btn-' + pid);
     if (sugBtnEl) {
       sugBtnEl.innerHTML = suggested > 0
-        ? '<button onclick="document.getElementById(\'oq-' + pid + '\').value=' + suggested + ';onInput(' + pid + ',\'orderQty\',' + suggested + ');showToast(\'入力しました。\')" style="cursor:pointer;border:none;background:#f57c00;color:#fff;border-radius:10px;padding:3px 0.3em;font-family:inherit;font-weight:800;font-size:17px;line-height:1.4;text-align:center;box-shadow:0 4px 0 #bf360c,0 5px 10px rgba(0,0,0,0.18)">👆 目安<span style="font-size:1.4em;font-weight:900">' + suggested + '箱</span>を入力</button>'
-        : '<div style="text-align:center"><div style="display:inline-block;font-size:18px;color:#fff;font-weight:700;padding:3px 1.05em;background:#388e3c;border-radius:10px;box-shadow:0 4px 0 #1b5e20,0 5px 10px rgba(0,0,0,0.18)">✅ 在庫あり（追加OK）</div></div>';
+        ? '<button onclick="document.getElementById(\'oq-' + pid + '\').value=' + suggested + ';onInput(' + pid + ',\'orderQty\',' + suggested + ');showToast(\'入力しました。\')" style="cursor:pointer;border:none;background:var(--order);color:#fff;border-radius:10px;padding:3px 0.3em;font-family:inherit;font-weight:800;font-size:17px;line-height:1.4;text-align:center;box-shadow:0 4px 0 #bf360c,0 5px 10px rgba(0,0,0,0.18)">👆 目安<span style="font-size:1.4em;font-weight:900">' + suggested + '箱</span>を入力</button>'
+        : '<div style="text-align:center"><div style="display:inline-block;font-size:18px;color:#fff;font-weight:700;padding:3px 1.05em;background:var(--ok);border-radius:10px;box-shadow:0 4px 0 #1b5e20,0 5px 10px rgba(0,0,0,0.18)">✅ 在庫あり（追加OK）</div></div>';
     }
   }
 
@@ -1271,7 +1271,7 @@ function updateCard(pid) {
   if (afvEl) {
     afvEl.className = "after-val" + (thurLow ? " low" : "");
     const stockDisp = formatBoxBag(nextSunRem, p).str;
-    afvEl.innerHTML = stockDisp + '<div style="font-size:10px;font-weight:400;color:#888;margin-top:2px">' + nextSunRem + '枚</div>';
+    afvEl.innerHTML = stockDisp + '<div style="font-size:10px;font-weight:400;color:var(--ink-3);margin-top:2px">' + nextSunRem + '枚</div>';
   }
   if (afdEl) { afdEl.style.display="none"; }
 
@@ -1283,8 +1283,8 @@ function updateCard(pid) {
     const sunStock = calcSundayStock(p);
     const sunLow = sunStock < 0;
     let sunDisp = sunLow ? '不足' : formatBoxBag(Math.max(0, sunStock), p).str;
-    sunEl.innerHTML = sunDisp + '<div style="font-size:9px;font-weight:400;color:#aaa;margin-top:1px">' + Math.round(sunStock) + '枚</div>';
-    sunEl.style.color = sunLow ? '#e53935' : '#555';
+    sunEl.innerHTML = sunDisp + '<div style="font-size:9px;font-weight:400;color:var(--ink-3);margin-top:1px">' + Math.round(sunStock) + '枚</div>';
+    sunEl.style.color = sunLow ? 'var(--danger)' : '#555';
     const sunBox = document.getElementById('sun-'+pid);
     if (sunBox) sunBox.className = 'after-box' + (sunLow ? ' low' : '');
   }
@@ -1316,7 +1316,7 @@ function updateCard(pid) {
       const gap = actualUsed - predictedUsed;
       gapRow.style.display = isAdminMode ? 'block' : 'none';
       gapEl.textContent = (gap > 0 ? '+' : '') + gap + '枚（予想' + predictedUsed + '枚 実際' + actualUsed + '枚）';
-      gapEl.style.color = gap === 0 ? '#888' : (gap > 0 ? '#e53935' : '#2a7a2a');
+      gapEl.style.color = gap === 0 ? 'var(--ink-3)' : (gap > 0 ? 'var(--danger)' : '#2a7a2a');
       gapEl.style.fontWeight = '700';
     }
   }
@@ -1365,8 +1365,8 @@ function updateSummary() {
   // 2グループ合計
   if (group1Total > 0 || group2Total > 0) {
     html += "<div style=\"display:flex;gap:10px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap\">";
-    if (group1Total > 0) html += "<div style=\"background:rgba(255,255,255,0.7);border:2px solid #e65100;border-radius:10px;padding:8px 20px;text-align:center\"><div style=\"font-size:16px;font-weight:800;color:#1a1a1a\">パッド計</div><div style=\"font-size:26px;font-weight:800;color:#e65100\">" + (group1Total) + "箱</div></div>";
-    if (group2Total > 0) html += "<div style=\"background:rgba(255,255,255,0.7);border:2px solid #e65100;border-radius:10px;padding:8px 20px;text-align:center\"><div style=\"font-size:16px;font-weight:800;color:#1a1a1a\">テープ・リハパン計</div><div style=\"font-size:26px;font-weight:800;color:#e65100\">" + (group2Total) + "箱</div></div>";
+    if (group1Total > 0) html += "<div style=\"background:rgba(255,255,255,0.7);border:2px solid var(--order);border-radius:10px;padding:8px 20px;text-align:center\"><div style=\"font-size:16px;font-weight:800;color:#1a1a1a\">パッド計</div><div style=\"font-size:26px;font-weight:800;color:var(--order)\">" + (group1Total) + "箱</div></div>";
+    if (group2Total > 0) html += "<div style=\"background:rgba(255,255,255,0.7);border:2px solid var(--order);border-radius:10px;padding:8px 20px;text-align:center\"><div style=\"font-size:16px;font-weight:800;color:#1a1a1a\">テープ・リハパン計</div><div style=\"font-size:26px;font-weight:800;color:var(--order)\">" + (group2Total) + "箱</div></div>";
     html += "</div>";
   }
 
@@ -1390,12 +1390,12 @@ function updateMoneySummary() {
     spareYen += sparePieces(p) * price;
   });
   el.style.display = "block";
-  el.style.cssText = "display:block;margin-top:8px;padding:10px 12px;background:rgba(255,255,255,0.7);border:2px solid #1565c0;border-radius:10px;font-size:13px;color:#1a1a1a;line-height:1.9";
+  el.style.cssText = "display:block;margin-top:8px;padding:10px 12px;background:rgba(255,255,255,0.7);border:2px solid var(--info);border-radius:10px;font-size:13px;color:#1a1a1a;line-height:1.9";
   el.innerHTML = '💰 <b>' + floorLabel(currentFloor) + 'の金額</b>（単価を入れた商品のみ）'
     + '<div style="display:flex;justify-content:space-between"><span>今回の注文</span>'
-    + '<b style="font-size:16px;color:#1565c0">' + Math.round(orderYen).toLocaleString() + ' 円</b></div>'
+    + '<b style="font-size:16px;color:var(--info)">' + Math.round(orderYen).toLocaleString() + ' 円</b></div>'
     + '<div style="display:flex;justify-content:space-between"><span>予備ストック</span>'
-    + '<b style="font-size:16px;color:#1565c0">' + Math.round(spareYen).toLocaleString() + ' 円</b></div>';
+    + '<b style="font-size:16px;color:var(--info)">' + Math.round(spareYen).toLocaleString() + ' 円</b></div>';
 }
 
 function onInput(pid, field, val) {
@@ -1678,11 +1678,11 @@ function confirmOrder() {
       if (match && (state[currentFloor][p.id].orderQty || 0) > 0) ordered.push(p);
     }
     if (!ordered.length) continue;
-    html += '<div style="font-size:10px;font-weight:700;color:#888;margin:8px 0 3px;grid-column:1/-1">▼ ' + g.label + '</div>';
+    html += '<div style="font-size:10px;font-weight:700;color:var(--ink-3);margin:8px 0 3px;grid-column:1/-1">▼ ' + g.label + '</div>';
     for (var k = 0; k < ordered.length; k++) {
       var op = ordered[k];
       var qty = state[currentFloor][op.id].orderQty || 0;
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:#f9f9f9;border-radius:6px;margin-bottom:3px"><span style="font-size:14px;font-weight:700">' + (op.short||op.name) + '</span><span style="white-space:nowrap"><span style="font-size:18px;font-weight:900;color:#e65100">' + qty + '</span><span style="font-size:12px;color:#999;margin-left:4px">箱</span></span></div>';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:#f9f9f9;border-radius:6px;margin-bottom:3px"><span style="font-size:14px;font-weight:700">' + (op.short||op.name) + '</span><span style="white-space:nowrap"><span style="font-size:18px;font-weight:900;color:var(--order)">' + qty + '</span><span style="font-size:12px;color:var(--ink-3);margin-left:4px">箱</span></span></div>';
       if (op.cat === 'pad') padTot += qty;
       else tapeTot += qty;
     }
@@ -1810,11 +1810,11 @@ function showDraftRestoreDialog(onRestore, onNew, onClose) {
   var box = document.createElement('div');
   box.style.cssText = 'position:relative;background:#fff;border-radius:12px;padding:24px;max-width:320px;width:88%;box-shadow:0 4px 20px rgba(0,0,0,0.2)';
   box.innerHTML =
-      '<button id="draft-close" aria-label="閉じる" style="position:absolute;top:2px;right:2px;width:44px;height:44px;border:none;background:none;color:#888;font-size:22px;line-height:1;cursor:pointer;font-family:inherit">×</button>'
+      '<button id="draft-close" aria-label="閉じる" style="position:absolute;top:2px;right:2px;width:44px;height:44px;border:none;background:none;color:var(--ink-3);font-size:22px;line-height:1;cursor:pointer;font-family:inherit">×</button>'
     + '<div style="font-size:14px;font-weight:700;color:#333;margin:4px 34px 16px 0;line-height:1.6">前回の入力データが残っています。<br>復元して作業を続けますか？</div>'
     + '<div style="display:flex;gap:10px;justify-content:flex-end">'
     + '<button id="draft-new" style="padding:10px 14px;border:1px solid #ccc;border-radius:8px;background:#f5f5f5;color:#555;cursor:pointer;font-family:inherit;font-size:13px">新しく入力</button>'
-    + '<button id="draft-restore" style="padding:10px 16px;border:none;border-radius:8px;background:#e65100;color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700">復元する</button>'
+    + '<button id="draft-restore" style="padding:10px 16px;border:none;border-radius:8px;background:var(--order);color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700">復元する</button>'
     + '</div>';
   overlay.appendChild(box);
   document.body.appendChild(overlay);
@@ -1832,7 +1832,7 @@ function showConfirmMobile(msg, onOk, onCancel, okLabel) {
   box.innerHTML = '<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:16px;line-height:1.6">' + msg.replace(/\n/g,'<br>') + '</div>'
     + '<div style="display:flex;gap:10px;justify-content:flex-end">'
     + '<button id="mob-cancel" style="padding:8px 16px;border:1px solid #ccc;border-radius:8px;background:#f5f5f5;cursor:pointer;font-family:inherit;font-size:13px">キャンセル</button>'
-    + '<button id="mob-ok" style="padding:8px 16px;border:none;border-radius:8px;background:#e65100;color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700">' + (okLabel || '上書き') + '</button>'
+    + '<button id="mob-ok" style="padding:8px 16px;border:none;border-radius:8px;background:var(--order);color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700">' + (okLabel || '上書き') + '</button>'
     + '</div>';
   overlay.appendChild(box);
   document.body.appendChild(overlay);
@@ -1847,7 +1847,7 @@ function updatePrevBadge(pid) {
   let last = getLastOrder(currentFloor, pid);
   if (last !== null && typeof last === 'object') last = last.qty || 0;
   if (last !== null && last > 0) {
-    el.innerHTML = "前回の注文：<span style=\"font-weight:800;color:#c0392b\">" + last + "箱</span>";
+    el.innerHTML = "前回の注文：<span style=\"font-weight:800;color:var(--danger)\">" + last + "箱</span>";
     el.style.display = "block";
   } else {
     el.style.display = "none";
@@ -1867,7 +1867,7 @@ function renderThuCheck() {
     if (!isDeliveryDay || !rec || rec.items[p.id] === undefined) { el.innerHTML = ''; return; }
     var exp = rec.items[p.id];
     var dispStr = formatBoxBag(exp, p).str;
-    el.innerHTML = '<div style="text-align:right;font-size:13px;color:#1565c0;margin-top:3px;font-weight:700">🚚 納品日チェック：予想 ' + dispStr + '</div>';
+    el.innerHTML = '<div style="text-align:right;font-size:13px;color:var(--info);margin-top:3px;font-weight:700">🚚 納品日チェック：予想 ' + dispStr + '</div>';
   });
 }
 
@@ -1903,7 +1903,7 @@ function renderHistory() {
     html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;padding:0 4px">';
     hist.forEach(function(h) {
       html += '<button class="hist-del-btn" data-key="' + (h.date + '_' + h.floor) + '" data-date="' + (h.date||'') + '"'
-        + ' style="font-size:11px;padding:4px 8px;border:1px solid #e0b0b0;border-radius:6px;background:#fff5f5;color:#c62828;font-family:inherit;cursor:pointer">'
+        + ' style="font-size:11px;padding:4px 8px;border:1px solid #e0b0b0;border-radius:6px;background:#fff5f5;color:var(--danger);font-family:inherit;cursor:pointer">'
         + '🗑 ' + (h.date||'') + '</button>';
     });
     html += '</div>';
@@ -1992,14 +1992,14 @@ function renderSunHistMobile() {
   var key = 'diaper_sun_hist_' + currentFloor;
   var hist = [];
   try { hist = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
-  if (!hist.length) { panel.innerHTML = '<div style="color:#aaa;padding:4px">履歴なし</div>'; return; }
+  if (!hist.length) { panel.innerHTML = '<div style="color:var(--ink-3);padding:4px">履歴なし</div>'; return; }
 
   var html = '<table style="border-collapse:collapse;width:100%;font-size:10px;table-layout:fixed">';
   html += '<tr style="background:#f0f0f0"><th style="padding:3px 6px;text-align:left">商品</th>';
   for (var hi = 0; hi < hist.length; hi++) {
     var h = hist[hi];
     html += '<th style="padding:3px 6px;text-align:center;white-space:nowrap">' + h.date
-      + '<br><button onclick="deleteSunHistMobile(' + hi + ')" style="font-size:8px;padding:1px 5px;border:1px solid #ffaaaa;border-radius:4px;background:#fff5f5;color:#e53935;cursor:pointer;font-family:inherit;margin-top:2px">削除</button></th>';
+      + '<br><button onclick="deleteSunHistMobile(' + hi + ')" style="font-size:8px;padding:1px 5px;border:1px solid #ffaaaa;border-radius:4px;background:#fff5f5;color:var(--danger);cursor:pointer;font-family:inherit;margin-top:2px">削除</button></th>';
   }
   html += '</tr>';
 
@@ -2010,9 +2010,9 @@ function renderSunHistMobile() {
     html += '<td style="padding:3px 6px;font-weight:700">' + (p.short||p.name) + '</td>';
     hist.forEach(function(h) {
       var val = h.items ? h.items[p.id] : undefined;
-      if (val === undefined) { html += '<td style="padding:3px 6px;text-align:center;color:#bbb">-</td>'; return; }
-      var disp = val < 0 ? '<span style="color:#e53935">不足</span>' : formatBoxBag(Math.max(0,val), p).str+'<br><span style="color:#aaa">('+val+'枚)</span>';
-      var stk = h.stocks && h.stocks[p.id] ? '<br><span style="color:#bbb;font-size:9px">在庫'+h.stocks[p.id].boxes+'箱'+h.stocks[p.id].bags+'袋</span>' : '';
+      if (val === undefined) { html += '<td style="padding:3px 6px;text-align:center;color:var(--ink-3)">-</td>'; return; }
+      var disp = val < 0 ? '<span style="color:var(--danger)">不足</span>' : formatBoxBag(Math.max(0,val), p).str+'<br><span style="color:var(--ink-3)">('+val+'枚)</span>';
+      var stk = h.stocks && h.stocks[p.id] ? '<br><span style="color:var(--ink-3);font-size:9px">在庫'+h.stocks[p.id].boxes+'箱'+h.stocks[p.id].bags+'袋</span>' : '';
       html += '<td style="padding:3px 6px;text-align:center">' + disp + stk + '</td>';
     });
     html += '</tr>';
@@ -2126,7 +2126,7 @@ function toggleUsageMobile() {
 function renderUsageMobile() {
   var panel = document.getElementById('usage-mobile');
   var WEEKS_N = 8;
-  var html = '<div style="color:#888;padding:2px 4px 6px">直近' + WEEKS_N + '週の実測消費（記録から逆算）と現在の居室予定を比較（' + floorLabel(currentFloor) + '）</div>';
+  var html = '<div style="color:var(--ink-3);padding:2px 4px 6px">直近' + WEEKS_N + '週の実測消費（記録から逆算）と現在の居室予定を比較（' + floorLabel(currentFloor) + '）</div>';
   html += '<table style="border-collapse:collapse;width:100%;font-size:11px">';
   html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">実測/週</th><th style="padding:4px 6px;text-align:right">居室予定/週</th><th style="padding:4px 6px;text-align:right">差</th><th style="padding:4px 6px;text-align:right">最小〜最大</th></tr>';
   var anyRow = false;
@@ -2138,7 +2138,7 @@ function renderUsageMobile() {
     html += '<tr style="border-top:1px solid #e0e0e0">';
     html += '<td style="padding:4px 6px;font-weight:700">' + (p.short || p.name) + '</td>';
     if (!st) {
-      html += '<td colspan="4" style="padding:4px 6px;text-align:right;color:#aaa">データ不足</td></tr>';
+      html += '<td colspan="4" style="padding:4px 6px;text-align:right;color:var(--ink-3)">データ不足</td></tr>';
       return;
     }
     anyRow = true;
@@ -2151,16 +2151,16 @@ function renderUsageMobile() {
     html += '<td style="padding:4px 6px;text-align:right;font-weight:700">' + st.avg + '枚</td>';
     html += '<td style="padding:4px 6px;text-align:right;color:#555">' + planned + '枚</td>';
     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:' + diffColor + '">' + diffDisp
-          + (dSub ? '<span style="font-weight:400;font-size:9px;color:#999">（' + dSub + '）</span>' : '') + '</td>';
+          + (dSub ? '<span style="font-weight:400;font-size:9px;color:var(--ink-3)">（' + dSub + '）</span>' : '') + '</td>';
     var rangeDisp = (st.min != null && st.max != null) ? (st.min + '〜' + st.max) : '—';
-    html += '<td style="padding:4px 6px;text-align:right;color:#999;font-size:10px">' + rangeDisp + '（' + st.weeks + '週）</td>';
+    html += '<td style="padding:4px 6px;text-align:right;color:var(--ink-3);font-size:10px">' + rangeDisp + '（' + st.weeks + '週）</td>';
     html += '</tr>';
   });
   html += '</table>';
-  if (!anyRow) { panel.innerHTML = '<div style="color:#aaa;padding:4px">まだ集計できる記録がありません（2回以上の注文確定が必要）</div>'; return; }
+  if (!anyRow) { panel.innerHTML = '<div style="color:var(--ink-3);padding:4px">まだ集計できる記録がありません（2回以上の注文確定が必要）</div>'; return; }
   html += '<div style="color:#666;padding:6px 4px;font-size:10px;line-height:1.7">'
-        + '＜差の見方＞ <span style="color:#1565c0;font-weight:700">−（マイナス・青）</span>＝居室予定が実測より多い＝使用量を下げられます（過剰在庫の要因）。'
-        + '<span style="color:#e65100;font-weight:700">＋（プラス・オレンジ）</span>＝汚染などで予定超過。安全在庫か使用量に上乗せを。'
+        + '＜差の見方＞ <span style="color:var(--info);font-weight:700">−（マイナス・青）</span>＝居室予定が実測より多い＝使用量を下げられます（過剰在庫の要因）。'
+        + '<span style="color:var(--order);font-weight:700">＋（プラス・オレンジ）</span>＝汚染などで予定超過。安全在庫か使用量に上乗せを。'
         + '「最小〜最大」の幅が大きいほど汚染の波が大きく、安全在庫を多めにすべき目安です。'
         + '<br>※ 在庫の数え漏れ（0入力）がある週は自動で補正し、期間全体の在庫増減＋納品から平均を算出しています。</div>';
   panel.innerHTML = html;
@@ -2196,7 +2196,7 @@ function renderScheduleMobile() {
           + ' onchange="toggleBathDay(' + i + ', this.checked)" style="vertical-align:middle">' + n + '</label>';
   });
   html += '</div>';
-  html += '<div style="color:#999;font-size:10px">※ 未チェックなら従来どおり「週2回・納品まで2回」で計算します</div>';
+  html += '<div style="color:var(--ink-3);font-size:10px">※ 未チェックなら従来どおり「週2回・納品まで2回」で計算します</div>';
   html += '<div style="margin-top:4px">今回だけの納品日：<input type="date" value="' + (cfg.onceDeliveryDate || '') + '"'
         + ' onchange="updateSchedule(\'onceDeliveryDate\', this.value)" style="font-size:14px;padding:4px;font-family:inherit">'
         + (cfg.onceDeliveryDate ? ' <button onclick="updateSchedule(\'onceDeliveryDate\', \'\')" style="font-size:12px;padding:4px 8px;font-family:inherit;border:1px solid #ddd;border-radius:6px;background:#f5f5f5">クリア</button>' : '')
@@ -2204,7 +2204,7 @@ function renderScheduleMobile() {
   html += '<div style="margin-top:6px;padding:6px;background:#f0fdf6;border-radius:6px;color:#1a4a3a;font-weight:700">'
         + DAY_NAMES[cfg.orderDay] + '曜注文 → ' + (dlv.getMonth()+1) + '/' + dlv.getDate() + '（' + DAY_NAMES[dlv.getDay()] + '）納品'
         + '（' + deliveryGapDays() + '日後）／納品まで入浴' + bathsBeforeDelivery() + '回'
-        + (cfg.onceDeliveryDate ? '　<span style="color:#e65100">※臨時指定中</span>' : '') + '</div>';
+        + (cfg.onceDeliveryDate ? '　<span style="color:var(--order)">※臨時指定中</span>' : '') + '</div>';
   html += '</div>';
   panel.innerHTML = html;
 }
@@ -2328,7 +2328,7 @@ function renderGraphMobile() {
   selHtml += '</select>';
 
   if (data.length < 2) {
-    panel.innerHTML = selHtml + '<div style="color:#aaa;font-size:11px;padding:8px;text-align:center">グラフ表示には2回以上の注文確定の記録が必要です<br>（現在 ' + data.length + ' 件）</div>';
+    panel.innerHTML = selHtml + '<div style="color:var(--ink-3);font-size:11px;padding:8px;text-align:center">グラフ表示には2回以上の注文確定の記録が必要です<br>（現在 ' + data.length + ' 件）</div>';
     return;
   }
 
@@ -2354,7 +2354,7 @@ function renderGraphMobile() {
   data.forEach(function(d, i) {
     if (d.sBag !== null) {
       sPts.push(px(i).toFixed(1) + ',' + pyS(d.sBag).toFixed(1));
-      var dotCol = d.sBag <= Math.round(p.perBox / p.perBag) ? '#e53935' : '#2a7a2a';
+      var dotCol = d.sBag <= Math.round(p.perBox / p.perBag) ? '#C62828' : '#2a7a2a';
       dots += '<circle cx="' + px(i).toFixed(1) + '" cy="' + pyS(d.sBag).toFixed(1) + '" r="2.5" fill="' + dotCol + '"/>';
     }
     if (d.o !== null) { oPts.push(px(i).toFixed(1) + ',' + pyO(d.o).toFixed(1)); dots += '<circle cx="' + px(i).toFixed(1) + '" cy="' + pyO(d.o).toFixed(1) + '" r="2.5" fill="#e65100"/>'; }
@@ -2380,8 +2380,8 @@ function renderGraphMobile() {
   // 箱の倍数（1箱分の袋数ごと）：赤文字＋薄い赤の補助線
   for (var bv = bagsPerBox; bv <= maxS; bv += bagsPerBox) {
     var by = pyS(bv);
-    svg += '<line x1="' + padL + '" y1="' + by.toFixed(1) + '" x2="' + (padL+plotW) + '" y2="' + by.toFixed(1) + '" stroke="#e53935" stroke-width="1" stroke-dasharray="3,3" opacity="0.35"/>'
-      + '<text x="' + (padL-3) + '" y="' + (by+3).toFixed(1) + '" font-size="9" font-weight="700" fill="#e53935" text-anchor="end">' + bv + '</text>';
+    svg += '<line x1="' + padL + '" y1="' + by.toFixed(1) + '" x2="' + (padL+plotW) + '" y2="' + by.toFixed(1) + '" stroke="#C62828" stroke-width="1" stroke-dasharray="3,3" opacity="0.35"/>'
+      + '<text x="' + (padL-3) + '" y="' + (by+3).toFixed(1) + '" font-size="9" font-weight="700" fill="#C62828" text-anchor="end">' + bv + '</text>';
   }
   svg += '<text x="' + (padL-3) + '" y="' + (padT-2) + '" font-size="9" fill="#2a7a2a" text-anchor="end">袋</text>';
   // 注文軸：1箱きざみの目盛り（多すぎる場合は間引き）
@@ -2413,8 +2413,8 @@ function renderGraphMobile() {
   panel.innerHTML = selHtml + svg
     + '<div style="display:flex;gap:14px;justify-content:center;font-size:11px;color:#555;margin-top:4px;padding-bottom:4px">'
     + '<span><span style="display:inline-block;width:14px;height:3px;background:#2a7a2a;vertical-align:middle;margin-right:3px"></span>在庫（袋）</span>'
-    + '<span><span style="display:inline-block;width:14px;height:3px;background:#e65100;vertical-align:middle;margin-right:3px;background-image:linear-gradient(90deg,#e65100 60%,#fff 60%)"></span>注文（箱）</span>'
-    + '<span style="color:#999">記録 ' + data.length + ' 件</span>'
+    + '<span><span style="display:inline-block;width:14px;height:3px;background:var(--order);vertical-align:middle;margin-right:3px;background-image:linear-gradient(90deg,#e65100 60%,#fff 60%)"></span>注文（箱）</span>'
+    + '<span style="color:var(--ink-3)">記録 ' + data.length + ' 件</span>'
     + '</div>';
 }
 
@@ -2504,17 +2504,17 @@ function renderMoneyGraphMobile() {
   // モード切替
   function modeBtn(mode, label, on) {
     return '<button onclick="setMoneyGraphMode(\'' + mode + '\')" style="flex:1;padding:8px 4px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;'
-      + (on ? 'border:2px solid #1565c0;background:#1565c0;color:#fff' : 'border:1px solid #ccc;background:#f5f5f5;color:#666') + '">' + label + '</button>';
+      + (on ? 'border:2px solid var(--info);background:#1565c0;color:#fff' : 'border:1px solid #ccc;background:#f5f5f5;color:#666') + '">' + label + '</button>';
   }
   var tabs = '<div style="display:flex;gap:6px;margin-bottom:6px">'
     + modeBtn('month', '月ごと', isMonth) + modeBtn('each', '回ごと', !isMonth) + '</div>';
 
   if (!raw.length) {
-    panel.innerHTML = tabs + '<div style="color:#aaa;padding:8px 4px;font-size:12px">まだ注文の記録がありません</div>';
+    panel.innerHTML = tabs + '<div style="color:var(--ink-3);padding:8px 4px;font-size:12px">まだ注文の記録がありません</div>';
     return;
   }
   if (!raw.some(function(d) { return d.yen > 0; })) {
-    panel.innerHTML = tabs + '<div style="color:#aaa;padding:8px 4px;font-size:12px">単価が未設定です。各商品のカードで単価を入力してください</div>';
+    panel.innerHTML = tabs + '<div style="color:var(--ink-3);padding:8px 4px;font-size:12px">単価が未設定です。各商品のカードで単価を入力してください</div>';
     return;
   }
   if (_moneyBarSel !== null && _moneyBarSel >= data.length) _moneyBarSel = null;
@@ -2592,21 +2592,21 @@ function renderMoneyGraphMobile() {
     var sp = sel.date.split('/');
     var when = isMonth ? (parseInt(sp[0],10) + '年' + parseInt(sp[1],10) + '月')
                        : (parseInt(sp[1],10) + '月' + parseInt(sp[2],10) + '日');
-    detail = '<div style="background:#fff3e0;border:2px solid #e65100;border-radius:8px;padding:6px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">'
+    detail = '<div style="background:#fff3e0;border:2px solid var(--order);border-radius:8px;padding:6px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">'
       + '<span style="font-size:12px;color:#333;font-weight:700">' + when + '</span>'
-      + '<span style="font-size:17px;font-weight:800;color:#e65100">' + sel.yen.toLocaleString() + ' 円</span></div>';
+      + '<span style="font-size:17px;font-weight:800;color:var(--order)">' + sel.yen.toLocaleString() + ' 円</span></div>';
   } else {
-    detail = '<div style="font-size:11px;color:#999;margin-bottom:6px;text-align:center">棒をタップすると、その'
+    detail = '<div style="font-size:11px;color:var(--ink-3);margin-bottom:6px;text-align:center">棒をタップすると、その'
       + (isMonth ? '月' : '回') + 'の金額が出ます</div>';
   }
 
   panel.innerHTML = tabs + detail
     + '<div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:4px;font-size:11px;color:#555">'
-    + '<span>合計 <b style="font-size:14px;color:#1565c0">' + total.toLocaleString() + '</b> 円</span>'
-    + '<span>' + (isMonth ? '1ヶ月' : '1回') + 'あたり平均 <b style="font-size:14px;color:#1565c0">' + avg.toLocaleString() + '</b> 円</span>'
+    + '<span>合計 <b style="font-size:14px;color:var(--info)">' + total.toLocaleString() + '</b> 円</span>'
+    + '<span>' + (isMonth ? '1ヶ月' : '1回') + 'あたり平均 <b style="font-size:14px;color:var(--info)">' + avg.toLocaleString() + '</b> 円</span>'
     + '</div>'
     + svg
-    + '<div style="font-size:11px;color:#999;margin-top:4px;padding-bottom:4px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--ink-3);margin-top:4px;padding-bottom:4px;text-align:center">'
     + (isMonth ? n + ' ヶ月分' : '記録 ' + n + ' 件') + '（2階＋3階の合計）／単価を入れた商品のみ集計'
     + '</div>';
 }
@@ -2616,12 +2616,12 @@ function renderGapMobile() {
   var hist = [];
   try { hist = JSON.parse(localStorage.getItem('diaper_sun_hist_' + currentFloor) || '[]'); } catch(e) {}
   if (hist.length < 2) {
-    panel.innerHTML = '<div style="color:#aaa;padding:4px">記録が足りません（2回注文確定後に表示されます）</div>';
+    panel.innerHTML = '<div style="color:var(--ink-3);padding:4px">記録が足りません（2回注文確定後に表示されます）</div>';
     return;
   }
   var thisWeek = hist[0];
   var lastWeek = hist[1];
-  var html = '<div style="color:#888;padding:2px 4px 6px">予想日：' + lastWeek.date + '　実績日：' + thisWeek.date + '（' + floorLabel(currentFloor) + '）</div>';
+  var html = '<div style="color:var(--ink-3);padding:2px 4px 6px">予想日：' + lastWeek.date + '　実績日：' + thisWeek.date + '（' + floorLabel(currentFloor) + '）</div>';
   html += '<table style="border-collapse:collapse;width:100%;font-size:11px">';
   html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">先週の予想</th><th style="padding:4px 6px;text-align:right">今週の実際</th><th style="padding:4px 6px;text-align:right">差</th></tr>';
   var anyRow = false;
@@ -2645,8 +2645,8 @@ function renderGapMobile() {
     html += '</tr>';
   });
   html += '</table>';
-  if (!anyRow) { panel.innerHTML = '<div style="color:#aaa;padding:4px">表示できるデータがありません</div>'; return; }
-  html += '<div style="color:#aaa;padding:4px;font-size:10px">＋：予想より在庫が多かった／−：予想より在庫が少なかった</div>';
+  if (!anyRow) { panel.innerHTML = '<div style="color:var(--ink-3);padding:4px">表示できるデータがありません</div>'; return; }
+  html += '<div style="color:var(--ink-3);padding:4px;font-size:10px">＋：予想より在庫が多かった／−：予想より在庫が少なかった</div>';
   panel.innerHTML = html;
 }
 // --- 居室データ ---
