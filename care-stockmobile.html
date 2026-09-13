@@ -811,6 +811,7 @@ function fbInitLoad(db) {
       var lsKeys = [
         'diaper_history', 'diaper_rooms', 'diaper_weekly_fixed', 'diaper_safety_boxes', 'diaper_safety_boxes_2F', 'diaper_safety_boxes_3F', 'diaper_order_schedule',
         'diaper_unit_price', 'diaper_spare_stock_2F', 'diaper_spare_stock_3F',
+        'diaper_usage_factor_2F', 'diaper_usage_factor_3F',
         'diaper_daily_2F', 'diaper_daily_3F',
         'diaper_saved_at_2F', 'diaper_saved_at_3F',
         'diaper_sun_hist_2F', 'diaper_sun_hist_3F',
@@ -2155,7 +2156,7 @@ function renderUsageMobile() {
   var WEEKS_N = 8;
   var html = '<div style="color:var(--ink-3);padding:2px 4px 6px">直近' + WEEKS_N + '週の実測消費（記録から逆算）と現在の居室予定を比較（' + floorLabel(currentFloor) + '）</div>';
   html += '<table style="border-collapse:collapse;width:100%;font-size:11px">';
-  html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">実測/週</th><th style="padding:4px 6px;text-align:right">居室予定/週</th><th style="padding:4px 6px;text-align:right">差</th><th style="padding:4px 6px;text-align:right">最小〜最大</th></tr>';
+  html += '<tr style="background:#f0f0f0"><th style="padding:4px 6px;text-align:left">商品</th><th style="padding:4px 6px;text-align:right">実測/週</th><th style="padding:4px 6px;text-align:right">居室予定/週</th><th style="padding:4px 6px;text-align:right">差</th><th style="padding:4px 6px;text-align:right">最小〜最大</th><th style="padding:4px 6px;text-align:center">補正係数</th></tr>';
   var anyRow = false;
   products.forEach(function(p) {
     if (p.special) return;
@@ -2165,7 +2166,7 @@ function renderUsageMobile() {
     html += '<tr style="border-top:1px solid #e0e0e0">';
     html += '<td style="padding:4px 6px;font-weight:700">' + (p.short || p.name) + '</td>';
     if (!st) {
-      html += '<td colspan="4" style="padding:4px 6px;text-align:right;color:var(--ink-3)">データ不足</td></tr>';
+      html += '<td colspan="5" style="padding:4px 6px;text-align:right;color:var(--ink-3)">データ不足</td></tr>';
       return;
     }
     anyRow = true;
@@ -2181,6 +2182,25 @@ function renderUsageMobile() {
           + (dSub ? '<span style="font-weight:400;font-size:9px;color:var(--ink-3)">（' + dSub + '）</span>' : '') + '</td>';
     var rangeDisp = (st.min != null && st.max != null) ? (st.min + '〜' + st.max) : '—';
     html += '<td style="padding:4px 6px;text-align:right;color:var(--ink-3);font-size:10px">' + rangeDisp + '（' + st.weeks + '週）</td>';
+    // 補正係数のセル
+    var cand = calcFactorCandidate(p);
+    var cur = getUsageFactorInfo(p.id);
+    var cell = '';
+    if (cur) {
+      cell = '<div style="font-size:14px;font-weight:800;color:var(--ok)">×' + cur.f.toFixed(2) + '</div>'
+           + '<div style="font-size:9px;color:var(--ink-3)">' + cur.at + ' 採用</div>'
+           + '<button onclick="clearUsageFactor(' + p.id + ')" style="margin-top:2px;font-size:10px;padding:3px 8px;border:1px solid #ccc;border-radius:var(--r-sm);background:#f5f5f5;color:var(--ink-2);font-family:inherit;cursor:pointer">解除</button>';
+    } else if (!cand.ok && cand.reason) {
+      cell = '<span style="font-size:10px;color:var(--ink-3)">' + cand.reason + '</span>';
+    } else if (!cand.ok) {
+      // 上下限に当たった＝記録自体が疑わしいので採用させない
+      cell = '<div style="font-size:12px;font-weight:800;color:var(--danger)">×' + cand.f.toFixed(2) + '</div>'
+           + '<div style="font-size:9px;color:var(--danger);line-height:1.4">範囲外<br>在庫の記録を<br>確認してください</div>';
+    } else {
+      cell = '<div style="font-size:14px;font-weight:800;color:var(--ink)">×' + cand.f.toFixed(2) + '</div>'
+           + '<button onclick="setUsageFactor(' + p.id + ',' + cand.f + ')" style="margin-top:2px;font-size:11px;font-weight:700;padding:4px 10px;border:none;border-radius:var(--r-sm);background:var(--order);color:#fff;font-family:inherit;cursor:pointer;box-shadow:var(--btn-raise)">採用</button>';
+    }
+    html += '<td style="padding:4px 6px;text-align:center">' + cell + '</td>';
     html += '</tr>';
   });
   html += '</table>';
@@ -2189,7 +2209,10 @@ function renderUsageMobile() {
         + '＜差の見方＞ <span style="color:var(--info);font-weight:700">−（マイナス・青）</span>＝居室予定が実測より多い＝使用量を下げられます（過剰在庫の要因）。'
         + '<span style="color:var(--order);font-weight:700">＋（プラス・オレンジ）</span>＝汚染などで予定超過。安全在庫か使用量に上乗せを。'
         + '「最小〜最大」の幅が大きいほど汚染の波が大きく、安全在庫を多めにすべき目安です。'
-        + '<br>※ 在庫の数え漏れ（0入力）がある週は自動で補正し、期間全体の在庫増減＋納品から平均を算出しています。</div>';
+        + '<br>※ 在庫の数え漏れ（0入力）がある週は自動で補正し、期間全体の在庫増減＋納品から平均を算出しています。'
+        + '<br><b>＜補正係数＞</b> 実測÷居室予定。採用すると居室集計に掛けて発注計算に反映します（例：居室20枚×1.14＝23枚）。'
+        + '入居者が変わっても居室データを直せば自動で追随します。'
+        + FACTOR_MIN + '〜' + FACTOR_MAX + 'の範囲外は記録ミスの疑いがあるため採用できません。</div>';
   panel.innerHTML = html;
 }
 
@@ -2768,11 +2791,14 @@ function reflectRoomToDaily(silent) {
   let changed = false;
   products.forEach(function(p) {
     if (!present[p.id]) return;
+    // 補正係数：実測消費÷居室予定。未採用なら 1 ＝ 従来どおり
+    const f = getUsageFactor(p.id);
     if (p.weeklyFixed === null) {
-      if (state[currentFloor][p.id].dailyUse !== totals[p.id]) changed = true;
-      state[currentFloor][p.id].dailyUse = totals[p.id];
+      const v = Math.round(totals[p.id] * f);
+      if (state[currentFloor][p.id].dailyUse !== v) changed = true;
+      state[currentFloor][p.id].dailyUse = v;
     } else {
-      const ov = totals[p.id] > 0 ? totals[p.id] * bathsPerWeek() : undefined;
+      const ov = totals[p.id] > 0 ? Math.round(totals[p.id] * bathsPerWeek() * f) : undefined;
       if (state[currentFloor][p.id].weeklyOverride !== ov) changed = true;
       state[currentFloor][p.id].weeklyOverride = ov;
     }
@@ -3231,6 +3257,62 @@ function updateUnitPrice(pid, val) {
   renderMoneyGraphMobile();   // 単価を変えたら金額グラフも引き直す
 }
 
+// --- 使用量の補正係数 --- 階ごと・実測消費÷居室予定
+// 居室データ（申告）に対して実際どれだけ多く使うかの比率。居室集計に掛けて発注計算に反映する。
+// 入居者が変わっても居室データが更新されれば自動で追随する（比率は現場固有の上振れ率を表すため）
+const FACTOR_MIN = 0.7, FACTOR_MAX = 1.5;   // 桁違いの記録ミスを弾く上下限
+const FACTOR_MIN_WEEKS = 3;                 // これ未満の集計期間では係数を出さない
+function factorKey(floor) { return 'diaper_usage_factor_' + floor; }
+function loadUsageFactors(floor) {
+  try { return JSON.parse(localStorage.getItem(factorKey(floor)) || '{}'); }
+  catch(e) { return {}; }
+}
+function saveUsageFactors(floor, data) {
+  const json = JSON.stringify(data);
+  localStorage.setItem(factorKey(floor), json);
+  fbWrite(factorKey(floor), json);
+}
+// 採用済みの係数（未設定は 1 ＝ 従来どおりの挙動）
+function getUsageFactor(pid) {
+  const d = loadUsageFactors(currentFloor)[pid];
+  if (!d || typeof d.f !== 'number' || isNaN(d.f)) return 1;
+  return Math.min(FACTOR_MAX, Math.max(FACTOR_MIN, d.f));
+}
+function getUsageFactorInfo(pid) { return loadUsageFactors(currentFloor)[pid] || null; }
+function setUsageFactor(pid, f) {
+  const data = loadUsageFactors(currentFloor);
+  const now = new Date();
+  data[pid] = { f: f, at: (now.getMonth()+1) + '/' + now.getDate() };
+  saveUsageFactors(currentFloor, data);
+  reflectRoomToDaily(true);
+  products.forEach(function(x) { updateCard(x.id); });
+  updateSummary();
+  renderUsageMobile();
+  showToast('✅ 補正係数 ' + f.toFixed(2) + ' を採用しました');
+}
+function clearUsageFactor(pid) {
+  const data = loadUsageFactors(currentFloor);
+  delete data[pid];
+  saveUsageFactors(currentFloor, data);
+  reflectRoomToDaily(true);
+  products.forEach(function(x) { updateCard(x.id); });
+  updateSummary();
+  renderUsageMobile();
+}
+// 実測と居室予定から係数の候補を出す。採用可否の判定つき
+function calcFactorCandidate(p) {
+  const st = realUsageStats(p.id, 8);
+  if (!st || st.weeks < FACTOR_MIN_WEEKS) return { ok: false, reason: 'データ不足' };
+  const planned = Math.round(p.weeklyFixed === null
+    ? state[currentFloor][p.id].dailyUse * DAYS_WEEK_NORMAL : weeklyNeed(p));
+  if (!planned) return { ok: false, reason: '居室予定なし' };
+  const raw = st.avg / planned;
+  const clamped = Math.min(FACTOR_MAX, Math.max(FACTOR_MIN, raw));
+  // 上下限に当たった＝記録自体が疑わしいので採用させない
+  return { ok: Math.abs(clamped - raw) < 1e-9, raw: raw, f: Math.round(raw * 100) / 100,
+           clamped: Math.round(clamped * 100) / 100, planned: planned, avg: st.avg, weeks: st.weeks };
+}
+
 // --- 予備ストック（別置きの在庫）--- 階ごと・記録のみで発注計算には使わない
 function spareKey(floor) { return 'diaper_spare_stock_' + floor; }
 function loadSpareStock(floor) {
@@ -3571,6 +3653,8 @@ function exportData() {
   try { data.unitPrices = JSON.parse(localStorage.getItem(UNIT_PRICE_KEY) || '{}'); } catch(e) {}
   data.spareStock = {};
   FLOORS.forEach(function(f) { try { data.spareStock[f] = JSON.parse(localStorage.getItem(spareKey(f)) || '{}'); } catch(e) {} });
+  data.usageFactors = {};
+  FLOORS.forEach(function(f) { try { data.usageFactors[f] = JSON.parse(localStorage.getItem(factorKey(f)) || '{}'); } catch(e) {} });
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -3649,6 +3733,7 @@ function importData(event) {
         if (data.graphLog && data.graphLog[f]) localStorage.setItem('diaper_graph_log_' + f, JSON.stringify(data.graphLog[f]));
         if (data.safetyBoxes && data.safetyBoxes[f]) localStorage.setItem('diaper_safety_boxes_' + f, JSON.stringify(data.safetyBoxes[f]));
         if (data.spareStock && data.spareStock[f]) localStorage.setItem(spareKey(f), JSON.stringify(data.spareStock[f]));
+        if (data.usageFactors && data.usageFactors[f]) localStorage.setItem(factorKey(f), JSON.stringify(data.usageFactors[f]));
       });
       if (data.weeklyFixed) localStorage.setItem('diaper_weekly_fixed', JSON.stringify(data.weeklyFixed));
       if (data.orderSchedule) localStorage.setItem(SCHEDULE_KEY, JSON.stringify(data.orderSchedule));
