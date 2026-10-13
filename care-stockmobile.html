@@ -1893,9 +1893,9 @@ function showConfirmMobile(msg, onOk, onCancel, okLabel, cancelLabel) {
   const box = document.createElement('div');
   box.style.cssText = 'background:#fff;border-radius:12px;padding:24px;max-width:320px;width:88%;box-shadow:0 4px 20px rgba(0,0,0,0.2)';
   box.innerHTML = '<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:16px;line-height:1.6">' + msg.replace(/\n/g,'<br>') + '</div>'
-    + '<div style="display:flex;gap:10px;justify-content:flex-end">'
-    + '<button id="mob-cancel" style="padding:8px 16px;border:1px solid #ccc;border-radius:8px;background:#f5f5f5;cursor:pointer;font-family:inherit;font-size:13px">' + (cancelLabel || 'キャンセル') + '</button>'
-    + '<button id="mob-ok" style="padding:8px 16px;border:none;border-radius:8px;background:var(--order);color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700">' + (okLabel || '上書き') + '</button>'
+    + '<div style="display:flex;gap:10px">'
+    + '<button id="mob-cancel" style="flex:1;padding:12px;border:2px solid #ddd;border-radius:var(--r-md);background:#f5f5f5;color:var(--ink-3);cursor:pointer;font-family:inherit;font-size:14px;font-weight:700">' + (cancelLabel || 'キャンセル') + '</button>'
+    + '<button id="mob-ok" style="flex:1;padding:12px;border:2px solid var(--order);border-radius:var(--r-md);background:var(--order);color:#fff;cursor:pointer;font-family:inherit;font-size:16px;font-weight:900;box-shadow:var(--btn-raise)">' + (okLabel || '上書き') + '</button>'
     + '</div>';
   overlay.appendChild(box);
   document.body.appendChild(overlay);
