@@ -1687,7 +1687,15 @@ function getLastOrder(floor, pid) {
 function confirmOrder() {
   var anyOrder = false;
   products.forEach(function(p) { if (state[currentFloor][p.id].orderQty > 0) anyOrder = true; });
-  if (!anyOrder) { showToast('注文箱数が入力されていません。'); return; }
+  if (!anyOrder) {
+    // 注文がなくても在庫は記録しておきたい（実測消費の計算に使うため）
+    const t = new Date();
+    const ds = t.getFullYear() + '/' + ('0'+(t.getMonth()+1)).slice(-2) + '/' + ('0'+t.getDate()).slice(-2);
+    showConfirmMobile(
+      '注文はありません。\n\n今の在庫を保存しますか？\n記録しておくと実測消費の計算に使われます。',
+      function() { saveStockOnly(ds); }, null, '保存する', 'いいえ');
+    return;
+  }
 
   var catDef = [
     { label:'パッド類', cat:'pad', special:false },
@@ -1742,6 +1750,33 @@ function confirmOrder() {
 
 function closeOrderPopupMobile() {
   document.getElementById('order-confirm-popup').style.display = 'none';
+}
+
+// 注文ゼロのときに在庫だけを記録する。
+// realUsageStats は o=0 のデータ点も有効に使うため、在庫さえ残れば実測消費に寄与する。
+// 注文履歴・日曜予想・納品日チェックは在庫を持たないか件数制限が厳しいので保存しない。
+function saveStockOnly(dateStr) {
+  const glKey = 'diaper_graph_log_' + currentFloor;
+  let gLog = [];
+  try { gLog = JSON.parse(localStorage.getItem(glKey) || '[]'); } catch(e) {}
+  const gEntry = { date: dateStr, data: {} };
+  products.forEach(function(p) {
+    gEntry.data[p.id] = { s: totalStock(p), o: 0, u: getUnitPrice(p.id) };
+  });
+  const gIdx = gLog.findIndex(function(g) { return g.date === dateStr; });
+  if (gIdx >= 0) { gLog[gIdx] = gEntry; } else { gLog.push(gEntry); }
+  gLog.sort(function(a,b) { return a.date < b.date ? -1 : 1; });
+  if (gLog.length > 60) gLog = gLog.slice(-60);
+  const glJson = JSON.stringify(gLog);
+  localStorage.setItem(glKey, glJson);
+  fbWrite(glKey, glJson);
+  // 記録した内容は確定扱いにし、下書き復元で聞かれないようにする
+  clearDraft(currentFloor);
+  _committedSnapshot = { floor: currentFloor, json: JSON.stringify(draftDataOf(currentFloor)) };
+  showToast('💾 ' + floorLabel(currentFloor) + 'の在庫を記録しました');
+  const up = document.getElementById('usage-mobile');
+  if (up && up.style.display !== 'none') renderUsageMobile();
+  renderMoneyGraphMobile();
 }
 
 function doConfirmOrder(dateStr) {
@@ -1852,14 +1887,14 @@ function showDraftRestoreDialog(onRestore, onNew, onClose) {
   document.getElementById('draft-close').onclick   = function() { close(onClose); };
 }
 
-function showConfirmMobile(msg, onOk, onCancel, okLabel) {
+function showConfirmMobile(msg, onOk, onCancel, okLabel, cancelLabel) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center';
   const box = document.createElement('div');
   box.style.cssText = 'background:#fff;border-radius:12px;padding:24px;max-width:320px;width:88%;box-shadow:0 4px 20px rgba(0,0,0,0.2)';
   box.innerHTML = '<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:16px;line-height:1.6">' + msg.replace(/\n/g,'<br>') + '</div>'
     + '<div style="display:flex;gap:10px;justify-content:flex-end">'
-    + '<button id="mob-cancel" style="padding:8px 16px;border:1px solid #ccc;border-radius:8px;background:#f5f5f5;cursor:pointer;font-family:inherit;font-size:13px">キャンセル</button>'
+    + '<button id="mob-cancel" style="padding:8px 16px;border:1px solid #ccc;border-radius:8px;background:#f5f5f5;cursor:pointer;font-family:inherit;font-size:13px">' + (cancelLabel || 'キャンセル') + '</button>'
     + '<button id="mob-ok" style="padding:8px 16px;border:none;border-radius:8px;background:var(--order);color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700">' + (okLabel || '上書き') + '</button>'
     + '</div>';
   overlay.appendChild(box);
