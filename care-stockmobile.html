@@ -1692,7 +1692,7 @@ function confirmOrder() {
     const t = new Date();
     const ds = t.getFullYear() + '/' + ('0'+(t.getMonth()+1)).slice(-2) + '/' + ('0'+t.getDate()).slice(-2);
     showConfirmMobile(
-      '注文はありません。\n\n今の在庫を保存しますか？\n記録しておくと実測消費の計算に使われます。',
+      '注文はありません。\n\n今の在庫を保存しますか？\n記録しておくと実測消費の計算に使われます。\n\n※ 注文履歴には残りません（在庫の記録だけです）',
       function() { saveStockOnly(ds); }, null, '保存する', 'いいえ');
     return;
   }
