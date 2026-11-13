@@ -1089,6 +1089,12 @@ function roomTotalFor(floor, p) {
   });
   return total;
 }
+// どこかの居室にこの商品が登録されているか
+function roomHasProduct(floor, p) {
+  return (ROOMS[floor] || []).some(function(rn) {
+    return !!getRoomState(floor, rn).products[String(p.id)];
+  });
+}
 
 function calcOrder(p) {
   const s = state[currentFloor][p.id];
@@ -1218,7 +1224,7 @@ function updateCard(pid) {
   const atDel = calcAtDelivery(p);
   const afterWeek = calcAfterWeek(p);
   const hasInput = totalStock(p) > 0 || s.stockBoxes > 0 || s.stockBags > 0;
-  const isLow = p.special ? false : hasInput && (calcSundayStock(p) < getSafetyBoxes(p.id) * p.perBox);
+  const isLow = p.special ? false : hasInput && (calcSundayStock(p) < getSafetyBoxes(p.id) * p.perBox) && !(p.weeklyFixed === null && s.dailyUse === 0);
   const isMismatch = s.orderQty > 0 && s.orderQty !== suggested && suggested > 0;
 
   const totEl = document.getElementById("tot-"+pid);
@@ -1298,7 +1304,7 @@ function updateCard(pid) {
   // 納品後の在庫
   let nextSunRem;
   if (p.weeklyFixed !== null) {
-    nextSunRem = Math.max(0, totalStock(p) - roomTotalFor(currentFloor, p) * bathsBeforeDelivery() - p.perBag * 2 + s.orderQty * p.perBox);
+    nextSunRem = Math.max(0, totalStock(p) - Math.round(roomTotalFor(currentFloor, p) * getUsageFactor(p.id)) * bathsBeforeDelivery() - p.perBag * 2 + s.orderQty * p.perBox);
   } else {
     nextSunRem = Math.max(0, totalStock(p) - s.dailyUse * deliveryGapDays() - p.perBag + s.orderQty * p.perBox);
   }
@@ -1330,12 +1336,16 @@ function updateCard(pid) {
   const gapEl = document.getElementById('gapv-'+pid);
   if (gapRow && gapEl && !p.special) {
     let lastRec = null;
+    let gapDays = 0;
     try {
       const gh = JSON.parse(localStorage.getItem('diaper_sun_hist_' + currentFloor) || '[]');
-      if (gh.length) lastRec = gh[0];
+      const t7 = new Date();
+      const todayStr7 = t7.getFullYear() + '/' + ('0'+(t7.getMonth()+1)).slice(-2) + '/' + ('0'+t7.getDate()).slice(-2);
+      lastRec = gh.find(function(r) { return r.date !== todayStr7; }) || null;
+      if (lastRec) gapDays = dateDiffDays(lastRec.date, todayStr7);
     } catch(e) {}
     const prevBoxes = lastRec && lastRec.stocks && lastRec.stocks[p.id] ? lastRec.stocks[p.id].boxes || 0 : undefined;
-    if (prevBoxes === undefined || !hasInput) {
+    if (prevBoxes === undefined || !hasInput || gapDays <= 0) {
       gapRow.style.display = 'none';
     } else {
       const prevBags = lastRec.stocks[p.id].bags || 0;
@@ -1347,8 +1357,8 @@ function updateCard(pid) {
         if (prevE && prevE.orders && prevE.orders[p.id] != null) prevOrderBoxes = parseInt(prevE.orders[p.id].qty != null ? prevE.orders[p.id].qty : prevE.orders[p.id]) || 0;
       } catch(e2) {}
       const actualUsed = prevStock + prevOrderBoxes * p.perBox - totalStock(p);
-      // 実消費は前回注文からの実期間（通常1週）なので、予想側も連休モードに関わらず常に1週分で比較
-      const predictedUsed = p.weeklyFixed === null ? s.dailyUse * DAYS_WEEK_NORMAL : weeklyNeed(p);
+      // 実消費は前回記録からの実日数なので、予想側も同じ日数分で比較
+      const predictedUsed = p.weeklyFixed === null ? s.dailyUse * gapDays : Math.round(weeklyNeed(p) / orderSpanWeeks() * gapDays / 7);
       const gap = actualUsed - predictedUsed;
       gapRow.style.display = isAdminMode ? 'block' : 'none';
       gapEl.textContent = (gap > 0 ? '+' : '') + gap + '枚（予想' + predictedUsed + '枚 実際' + actualUsed + '枚）';
@@ -1381,7 +1391,7 @@ function updateSummary() {
   let group1Total = 0, group2Total = 0;
 
   cats.forEach(function(cat) {
-    const items = products.filter(function(p) { return p.cat === cat && state[currentFloor][p.id].orderQty > 0; });
+    const items = products.filter(function(p) { return p.cat === cat && !p.special && state[currentFloor][p.id].orderQty > 0; });
     if (!items.length) return;
     const label = cat === "pad" ? "パッド類" : cat === "pants" ? "リハパン" : "テープ止め";
     html += "<div class=\"summary-cat-label\">" + (label) + "</div><div class=\"summary-items\">";
@@ -1397,6 +1407,18 @@ function updateSummary() {
     });
     html += "</div>";
   });
+
+  // その他（吸水シートなど）：グループ合計には含めない
+  const others = products.filter(function(p) { return p.special && state[currentFloor][p.id].orderQty > 0; });
+  if (others.length) {
+    html += "<div class=\"summary-cat-label\">その他</div><div class=\"summary-items\">";
+    others.forEach(function(p) {
+      const qty = state[currentFloor][p.id].orderQty;
+      totalBoxes += qty; totalPieces += qty * p.perBox;
+      html += "<div class=\"summary-item\">\n        <div class=\"summary-item-name\">" + (p.short || p.name) + "</div>\n        <div class=\"summary-item-qty\">" + (qty) + "箱</div>\n      </div>";
+    });
+    html += "</div>";
+  }
 
   // 2グループ合計
   if (group1Total > 0 || group2Total > 0) {
@@ -1618,7 +1640,7 @@ function switchCat(cat, btn) {
     if (card) {
       const s2 = state[currentFloor][p.id];
       const hasInput2 = totalStock(p) > 0 || s2.stockBoxes > 0 || s2.stockBags > 0;
-      const isLow = !p.special && hasInput2 && (calcSundayStock(p) < getSafetyBoxes(p.id) * p.perBox);
+      const isLow = !p.special && hasInput2 && (calcSundayStock(p) < getSafetyBoxes(p.id) * p.perBox) && !(p.weeklyFixed === null && state[currentFloor][p.id].dailyUse === 0);
       card.className = "card" + (p.cat === cat ? " visible" : "") + (isLow ? " low" : "");
     }
   });
@@ -1728,7 +1750,7 @@ function confirmOrder() {
       var qty = state[currentFloor][op.id].orderQty || 0;
       html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:#f9f9f9;border-radius:8px;margin-bottom:3px"><span style="font-size:14px;font-weight:700">' + (op.short||op.name) + '</span><span style="white-space:nowrap"><span style="font-size:18px;font-weight:900;color:var(--order)">' + qty + '</span><span style="font-size:12px;color:var(--ink-3);margin-left:4px">箱</span></span></div>';
       if (op.cat === 'pad') padTot += qty;
-      else tapeTot += qty;
+      else if (!op.special) tapeTot += qty;
     }
   }
   document.getElementById('popup-content-mobile').innerHTML = html;
@@ -1854,7 +1876,7 @@ function doConfirmOrder(dateStr) {
     const s = state[currentFloor][p.id];
     let thuExp;
     if (p.weeklyFixed !== null) {
-      thuExp = Math.max(0, totalStock(p) - roomTotalFor(currentFloor, p) * bathsBeforeDelivery() - p.perBag * 2 + (s.orderQty || 0) * p.perBox);
+      thuExp = Math.max(0, totalStock(p) - Math.round(roomTotalFor(currentFloor, p) * getUsageFactor(p.id)) * bathsBeforeDelivery() - p.perBag * 2 + (s.orderQty || 0) * p.perBox);
     } else {
       thuExp = Math.max(0, totalStock(p) - (s.dailyUse || 0) * deliveryGapDays() - p.perBag + (s.orderQty || 0) * p.perBox);
     }
@@ -2146,20 +2168,41 @@ function formatBoxBag(pieces, p) {
 function realUsageStats(pid, weeksN) {
   var p = products.find(function(x){ return x.id === pid; });
   if (!p) return null;
-  var data = collectGraphData(pid); // [{date,s,o}] 昇順・1年以内
-  // 直近 weeksN+1 点程度に絞る（過去 weeksN 週相当）
-  if (data.length > weeksN + 1) data = data.slice(-(weeksN + 1));
-  // 先頭・末尾で在庫が数え漏れ疑い（null/0）の点をトリム
-  while (data.length && (data[0].s == null || data[0].s === 0)) data = data.slice(1);
-  while (data.length && (data[data.length-1].s == null || data[data.length-1].s === 0)) data = data.slice(0, -1);
-  if (data.length < 2) return null;
+  var all = collectGraphData(pid); // [{date,s,o}] 昇順・1年以内
+  // 末尾で在庫が数え漏れ疑い（null/0）の点をトリム（終点は在庫が有効な最後の点）
+  while (all.length && (all[all.length-1].s == null || all[all.length-1].s === 0)) all = all.slice(0, -1);
+  if (all.length < 2) return null;
+  // --- 日数ベースの窓：終点から weeksN*7 日未満の点すべて＋その直前の1点 ---
+  // （週1点のデータでは従来の「直近 weeksN+1 点」と同じ範囲になる）
+  var lastIdx = all.length - 1;
+  var lastDate = all[lastIdx].date;
+  var start = lastIdx;
+  while (start > 0 && dateDiffDays(all[start-1].date, lastDate) < weeksN * 7) start--;
+  if (start > 0) start--;                                  // 窓の直前の1点を起点に含める
+  // 先頭で在庫が数え漏れ疑い（null/0）の点をトリム
+  while (start < lastIdx && (all[start].s == null || all[start].s === 0)) start++;
+  if (lastIdx - start < 1) return null;
+  var data = all.slice(start);
 
-  // --- 期間集計方式：総消費 = 最初の在庫 − 最後の在庫 + 総納品 ---
-  // （途中の在庫の数え漏れは最初/最後しか使わないので相殺される）
-  var totalDelivered = 0;
-  for (var i = 0; i < data.length - 1; i++) {           // 最後の点の注文は窓外に納品されるので除外
-    if (data[i].o != null) totalDelivered += data[i].o * p.perBox;
+  // 注文→納品の日数。0 だと区間割当が破綻するので最低1日
+  var gap = Math.max(1, deliveryGapDays());
+  // 点 all[ai] の後〜点 all[bi] まで (ai,bi] に納品された枚数。
+  // 注文 i（i<bi）は diff(i,bi)≥gap かつ diff(i,ai)<gap のとき、この区間に納品されたとみなす。
+  // 該当する注文に null（注文不明）があれば unknown=true。窓より前の点の注文も対象（窓頭に届いた分）。
+  function deliveredIn(ai, bi) {
+    var sum = 0, unknown = false;
+    for (var i = bi - 1; i >= 0; i--) {
+      if (i <= ai && dateDiffDays(all[i].date, all[ai].date) >= gap) break; // 昇順なので以前はすべて ai 以前に納品済み
+      if (dateDiffDays(all[i].date, all[bi].date) < gap) continue; // bi 時点で未納品
+      if (all[i].o == null) unknown = true;
+      else sum += all[i].o * p.perBox;
+    }
+    return { sum: sum, unknown: unknown };
   }
+
+  // --- 期間集計方式：総消費 = 最初の在庫 − 最後の在庫 + 総納品（起点〜終点に届いた分のみ）---
+  // （途中の在庫の数え漏れは最初/最後しか使わないので相殺される。注文不明(null)は0扱い）
+  var totalDelivered = deliveredIn(start, lastIdx).sum;
   var totalConsumed = data[0].s - data[data.length-1].s + totalDelivered;
   // 実日数ベースの週数
   var totalDays = dateDiffDays(data[0].date, data[data.length-1].date);
@@ -2167,14 +2210,16 @@ function realUsageStats(pid, weeksN) {
   if (weeks <= 0) return null;
   var avg = Math.max(0, totalConsumed / weeks);
 
-  // --- 範囲（安全在庫の目安）：両端の在庫が有効な区間のみ・週正規化・負値/数え漏れ除外 ---
+  // --- 範囲（安全在庫の目安）：両端の在庫が有効な区間のみ・週正規化・負値/数え漏れ/注文不明を除外 ---
   var weekly = [];
-  for (var j = 0; j < data.length - 1; j++) {
-    var a = data[j], b = data[j+1];
-    if (a.s == null || a.s === 0 || b.s == null || b.s === 0 || a.o == null) continue;
+  for (var j = start; j < lastIdx; j++) {
+    var a = all[j], b = all[j+1];
+    if (a.s == null || a.s === 0 || b.s == null || b.s === 0) continue;
     var d = dateDiffDays(a.date, b.date);
     if (d <= 0) continue;
-    var perWeek = (a.s + a.o * p.perBox - b.s) * 7 / d;
+    var dv = deliveredIn(j, j + 1);
+    if (dv.unknown) continue;
+    var perWeek = (a.s + dv.sum - b.s) * 7 / d;
     if (perWeek < 0) continue;
     weekly.push(perWeek);
   }
@@ -2184,6 +2229,7 @@ function realUsageStats(pid, weeksN) {
     max: weekly.length ? Math.round(Math.max.apply(null, weekly)) : null,
     n: weekly.length,
     weeks: Math.round(weeks),
+    weeksExact: weeks,                                       // 四捨五入前の週数
     // --- 診断用（算出ロジックは変えず、内部の値を返すだけ）---
     total: Math.round(totalConsumed),                        // 期間の総消費（枚）
     delta: data[data.length-1].s - data[0].s,                // 在庫の増減（＋なら積み上がり）
@@ -3386,6 +3432,20 @@ function confirmAdoptFactor(pid, f) {
 }
 
 function clearUsageFactor(pid) {
+  const fPrev = getUsageFactor(pid);
+  const pCl = products.find(function(x) { return x.id === pid; });
+  if (pCl && fPrev !== 1 && !roomHasProduct(currentFloor, pCl)) {
+    // 居室登録がなく reflectRoomToDaily では戻らない商品は、係数で掛けた値を割り戻す
+    const sCl = state[currentFloor][pid];
+    if (pCl.weeklyFixed === null) {
+      sCl.dailyUse = Math.round(sCl.dailyUse / fPrev);
+      const dd = {};
+      products.forEach(function(x) { dd[x.id] = state[currentFloor][x.id].dailyUse; });
+      lsSet(saveKey(currentFloor), JSON.stringify(dd));
+    } else if (sCl.weeklyOverride !== null && sCl.weeklyOverride !== undefined) {
+      sCl.weeklyOverride = Math.round(sCl.weeklyOverride / fPrev);
+    }
+  }
   const data = loadUsageFactors(currentFloor);
   delete data[pid];
   saveUsageFactors(currentFloor, data);
@@ -3399,8 +3459,9 @@ function clearUsageFactor(pid) {
 const FACTOR_MIN_BAGS = 5;
 
 function calcFactorCandidate(p) {
+  if (!roomHasProduct(currentFloor, p)) return { ok: false, reason: '居室登録なし' };
   const st = realUsageStats(p.id, 8);
-  if (!st || st.weeks < FACTOR_MIN_WEEKS) return { ok: false, reason: 'データ不足' };
+  if (!st || (st.weeksExact != null ? st.weeksExact : st.weeks) < FACTOR_MIN_WEEKS) return { ok: false, reason: 'データ不足' };
   const planned = Math.round(p.weeklyFixed === null
     ? state[currentFloor][p.id].dailyUse * DAYS_WEEK_NORMAL : weeklyNeed(p));
   if (!planned) return { ok: false, reason: '居室予定なし' };
