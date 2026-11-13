@@ -803,6 +803,7 @@ function fbInitLoad(db) {
       FLOORS.forEach(function(f) { loadDailyUse(f); });
       buildCards();
       syncInputsToState();
+      applyModeUI();
       renderThuCheck();
       updateSaveDateLabel();
       products.forEach(function(p) { updatePrevBadge(p.id); });
@@ -866,6 +867,8 @@ function fbInitLoad(db) {
         FLOORS.forEach(function(f) { loadDailyUse(f); });
         buildCards();
         syncInputsToState();
+        applyModeUI();
+        renderThuCheck();
         updateSaveDateLabel();
         products.forEach(function(p) { updatePrevBadge(p.id); });
         updateWeeklyDisplay();
@@ -1259,7 +1262,7 @@ function updateCard(pid) {
       else txt7 = bags7 + "袋";
       const use7vEl = document.getElementById("use7v-"+pid);
       if (use7vEl) use7vEl.textContent = txt7;
-      use4El.style.display = "";
+      use4El.style.display = isAdminMode ? "block" : "none";
     } else {
       use4El.style.display = "none";
     }
@@ -3217,13 +3220,13 @@ function toggleHoliday() {
   var subHeader = document.querySelector('.header-sub');
   if (isHolidayMode) {
     btn.textContent = '🏖 連休モード ON（タップでOFFに戻す）';
-    btn.className = 'btn-holiday active';
+    btn.classList.add('active');
     banner.style.display = 'block';
     if (weeks) weeks.style.display = 'flex';
     if (subHeader) subHeader.textContent = '🏖 連休モード：' + (orderWeeks * 7) + '日分で計算中';
   } else {
     btn.textContent = '🏖 連休モード';
-    btn.className = 'btn-holiday';
+    btn.classList.remove('active');
     banner.style.display = 'none';
     if (weeks) weeks.style.display = 'none';
     updateCycleHeaderLabel();
@@ -3235,21 +3238,21 @@ function toggleHoliday() {
 // --- モード切替 ---
 let isAdminMode = false;
 
-function toggleMode() {
-  if (!isAdminMode) {
-    if (!confirm('管理者モードに切り替えますか？')) return;
-  }
-  isAdminMode = !isAdminMode;
+// 今のモード（isAdminMode）の表示を適用する。モードは切り替えない。
+// 開いているパネルの開閉状態は変えない（閉じる処理は toggleMode 側の責務）
+function applyModeUI() {
   const adminEls = document.querySelectorAll('.admin-only');
   const btn = document.getElementById('mode-btn');
   const banner = document.getElementById('mode-banner');
   const staffLabel = document.getElementById('staff-label');
+  const panelIds = ['sun-hist-mobile', 'gap-mobile', 'usage-mobile', 'schedule-mobile', 'graph-mobile', 'money-graph-mobile'];
 
   adminEls.forEach(function(el) {
     if (isAdminMode) {
       // daily-colはweeklyFixed=trueのものは非表示のまま
       if (el.id && el.id.startsWith('daily-col-') && el.dataset.weekly === 'true') return;
       if (el.id === 'sun-hist-header' || el.id === 'gap-header' || el.id === 'usage-header' || el.id === 'schedule-header' || el.id === 'graph-header' || el.id === 'money-graph-header') return;  // 個別に制御
+      if (panelIds.indexOf(el.id) !== -1) return;  // パネル本体は開閉状態を保つ
       if (el.classList.contains('save-bar')) el.style.display = 'flex';
       else if (el.tagName === 'BUTTON') el.style.display = 'inline-block';
       else el.style.display = 'block';
@@ -3264,51 +3267,11 @@ function toggleMode() {
     banner.style.display = 'none';
     if (staffLabel) staffLabel.textContent = '⚙️ 管理者';
     showWeeklyInputs(true);
-    // 施設名を入力欄に反映
-    var fnEl = document.getElementById('facility-name');
-    if (fnEl) fnEl.value = localStorage.getItem('facility_name') || '';
-    // 来週日曜在庫履歴を閉じた状態にリセット
-    var sunPanel = document.getElementById('sun-hist-mobile');
-    var sunHeader = document.getElementById('sun-hist-header');
-    var sunIcon = document.getElementById('sun-hist-toggle-icon');
-    if (sunPanel) sunPanel.style.display = 'none';
-    if (sunHeader) sunHeader.style.display = 'flex';
-    if (sunIcon) sunIcon.textContent = '▼ 開く';
-    // ズレ記録を閉じた状態で表示
-    var gapPanel = document.getElementById('gap-mobile');
-    var gapHeader = document.getElementById('gap-header');
-    var gapIcon = document.getElementById('gap-toggle-icon');
-    if (gapPanel) gapPanel.style.display = 'none';
-    if (gapHeader) gapHeader.style.display = 'flex';
-    if (gapIcon) gapIcon.textContent = '▼ 開く';
-    // 実測消費の差を閉じた状態で表示
-    var usPanel = document.getElementById('usage-mobile');
-    var usHeader = document.getElementById('usage-header');
-    var usIcon = document.getElementById('usage-toggle-icon');
-    if (usPanel) usPanel.style.display = 'none';
-    if (usHeader) usHeader.style.display = 'flex';
-    if (usIcon) usIcon.textContent = '▼ 開く';
-    // 注文サイクル設定を閉じた状態で表示
-    var scPanel = document.getElementById('schedule-mobile');
-    var scHeader = document.getElementById('schedule-header');
-    var scIcon = document.getElementById('schedule-toggle-icon');
-    if (scPanel) scPanel.style.display = 'none';
-    if (scHeader) scHeader.style.display = 'flex';
-    if (scIcon) scIcon.textContent = '▼ 開く';
-    // グラフを閉じた状態で表示
-    var grPanel = document.getElementById('graph-mobile');
-    var grHeader = document.getElementById('graph-header');
-    var grIcon = document.getElementById('graph-toggle-icon');
-    if (grPanel) grPanel.style.display = 'none';
-    if (grHeader) grHeader.style.display = 'flex';
-    if (grIcon) grIcon.textContent = '▼ 開く';
-    // 注文金額の推移を閉じた状態で表示
-    var mgPanel = document.getElementById('money-graph-mobile');
-    var mgHeader = document.getElementById('money-graph-header');
-    var mgIcon = document.getElementById('money-graph-toggle-icon');
-    if (mgPanel) mgPanel.style.display = 'none';
-    if (mgHeader) mgHeader.style.display = 'flex';
-    if (mgIcon) mgIcon.textContent = '▼ 開く';
+    // パネルのヘッダーを表示（パネル本体の開閉は触らない）
+    ['sun-hist-header', 'gap-header', 'usage-header', 'schedule-header', 'graph-header', 'money-graph-header'].forEach(function(id) {
+      var h = document.getElementById(id);
+      if (h) h.style.display = 'flex';
+    });
     // 居室管理タブを表示
     document.getElementById('tab-room').style.display = 'inline-block';
     // カード再計算（ズレ表示など）＋週必要枚数欄の表示
@@ -3320,10 +3283,33 @@ function toggleMode() {
     if (staffLabel) staffLabel.textContent = '📋 注文シート';
     showWeeklyInputs(false);
     products.forEach(function(p) { updateWeeklyColVisibility(p.id); });
+    document.getElementById('tab-room').style.display = 'none';
+  }
+}
+function toggleMode() {
+  if (!isAdminMode) {
+    if (!confirm('管理者モードに切り替えますか？')) return;
+  }
+  isAdminMode = !isAdminMode;
+
+  if (isAdminMode) {
+    // 施設名を入力欄に反映
+    var fnEl = document.getElementById('facility-name');
+    if (fnEl) fnEl.value = localStorage.getItem('facility_name') || '';
+    // 各パネルを閉じた状態にリセット（切替時のみ。applyModeUI は開閉を触らない）
+    [['sun-hist-mobile', 'sun-hist-toggle-icon'], ['gap-mobile', 'gap-toggle-icon'], ['usage-mobile', 'usage-toggle-icon'],
+     ['schedule-mobile', 'schedule-toggle-icon'], ['graph-mobile', 'graph-toggle-icon'], ['money-graph-mobile', 'money-graph-toggle-icon']].forEach(function(pr) {
+      var pn = document.getElementById(pr[0]);
+      var ic = document.getElementById(pr[1]);
+      if (pn) pn.style.display = 'none';
+      if (ic) ic.textContent = '▼ 開く';
+    });
+    applyModeUI();
+  } else {
+    applyModeUI();
     // 連休モードが ONのままなら OFF に戻す
     if (isHolidayMode) toggleHoliday();
     // 居室管理タブ非表示・パッド類に戻す
-    document.getElementById('tab-room').style.display = 'none';
     if (currentCat === 'room') {
       const padTab = document.querySelector('.tab');
       switchCat('pad', padTab);
@@ -3332,6 +3318,9 @@ function toggleMode() {
     }
   }
   updateMoneySummary();   // 管理者モードの切替に金額表示を追随させる
+  // 履歴パネルが開いていれば、削除ボタンの出し分けを反映する
+  var histBody = document.getElementById('history-body');
+  if (histBody && histBody.style.display === 'block') renderHistory();
 }
 
 
@@ -3745,6 +3734,7 @@ function importFloorData(input, targetFloor) {
       FLOORS.forEach(function(f) { loadDailyUse(f); });
       buildCards();
       syncInputsToState();
+      applyModeUI();
       reflectRoomToDaily(true);
       updateRoomReflectLabelMobile();
       buildRoomSection();
@@ -3888,7 +3878,7 @@ function importData(event) {
         FLOORS.forEach(function(f) { writes['diaper_room_reflect_date_' + f] = todayStr; });
         Object.keys(writes).forEach(function(k) { lsSet(k, writes[k]); });
         FLOORS.forEach(function(f) { loadDailyUse(f); });
-        buildCards(); syncInputsToState(); reflectRoomToDaily(true);
+        buildCards(); syncInputsToState(); applyModeUI(); reflectRoomToDaily(true);
         updateRoomReflectLabelMobile();
         buildRoomSection();
         statusEl.style.display = '';
