@@ -168,7 +168,7 @@
 
   /* 保存トースト */
   #toast {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    position: fixed; top: 0; bottom: 0; left: 0; right: 0; margin: auto; width: fit-content; height: fit-content; max-width: 90vw;
     background: #1a4a3a; color: #fff; border-radius: var(--r-lg);
     padding: 16px 32px; font-size: 16px; font-weight: 800;
     opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999;
@@ -543,6 +543,7 @@
       </div>
     </div>
   </div>
+  <div class="header-sub"></div>
 
   <!-- フロア選択 -->
   <div class="floor-tabs">
@@ -1023,6 +1024,7 @@ function saveDailyUse() {
   updateSaveDateLabel();
   products.forEach(function(p) { updateDailyBadge(p.id); });
   clearDraft(currentFloor);
+  refreshOpenPanels();
 }
 
 function updateSaveDateLabel() {
@@ -1056,11 +1058,22 @@ function hasSavedData(floor) {
 
 function floorLabel(f) { return f === "2F" ? "2階" : "3階"; }
 
+let _toastTimer = null;
 function showToast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg;
   t.style.opacity = 1;
-  setTimeout(function() { t.style.opacity = 0; }, 2000);
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { t.style.opacity = 0; _toastTimer = null; }, 2000);
+}
+
+// 開いているパネルだけを再描画する
+function refreshOpenPanels() {
+  [['sun-hist-mobile', renderSunHistMobile], ['gap-mobile', renderGapMobile], ['usage-mobile', renderUsageMobile],
+   ['graph-mobile', renderGraphMobile], ['money-graph-mobile', renderMoneyGraphMobile]].forEach(function(x) {
+    var el = document.getElementById(x[0]);
+    if (el && el.style.display !== 'none') x[1]();
+  });
 }
 
 // --- 計算 ---
@@ -1378,10 +1391,6 @@ function updateCard(pid) {
   if (cardEl) cardEl.className = "card" + (p.cat === currentCat ? " visible" : "") + (isLow ? " low" : "");
 
   // ギャップパネルが開いていれば実在庫列を即時更新
-  var gapPanel = document.getElementById('gap-mobile');
-  if (gapPanel && gapPanel.style.display !== 'none') renderGapMobile();
-  var usagePanel = document.getElementById('usage-mobile');
-  if (usagePanel && usagePanel.style.display !== 'none') renderUsageMobile();
 
   updateSummary();
 }
@@ -1599,13 +1608,10 @@ function switchFloor(floor, btn) {
   products.forEach(function(p) { updatePrevBadge(p.id); });
   renderThuCheck();
   renderHistory();
-  var grP = document.getElementById('graph-mobile');
-  if (grP && grP.style.display !== 'none') renderGraphMobile();
   updateWeeklyDisplay();
-  var sunP = document.getElementById('sun-hist-mobile');
-  if (sunP && sunP.style.display !== 'none') renderSunHistMobile();
   if (isAdminMode) showWeeklyInputs(true);
   if (currentCat === 'room') buildRoomSection();
+  refreshOpenPanels();
 }
 
 function switchCat(cat, btn) {
@@ -1809,9 +1815,8 @@ function saveStockOnly(dateStr) {
   clearDraft(currentFloor);
   _committedSnapshot = { floor: currentFloor, json: JSON.stringify(draftDataOf(currentFloor)) };
   showToast('💾 ' + floorLabel(currentFloor) + 'の在庫を記録しました');
-  const up = document.getElementById('usage-mobile');
-  if (up && up.style.display !== 'none') renderUsageMobile();
-  renderMoneyGraphMobile();
+  products.forEach(function(p) { updateCard(p.id); });
+  refreshOpenPanels();
 }
 
 function doConfirmOrder(dateStr) {
@@ -1897,14 +1902,15 @@ function doConfirmOrder(dateStr) {
   clearDraft(currentFloor);
   // 確定内容を記録し、このまま閉じても次回に復元を尋ねないようにする
   _committedSnapshot = { floor: currentFloor, json: JSON.stringify(draftDataOf(currentFloor)) };
-  renderMoneyGraphMobile();   // 確定した注文を金額グラフへ反映
+  products.forEach(function(p) { updateCard(p.id); });
+  refreshOpenPanels();   // 開いているパネル（金額グラフ含む）へ確定内容を反映
   setTimeout(function() { window.scrollTo({ top: scrollY, behavior: 'instant' }); }, 50);
 }
 
 // 下書き復元の3択（× = 決定せず閉じる / 新しく入力 = 破棄 / 復元する）
 function showDraftRestoreDialog(onRestore, onNew, onClose) {
   var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:10001;display:flex;align-items:center;justify-content:center';
   var box = document.createElement('div');
   box.style.cssText = 'position:relative;background:#fff;border-radius:12px;padding:24px;max-width:320px;width:88%;box-shadow:0 4px 20px rgba(0,0,0,0.2)';
   box.innerHTML =
@@ -1924,7 +1930,7 @@ function showDraftRestoreDialog(onRestore, onNew, onClose) {
 
 function showConfirmMobile(msg, onOk, onCancel, okLabel, cancelLabel) {
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:10001;display:flex;align-items:center;justify-content:center';
   const box = document.createElement('div');
   box.style.cssText = 'background:#fff;border-radius:12px;padding:24px;max-width:320px;width:88%;box-shadow:0 4px 20px rgba(0,0,0,0.2)';
   box.innerHTML = '<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:16px;line-height:1.6">' + msg.replace(/\n/g,'<br>') + '</div>'
@@ -2047,12 +2053,7 @@ function deleteHistory(key) {
   renderHistory();
   // ズレ表示・前回注文バッジを再計算
   products.forEach(function(p) { updateCard(p.id); updatePrevBadge(p.id); });
-  const gapPanel = document.getElementById('gap-mobile');
-  if (gapPanel && gapPanel.style.display !== 'none') renderGapMobile();
-  const sunPanel = document.getElementById('sun-hist-mobile');
-  if (sunPanel && sunPanel.style.display !== 'none') renderSunHistMobile();
-  const grPanel2 = document.getElementById('graph-mobile');
-  if (grPanel2 && grPanel2.style.display !== 'none') renderGraphMobile();
+  refreshOpenPanels();
 }
 function toggleHistory() {
   const body = document.getElementById("history-body");
@@ -2070,6 +2071,8 @@ function toggleHistory() {
   } else {
     body.style.display = "none";
     if (sunPanel) sunPanel.style.display = "none";
+    var sunIcon2 = document.getElementById('sun-hist-toggle-icon');
+    if (sunIcon2) sunIcon2.textContent = '▼ 開く';
     icon.textContent = "▼ 開く";
   }
 }
@@ -2125,7 +2128,8 @@ function deleteSunHistMobile(idx) {
   try { hist = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
   hist.splice(idx, 1);
   lsSet(key, JSON.stringify(hist));
-  renderSunHistMobile();
+  products.forEach(function(p) { updateCard(p.id); });
+  refreshOpenPanels();
 }
 
 function toggleGapMobile() {
@@ -2959,6 +2963,7 @@ function reflectRoomToDaily(silent) {
   }
   updateRoomReflectLabelMobile();
   updateReflectDateLabel();
+  refreshOpenPanels();
 }
 
 function hasRoomDataForFloor(floor) {
@@ -3399,7 +3404,7 @@ function setUsageFactor(pid, f) {
   reflectRoomToDaily(true);
   products.forEach(function(x) { updateCard(x.id); });
   updateSummary();
-  renderUsageMobile();
+  refreshOpenPanels();
   showToast('✅ 補正係数 ' + f.toFixed(2) + ' を採用しました');
 }
 // 範囲外の係数を採用する前に、発注量がどう変わるかを数値で確認させる
@@ -3441,7 +3446,7 @@ function clearUsageFactor(pid) {
   reflectRoomToDaily(true);
   products.forEach(function(x) { updateCard(x.id); });
   updateSummary();
-  renderUsageMobile();
+  refreshOpenPanels();
 }
 // 実測と居室予定から係数の候補を出す。採用可否の判定つき
 // 在庫記録が1袋刻みでしか動かないため、総消費がこの袋数未満だと誤差が支配的になる
@@ -4019,6 +4024,7 @@ if (fnEl) fnEl.value = localStorage.getItem('facility_name') || '';
 reflectRoomToDaily(true);  // 居室管理を自動反映
 updateReflectDateLabel();
 updateRoomReflectLabelMobile();
+updateCycleHeaderLabel();
 
 // --- ライフサイクル：下書きの保存とバックグラウンド復帰時の同期 ---
 // Firebaseの成否に関わらず必ず登録されるよう、トップレベルで設定する
