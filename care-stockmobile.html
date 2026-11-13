@@ -695,7 +695,7 @@
     <div style="font-size:11px;color:var(--ink-3);margin-bottom:4px">書き出しファイル名の先頭に付ける名前（任意）</div>
     <input type="text" id="facility-name" placeholder="例：ケアユニット" value=""
       style="width:100%;padding:8px;border:1.5px solid #dde8e4;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"
-      oninput="localStorage.setItem('facility_name', this.value)" onchange="localStorage.setItem('facility_name', this.value)">
+      oninput="localStorage.setItem('facility_name', this.value)" onchange="lsSet('facility_name', this.value)">
   </div>
   <div class="backup-btns">
     <button class="btn-export" onclick="exportData()">📤 全データ書き出し</button>
@@ -776,9 +776,17 @@ let _syncFromFirebase = null;
 // Firebase にデータを書き込む（JSON文字列のまま保存し、構造の変換を防ぐ）
 function fbWrite(key, value) {
   if (!_fbDb || !_fbReady) return;
+  if (value === null) { _fbDb.ref(FB_PATH + '/' + key).remove(); return; }
   const str = typeof value === 'string' ? value : JSON.stringify(value);
   _fbDb.ref(FB_PATH + '/' + key).set(str);
 }
+// 端末とクラウドの両方に書く。取り込み・削除はすべてこれを通す
+function lsSet(key, value) {
+  const str = typeof value === 'string' ? value : JSON.stringify(value);
+  localStorage.setItem(key, str);
+  fbWrite(key, str);
+}
+function lsRemove(key) { localStorage.removeItem(key); fbWrite(key, null); }
 
 // Firebase から全データを読み込んで localStorage に反映し UI を再描画
 function fbInitLoad(db) {
@@ -1760,10 +1768,12 @@ function saveStockOnly(dateStr) {
   let gLog = [];
   try { gLog = JSON.parse(localStorage.getItem(glKey) || '[]'); } catch(e) {}
   const gEntry = { date: dateStr, data: {} };
-  products.forEach(function(p) {
-    gEntry.data[p.id] = { s: totalStock(p), o: 0, u: getUnitPrice(p.id) };
-  });
   const gIdx = gLog.findIndex(function(g) { return g.date === dateStr; });
+  const oldData = gIdx >= 0 ? (gLog[gIdx].data || {}) : {};
+  products.forEach(function(p) {
+    const prev = oldData[p.id];
+    gEntry.data[p.id] = { s: totalStock(p), o: prev ? (prev.o || 0) : 0, u: prev && prev.u != null ? prev.u : getUnitPrice(p.id) };
+  });
   if (gIdx >= 0) { gLog[gIdx] = gEntry; } else { gLog.push(gEntry); }
   gLog.sort(function(a,b) { return a.date < b.date ? -1 : 1; });
   if (gLog.length > 60) gLog = gLog.slice(-60);
@@ -1996,18 +2006,18 @@ function deleteHistory(key) {
   try {
     let sunHist = JSON.parse(localStorage.getItem(sunKey) || '[]');
     sunHist = sunHist.filter(function(r) { return r.date !== delDate; });
-    localStorage.setItem(sunKey, JSON.stringify(sunHist));
+    lsSet(sunKey, JSON.stringify(sunHist));
   } catch(e) {}
   try {
     const rec = JSON.parse(localStorage.getItem('diaper_sun_record_' + delFloor) || 'null');
-    if (rec && rec.date === delDate) localStorage.removeItem('diaper_sun_record_' + delFloor);
+    if (rec && rec.date === delDate) lsRemove('diaper_sun_record_' + delFloor);
   } catch(e) {}
   // グラフ用ログからも削除
   try {
     const glKey2 = 'diaper_graph_log_' + delFloor;
     let gLog2 = JSON.parse(localStorage.getItem(glKey2) || '[]');
     gLog2 = gLog2.filter(function(g) { return g.date !== delDate; });
-    localStorage.setItem(glKey2, JSON.stringify(gLog2));
+    lsSet(glKey2, JSON.stringify(gLog2));
   } catch(e) {}
   renderHistory();
   // ズレ表示・前回注文バッジを再計算
@@ -2089,7 +2099,7 @@ function deleteSunHistMobile(idx) {
   var hist = [];
   try { hist = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
   hist.splice(idx, 1);
-  localStorage.setItem(key, JSON.stringify(hist));
+  lsSet(key, JSON.stringify(hist));
   renderSunHistMobile();
 }
 
@@ -3545,12 +3555,12 @@ function importRoomData(input) {
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
-      localStorage.setItem('diaper_rooms', JSON.stringify(data));
+      lsSet('diaper_rooms', JSON.stringify(data));
       // 反映日付：インポートした日を記録（両フロア）
       const nowD = new Date();
       const importDateStr = (nowD.getMonth()+1) + '/' + nowD.getDate();
       FLOORS.forEach(function(f) {
-        localStorage.setItem('diaper_room_reflect_date_' + f, importDateStr);
+        lsSet('diaper_room_reflect_date_' + f, importDateStr);
       });
       updateReflectDateLabel();
       showToast('📥 居室データをインポートしました！');
@@ -3630,6 +3640,10 @@ function importFloorData(input, targetFloor) {
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
+      if (data.floor && data.floor !== targetFloor) {
+        showToast('❌ これは' + data.floor + 'のファイルです。' + targetFloor + 'には読み込めません');
+        input.value = ''; return;
+      }
       const all = {};
       try { Object.assign(all, JSON.parse(localStorage.getItem('diaper_rooms') || '{}')); } catch(e2) {}
 
@@ -3643,27 +3657,29 @@ function importFloorData(input, targetFloor) {
         Object.keys(data).forEach(function(k) {
           if (k.startsWith(targetFloor + '_')) all[k] = data[k];
         });
-        localStorage.setItem('diaper_rooms', JSON.stringify(all));
+        lsSet('diaper_rooms', JSON.stringify(all));
       } else {
         // 新しい形式：daily + rooms
         if (data.daily) {
-          localStorage.setItem('diaper_daily_' + targetFloor, JSON.stringify(data.daily));
+          lsSet('diaper_daily_' + targetFloor, JSON.stringify(data.daily));
         }
         if (data.rooms) {
           Object.keys(all).forEach(function(k) { if (k.startsWith(targetFloor + '_')) delete all[k]; });
-          Object.assign(all, data.rooms);
-          localStorage.setItem('diaper_rooms', JSON.stringify(all));
+          Object.keys(data.rooms).forEach(function(k) {
+            if (k.startsWith(targetFloor + '_')) all[k] = data.rooms[k];
+          });
+          lsSet('diaper_rooms', JSON.stringify(all));
         }
       }
 
       // フロアメモを復元
       if (data.floorMemo !== undefined) {
-        localStorage.setItem('diaper_room_memo_' + targetFloor, data.floorMemo);
+        lsSet('diaper_room_memo_' + targetFloor, data.floorMemo);
       }
 
       // 反映日付：インポートした日を記録
       var nowD2 = new Date();
-      localStorage.setItem('diaper_room_reflect_date_' + targetFloor, (nowD2.getMonth()+1) + '/' + nowD2.getDate());
+      lsSet('diaper_room_reflect_date_' + targetFloor, (nowD2.getMonth()+1) + '/' + nowD2.getDate());
 
       FLOORS.forEach(function(f) { loadDailyUse(f); });
       buildCards();
@@ -3743,7 +3759,12 @@ function exportData() {
   });
   // 安全在庫（階別）・週必要枚数カスタム値
   data.safetyBoxes = {};
-  FLOORS.forEach(function(f) { try { data.safetyBoxes[f] = JSON.parse(localStorage.getItem('diaper_safety_boxes_' + f) || '{}'); } catch(e) {} });
+  FLOORS.forEach(function(f) {
+    try { data.safetyBoxes[f] = JSON.parse(localStorage.getItem('diaper_safety_boxes_' + f) || '{}'); } catch(e) {}
+    if (!data.safetyBoxes[f] || Object.keys(data.safetyBoxes[f]).length === 0) {
+      try { data.safetyBoxes[f] = JSON.parse(localStorage.getItem('diaper_safety_boxes') || '{}'); } catch(e) {}
+    }
+  });
   try { data.weeklyFixed = JSON.parse(localStorage.getItem('diaper_weekly_fixed') || '{}'); } catch(e) {}
   try { data.orderSchedule = JSON.parse(localStorage.getItem(SCHEDULE_KEY) || '{}'); } catch(e) {}
   try { data.unitPrices = JSON.parse(localStorage.getItem(UNIT_PRICE_KEY) || '{}'); } catch(e) {}
@@ -3751,6 +3772,15 @@ function exportData() {
   FLOORS.forEach(function(f) { try { data.spareStock[f] = JSON.parse(localStorage.getItem(spareKey(f)) || '{}'); } catch(e) {} });
   data.usageFactors = {};
   FLOORS.forEach(function(f) { try { data.usageFactors[f] = JSON.parse(localStorage.getItem(factorKey(f)) || '{}'); } catch(e) {} });
+  data.sunRecord = {}; data.thuRecord = {}; data.roomChangeDate = {}; data.savedAt = {}; data.reflectDates = {};
+  FLOORS.forEach(function(f) {
+    try { const r = JSON.parse(localStorage.getItem('diaper_sun_record_' + f) || 'null'); if (r) data.sunRecord[f] = r; } catch(e) {}
+    try { const r = JSON.parse(localStorage.getItem('diaper_thu_record_' + f) || 'null'); if (r) data.thuRecord[f] = r; } catch(e) {}
+    const cd = localStorage.getItem('diaper_room_change_date_' + f); if (cd) data.roomChangeDate[f] = cd;
+    const sa = localStorage.getItem('diaper_saved_at_' + f); if (sa) data.savedAt[f] = sa;
+    const rd = localStorage.getItem('diaper_room_reflect_date_' + f); if (rd) data.reflectDates[f] = rd;
+  });
+  data.facilityName = localStorage.getItem('facility_name') || '';
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -3771,19 +3801,32 @@ function importData(event) {
     const statusEl = document.getElementById('import-status');
     try {
       const data = JSON.parse(e.target.result);
+      // 検証が通るまで localStorage / state には一切書かない（writes に積むだけ）
+      const writes = {};
+      const nowD = new Date();
+      const todayStr = (nowD.getMonth()+1) + '/' + nowD.getDate();
+      const checkRooms = function(rooms) {
+        Object.keys(rooms).forEach(function(k) {
+          const r = rooms[k];
+          if (!r || typeof r !== 'object' || !r.products || typeof r.products !== 'object') {
+            throw new Error('居室データの形式が正しくありません');
+          }
+        });
+      };
       // 古い居室データ形式（3F_301等のキー）の場合は居室データとして読み込む
       const isOldRoomFormat = Object.keys(data).some(function(k) { return /^[23]F_\d+$/.test(k); });
       if (isOldRoomFormat) {
+        const roomEntries = {};
+        Object.keys(data).forEach(function(k) { if (/^[23]F_\d+$/.test(k)) roomEntries[k] = data[k]; });
+        checkRooms(roomEntries);
         const all = {};
         try { Object.assign(all, JSON.parse(localStorage.getItem('diaper_rooms') || '{}')); } catch(e2) {}
         Object.assign(all, data);
-        localStorage.setItem('diaper_rooms', JSON.stringify(all));
+        writes['diaper_rooms'] = JSON.stringify(all);
         // 反映日付：インポートした日を記録（両フロア）
-        var nowD3 = new Date();
-        var importDateStr3 = (nowD3.getMonth()+1) + '/' + nowD3.getDate();
-        FLOORS.forEach(function(f) {
-          localStorage.setItem('diaper_room_reflect_date_' + f, importDateStr3);
-        });
+        FLOORS.forEach(function(f) { writes['diaper_room_reflect_date_' + f] = todayStr; });
+        Object.keys(writes).forEach(function(k) { lsSet(k, writes[k]); });
+        FLOORS.forEach(function(f) { loadDailyUse(f); });
         buildCards(); syncInputsToState(); reflectRoomToDaily(true);
         updateRoomReflectLabelMobile();
         buildRoomSection();
@@ -3799,45 +3842,60 @@ function importData(event) {
       FLOORS.forEach(function(f) {
         const daily = data['daily_'+f] || (data.floors && data.floors[f]) || null;
         if (!daily) return;
+        const saveData = {};
         products.forEach(function(p) {
           const val = daily[p.id];
-          if (val !== undefined) state[f][p.id].dailyUse = val;
+          if (val !== undefined && (typeof val !== 'number' || !isFinite(val))) {
+            throw new Error('使用量の値が正しくありません');
+          }
+          saveData[p.id] = val !== undefined ? val : state[f][p.id].dailyUse;
         });
-        const saveData = {};
-        products.forEach(function(p) { saveData[p.id] = state[f][p.id].dailyUse; });
-        localStorage.setItem(saveKey(f), JSON.stringify(saveData));
+        writes[saveKey(f)] = JSON.stringify(saveData);
         // 反映日付：インポートした日を記録
-        const nowD4 = new Date();
-        localStorage.setItem('diaper_room_reflect_date_' + f, (nowD4.getMonth()+1) + '/' + nowD4.getDate());
+        writes['diaper_room_reflect_date_' + f] = todayStr;
       });
       // 居室データ（PC版はdata.all、スマホ版はdata.rooms）
       const roomSrc = data.all || data.rooms || null;
       if (roomSrc) {
-        localStorage.setItem('diaper_rooms', JSON.stringify(roomSrc));
+        checkRooms(roomSrc);
+        writes['diaper_rooms'] = JSON.stringify(roomSrc);
       }
       // メモを復元
-      if (data.memo !== undefined) localStorage.setItem('diaper_room_memo', data.memo);
+      if (data.memo !== undefined) writes['diaper_room_memo'] = data.memo;
       if (data.floorMemos) {
         FLOORS.forEach(function(f) {
-          if (data.floorMemos[f] !== undefined) localStorage.setItem('diaper_room_memo_' + f, data.floorMemos[f]);
+          if (data.floorMemos[f] !== undefined) writes['diaper_room_memo_' + f] = data.floorMemos[f];
         });
       }
       // 注文履歴・日曜在庫予想履歴・グラフ用ログを復元
-      if (data.history) localStorage.setItem(HISTORY_KEY, JSON.stringify(data.history));
+      if (data.history) writes[HISTORY_KEY] = JSON.stringify(data.history);
       FLOORS.forEach(function(f) {
-        if (data.sunHist && data.sunHist[f]) localStorage.setItem('diaper_sun_hist_' + f, JSON.stringify(data.sunHist[f]));
-        if (data.graphLog && data.graphLog[f]) localStorage.setItem('diaper_graph_log_' + f, JSON.stringify(data.graphLog[f]));
-        if (data.safetyBoxes && data.safetyBoxes[f]) localStorage.setItem('diaper_safety_boxes_' + f, JSON.stringify(data.safetyBoxes[f]));
-        if (data.spareStock && data.spareStock[f]) localStorage.setItem(spareKey(f), JSON.stringify(data.spareStock[f]));
-        if (data.usageFactors && data.usageFactors[f]) localStorage.setItem(factorKey(f), JSON.stringify(data.usageFactors[f]));
+        if (data.sunHist && data.sunHist[f]) writes['diaper_sun_hist_' + f] = JSON.stringify(data.sunHist[f]);
+        if (data.graphLog && data.graphLog[f]) writes['diaper_graph_log_' + f] = JSON.stringify(data.graphLog[f]);
+        if (data.safetyBoxes && data.safetyBoxes[f]) writes['diaper_safety_boxes_' + f] = JSON.stringify(data.safetyBoxes[f]);
+        if (data.spareStock && data.spareStock[f]) writes[spareKey(f)] = JSON.stringify(data.spareStock[f]);
+        if (data.usageFactors && data.usageFactors[f]) writes[factorKey(f)] = JSON.stringify(data.usageFactors[f]);
+        if (data.sunRecord && data.sunRecord[f]) writes['diaper_sun_record_' + f] = JSON.stringify(data.sunRecord[f]);
+        if (data.thuRecord && data.thuRecord[f]) writes['diaper_thu_record_' + f] = JSON.stringify(data.thuRecord[f]);
+        if (data.roomChangeDate && data.roomChangeDate[f]) writes['diaper_room_change_date_' + f] = String(data.roomChangeDate[f]);
+        if (data.savedAt && data.savedAt[f]) writes['diaper_saved_at_' + f] = String(data.savedAt[f]);
+        if (data.reflectDates && data.reflectDates[f]) writes['diaper_room_reflect_date_' + f] = String(data.reflectDates[f]);
       });
-      if (data.weeklyFixed) localStorage.setItem('diaper_weekly_fixed', JSON.stringify(data.weeklyFixed));
-      if (data.orderSchedule) localStorage.setItem(SCHEDULE_KEY, JSON.stringify(data.orderSchedule));
-      if (data.unitPrices) localStorage.setItem(UNIT_PRICE_KEY, JSON.stringify(data.unitPrices));
+      if (data.facilityName) writes['facility_name'] = String(data.facilityName);
+      if (data.weeklyFixed) writes['diaper_weekly_fixed'] = JSON.stringify(data.weeklyFixed);
+      if (data.orderSchedule) writes[SCHEDULE_KEY] = JSON.stringify(data.orderSchedule);
+      if (data.unitPrices) writes[UNIT_PRICE_KEY] = JSON.stringify(data.unitPrices);
+      Object.keys(writes).forEach(function(k) { lsSet(k, writes[k]); });
+      FLOORS.forEach(function(f) { loadDailyUse(f); });
+      if (data.facilityName) { const fnEl2 = document.getElementById('facility-name'); if (fnEl2) fnEl2.value = String(data.facilityName); }
       renderHistory();
       products.forEach(function(p) { updatePrevBadge(p.id); });
       syncInputsToState();
       reflectRoomToDaily(true);
+      // reflectRoomToDaily が今日の日付で上書きするため、バックアップ内の反映日付を再適用する
+      FLOORS.forEach(function(f) {
+        if (data.reflectDates && data.reflectDates[f]) lsSet('diaper_room_reflect_date_' + f, String(data.reflectDates[f]));
+      });
       updateRoomReflectLabelMobile();
       buildRoomSection();
       statusEl.style.display = '';
